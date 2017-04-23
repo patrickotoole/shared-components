@@ -2,11 +2,13 @@ import tornado.web
 import json
 import pandas as pd
 import logging
-from database import *
+from api import *
+from lib.helpers import decorators
+from lib import custom_defer
 
 
 
-class CampaignHandler(tornado.web.RequestHandler, CampaignDatabase):
+class CampaignHandler(tornado.web.RequestHandler, CampaignAPI):
 
     def initialize(self, **kwargs):
         self.db = kwargs.get("db",False)
@@ -14,10 +16,17 @@ class CampaignHandler(tornado.web.RequestHandler, CampaignDatabase):
         self.crushercache = kwargs.get("crushercache",False)
 
 
+    @custom_defer.inlineCallbacksErrors
+    def load_domains_to_create(self, advertiser_id):
+        domains = yield self.get_domains_to_create(advertiser_id)
+        self.render("create.html", domains = json.dumps(domains.to_dict('records')))
+
+
+    @tornado.web.asynchronous
+    @decorators.error_handling
     def get(self):
         advertiser_id = self.get_query_argument("advertiser")
-        domains = self.get_domains(advertiser_id)
-        self.render("create.html", domains = json.dumps(domains.to_dict('records')))
+        self.load_domains_to_create(advertiser_id)
 
 
     def post(self):

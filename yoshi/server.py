@@ -41,7 +41,6 @@ if __name__ == '__main__':
         (r'/', SetupHandler, connectors),
         (r'/setup', SetupHandler, connectors),
         (r'/domains', DomainsHandler, connectors),
-        (r'/urls', URLHandler, connectors),
         (r'/create', CampaignHandler, connectors),
         (r'/autorun', AutorunHandler, connectors)
     ]

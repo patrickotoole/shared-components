@@ -2,27 +2,30 @@ import tornado.web
 import json
 import pandas as pd
 import logging
-from database import *
+from deferred import *
+from lib.helpers import decorators
+from lib import custom_defer
+from handlers.base import *
 
-class SetupHandler(tornado.web.RequestHandler, SetupDatabase):
+
+class SetupHandler(BaseHandler, SetupDeferred):
 
     def initialize(self, **kwargs):
         self.db = kwargs.get("db",False) 
-        self.crushercache = kwargs.get("crushercache",False)  
+        self.crushercache = kwargs.get("crushercache",False)
 
+    
+    @custom_defer.inlineCallbacksErrors
+    def load_setup(self, advertiser_id):
+        data = yield self.get_setup_data(advertiser_id)
+        self.render("setup.html", data = json.dumps(data))
+
+
+    @tornado.web.asynchronous
+    @decorators.error_handling
     def get(self):
         advertiser_id = self.get_query_argument("advertiser")
-        setups = self.get_setup(advertiser_id)
-        line_items = self.get_line_items(advertiser_id)
-        media_plans = self.get_media_plans(advertiser_id)
-        data = {
-            'setup': setups.to_dict('records'),
-            'line_items': line_items['line_item_name'].tolist(),
-            'media_plans': media_plans['name'].tolist()
-
-        }
-        self.render("setup.html", data = json.dumps(data))
-        # self.finish()
+        self.load_setup(advertiser_id)
 
     def post(self):
         advertiser_id = self.get_query_argument("advertiser")
