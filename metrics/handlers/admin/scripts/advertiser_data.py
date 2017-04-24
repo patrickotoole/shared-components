@@ -25,7 +25,7 @@ class AdvertiserDataHandler(AnalyticsBase, BaseHandler):
             Q = QUERY_SEGMENT_skip if skip else QUERY_SEGMENT
             pixel_name = advertiser['pixel_source_name']
             resp[pixel_name]={"has_data":advertiser['valid_pixel_fires_yesterday']}
-            resp[pixel_name]['segment'] = self.db.select_dataframe(Q % pixel_name).to_dict('records')
+            resp[pixel_name]['segments'] = self.db.select_dataframe(Q % pixel_name).to_dict('records')
         return resp
 
     @decorators.deferred
