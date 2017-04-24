@@ -382,14 +382,14 @@
           }
         , "does not contain": function(field,value) {
             return function(x) {
-              var values = value.split(",")
-              return values.reduce(function(p,value) { return p + String(x[field]).indexOf(String(value)) > -1 }, 0) == 0
+              var values = value.toLowerCase().split(",")
+              return values.reduce(function(p,value) { return p + String(x[field]).indexOf(String(value).toLowerCase()) > -1 }, 0) == 0
             } 
           }
         , "contains": function(field,value) {
             return function(x) {
-              var values = value.split(",")
-              return values.reduce(function(p,value) { return p + String(x[field]).indexOf(String(value)) > -1 }, 0) > 0
+              var values = value.toLowerCase().split(",")
+              return values.reduce(function(p,value) { return p + String(x[field]).indexOf(String(value).toLowerCase()) > -1 }, 0) > 0
             } 
           }
       }

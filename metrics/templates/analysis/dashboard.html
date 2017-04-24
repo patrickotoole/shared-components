@@ -395,18 +395,18 @@
             return values.reduce(function(p,value) { return p + String(x[field]).indexOf(String(value)) > -1 }, 0) == 0
           } 
         }
-     , "does not contain": function(field,value) {
-          return function(x) {
-            var values = value.split(",")
-            return values.reduce(function(p,value) { return p + String(x[field]).indexOf(String(value)) > -1 }, 0) == 0
-          } 
-        }
-      , "contains": function(field,value) {
-          return function(x) {
-            var values = value.split(",")
-            return values.reduce(function(p,value) { return p + String(x[field]).indexOf(String(value)) > -1 }, 0) > 0
-          } 
-        }
+     //, "does not contain": function(field,value) {
+     //     return function(x) {
+     //       var values = value.split(",")
+     //       return values.reduce(function(p,value) { return p + String(x[field]).indexOf(String(value)) > -1 }, 0) == 0
+     //     } 
+     //   }
+     //, "contains": function(field,value) {
+     //     return function(x) {
+     //       var values = value.split(",")
+     //       return values.reduce(function(p,value) { return p + String(x[field]).indexOf(String(value)) > -1 }, 0) > 0
+     //     } 
+     //   }
   }
 
   function buildDashboardLoading(value) {
@@ -532,8 +532,8 @@
         .filter_data(value.original_urls)
         .op("is in", ops["is in"])
         .op("is not in", ops["is not in"])
-        .op("does not contain", ops["does not contain"])
-        .op("contains", ops["contains"])
+        //.op("does not contain", ops["does not contain"])
+        //.op("contains", ops["contains"])
         .logic(logic.value)
         .by(filters)
 
@@ -691,8 +691,8 @@
           .filter_data(value.before)
           .op("is in", ops["is in"])
           .op("is not in", ops["is not in"])
-          .op("does not contain", ops["does not contain"])
-          .op("contains", ops["contains"])
+          //.op("does not contain", ops["does not contain"])
+          //.op("contains", ops["contains"])
           .logic(logic.value)
           .by(filters)
 
@@ -700,8 +700,8 @@
           .filter_data(value.after)
           .op("is in", ops["is in"])
           .op("is not in", ops["is not in"])
-          .op("does not contain", ops["does not contain"])
-          .op("contains", ops["contains"])
+          //.op("does not contain", ops["does not contain"])
+          //.op("contains", ops["contains"])
           .logic(logic.value)
           .by(filters)
 
