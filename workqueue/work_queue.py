@@ -121,8 +121,7 @@ class WorkQueue(object):
         kwargs['job_id'] = job_id
         kwargs['connectors']=self.connectors
         self.log_before_job(job_id, entry_id, False, fn, kwargs)
-        properkey = 'params' if 'params' in kwargs.keys() else 'parameters'
-        kwargs[properkey]['log_object'] = self.logging
+        kwargs['log_object'] = self.logging
         valid = self.set_api_wrapper(kwargs)
         fn(**kwargs)
         self.log_job_success(job_id, fn, kwargs)

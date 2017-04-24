@@ -152,7 +152,7 @@ def runner(**kwargs):
         uuid_num = kwargs['job_id']
 
     base_url = kwargs.get('base_url', "http://beta.crusher.getrockerbox.com")
-    log_obj = kwargs.get('parameters',{}).get('log_object',False) or logging
+    log_obj = kwargs.get('log_object',False) or logging
     UR = UDFRunner(connectors, kwargs['advertiser'], base_url, log_obj)
     
     func_name = kwargs['func_name']

@@ -16,7 +16,7 @@ import cStringIO
 import twisted
 
 
-UDF_EXCLUDES = ['submitted_by', 'base_url', 'advertiser', 'job_id', 'identifiers', 'func_name', 'udf', 'filter_id', 'pattern', 'priority', 'log_object']
+UDF_EXCLUDES = ['submitted_by', 'base_url', 'advertiser', 'job_id', 'identifiers', 'func_name', 'udf', 'filter_id', 'pattern', 'priority']
 
 def check_defer_list(defer_list):
     for res in defer_list:
