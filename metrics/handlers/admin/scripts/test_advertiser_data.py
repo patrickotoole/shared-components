@@ -14,7 +14,7 @@ from lib.helpers import *
 import advertiser_data
 
 CREATE_ADVERTISER_TABLE="""
-CREATE TABLE `advertiser_caching` (
+CREATE TABLE if not exists `advertiser_caching` (
   `pixel_source_name` varchar(250) DEFAULT NULL,
   `valid_pixel_fires_yesterday` tinyint(1) DEFAULT '0',
   `skip` tinyint(1) DEFAULT '0',
@@ -25,7 +25,7 @@ CREATE TABLE `advertiser_caching` (
 """
 
 CREATE_SEGMENT_TABLE="""
-CREATE TABLE `advertiser_caching_segment` (
+CREATE TABLE if not exists `advertiser_caching_segment` (
   `pixel_source_name` varchar(250) DEFAULT NULL,
   `filter_id` int(12) DEFAULT NULL,
   `action_name` varchar(250) DEFAULT NULL,
