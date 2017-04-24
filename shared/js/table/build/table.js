@@ -311,7 +311,7 @@
               this._sort = {}
               this.draw()
             } else {
-              x.sort = !x.sort
+              x.sort = !!x.sort
 
               this.sort(x.key,x.sort)
               this.draw()
