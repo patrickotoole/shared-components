@@ -59,6 +59,7 @@ class CheckPixelTest(unittest.TestCase):
         connectors_mock = {"db": self.mock_db, "crushercache": mock_crushercache, "api":mock_api}
         self.cpf_instance = cpf.SetCacheList(connectors_mock["db"],connectors_mock["api"], connectors_mock["crushercache"])
         self.cpf_instance.advertisers = ['fsastore']
+        self.logging_called=0
 
     def tearDown(self):
         self.test_db.execute(DELETE_LOG)
@@ -72,5 +73,7 @@ class CheckPixelTest(unittest.TestCase):
     def test_check_yesterday(self):
         def logmock(x):
             assert "changed expectation" in x
+            self.logging_called = 1
         with mock.patch('logging.info', logmock):
             self.cpf_instance.check_yesterday("fsastore", 1)
+        self.assertEqual(self.logging_called, 1)
