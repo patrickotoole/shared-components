@@ -6,7 +6,7 @@ import numpy
 import datetime
 
 
-SEGMENT = "select pixel_source_name as advertiser, pixel_fires, filter_id, date from advertiser_segment_check where date > '%s'"
+SEGMENT = "select pixel_source_name as advertiser, pixel_fires, filter_id, date from advertiser_segment_check group by advertiser, filter_id, date having date > '%s'"
 QUERY = "select distinct action_name, filter_id from advertiser_caching_segment"
 
 class CheckSegmentHandler(tornado.web.RequestHandler):

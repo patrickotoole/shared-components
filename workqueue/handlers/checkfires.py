@@ -6,7 +6,7 @@ import numpy
 import datetime
 
 
-FIRES = "select pixel_source_name as advertiser, pixel_fires, date from advertiser_pixel_fires where date > '%s'"
+FIRES = "select pixel_source_name as advertiser, pixel_fires, date from advertiser_pixel_fires group by advertiser, date having date > '%s'"
 
 class CheckFiresHandler(tornado.web.RequestHandler):
     
@@ -16,7 +16,6 @@ class CheckFiresHandler(tornado.web.RequestHandler):
 
     def get(self):
         df = self.crushercache.select_dataframe(FIRES % (datetime.datetime.now() - datetime.timedelta(days=7)).strftime("%Y-%m-%d"))
-
         ndict = df.set_index(["advertiser","date"])['pixel_fires'].unstack(1).fillna(0).reset_index(['advertiser'])
         ndict.columns = [str(x) for x in ndict.columns]
         colheaders = ndict.columns.tolist()
