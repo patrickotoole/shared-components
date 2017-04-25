@@ -70,7 +70,7 @@ class SetCacheList():
     def check_yesterday(self, advertiser,check):
         yesterday_date = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
         data_from_db = self.crushercache.select_dataframe(QUERY_YESTERDAY % (advertiser,yesterday_date))
-        has_data_yesterday = 1 if len(data_from_db) ==0 else data_from_db['pixel_fires'][0]
+        has_data_yesterday = 0 if len(data_from_db) ==0 else data_from_db['pixel_fires'][0]
         if str(has_data_yesterday) != str(check):
             logging.info("changed expectation: advertiser %s changed from %s to %s" % (advertiser, has_data_yesterday, check))
 

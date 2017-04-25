@@ -35,18 +35,20 @@ def advertiser_database_mock(QUERY):
         return pandas.DataFrame({"skip":[0]})
     if "select external_segment_id" in QUERY:
         return pandas.DataFrame({"external_segment_id":[123]})
+    if "select pixel_fires" in QUERY:
+        return pandas.DataFrame({})
     return None
         
 
 class CheckPixelTest(unittest.TestCase):
     
     def setUp(self):
-        mock_db = mock.MagicMock()
+        self.mock_db = mock.MagicMock()
         self.test_db  =  lnk.dbs.test
         mock_crushercache = self.test_db
         mock_api = mock.MagicMock()
         mock_api.side_effect = lambda x : RESP_FIXTURE 
-        mock_db.side_effect = lambda x : advertiser_database_mock(x)
+        self.mock_db.side_effect = lambda x : advertiser_database_mock(x)
         yesterday_date = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
         try:
             mock_crushercache.execute(CREATE_LOG)
@@ -54,7 +56,7 @@ class CheckPixelTest(unittest.TestCase):
             import logging
             logging.info("table already create")
         mock_data = {"date":yesterday_date, "advertiser": "fsastore", "pixel_fires":0}
-        connectors_mock = {"db": mock_db, "crushercache": mock_crushercache, "api":mock_api}
+        connectors_mock = {"db": self.mock_db, "crushercache": mock_crushercache, "api":mock_api}
         self.cpf_instance = cpf.SetCacheList(connectors_mock["db"],connectors_mock["api"], connectors_mock["crushercache"])
         self.cpf_instance.advertisers = ['fsastore']
 
@@ -66,3 +68,9 @@ class CheckPixelTest(unittest.TestCase):
         data = self.test_db.select_dataframe("select * from advertiser_pixel_fires")
         self.assertTrue(len(data) >0 )
 
+
+    def test_check_yesterday(self):
+        def logmock(x):
+            assert "changed expectation" in x
+        with mock.patch('logging.info', logmock):
+            self.cpf_instance.check_yesterday("fsastore", 1)

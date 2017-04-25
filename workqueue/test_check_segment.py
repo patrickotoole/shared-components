@@ -37,6 +37,8 @@ def advertiser_database_mock(QUERY):
         return pandas.DataFrame({"pixel_source_name":["fsastore"], "action_id":[1336], "url_pattern":["/"], "action_name":["All Pages"]})
     if "select skip" in QUERY:
         return pandas.DataFrame({"skip":[0]})
+    if "select pixel_fires" in QUERY:
+        return pandas.DataFrame({})
     return None
         
 
@@ -69,3 +71,8 @@ class CheckPixelTest(unittest.TestCase):
         data = self.test_db.select_dataframe("select * from advertiser_segment_check")
         self.assertTrue(len(data) >0 )
 
+    def test_check_yesterday(self):
+        def logmock(x):
+            assert "changed expectation" in x
+        with mock.patch('logging.info', logmock):
+            self.csd_instance.check_yesterday(1336, 1)
