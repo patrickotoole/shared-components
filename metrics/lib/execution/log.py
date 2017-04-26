@@ -1,5 +1,5 @@
 LOG_STR = """
-    logging.info = logging_info('%(name)s',params['log_object'])
+    logging.info = logging_info('%(name)s')
 """
 
 class DotDict(dict):
@@ -8,9 +8,7 @@ class DotDict(dict):
 
 logging = DotDict()
 
-def logging_info(name, log_object):
-    if log_object:
-        return log_object.info
+def logging_info(name):
     import logging
     def info(msg, *args, **kwargs):
         if len(logging.root.handlers) == 0:
