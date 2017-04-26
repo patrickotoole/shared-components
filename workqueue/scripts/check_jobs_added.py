@@ -36,8 +36,7 @@ class JobsAddedChecks():
     def run_check(self):
         number_added = self.number_added()
         if number_added < 50:
-            send_msg = {"channel":"egnineering", "message":"Caching jobs not added to WorkQueue today. Resolve issue and re-run chronos job"}
-            logging.info(params["parameters"]["parameters"])
+            send_msg = {"channel":"engineering", "message":"Caching jobs not added to WorkQueue today. Resolve issue and re-run chronos job"}
             slack().__call__(send_msg)     
 
 
