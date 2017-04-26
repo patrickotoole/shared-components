@@ -34,7 +34,7 @@ class SetCacheList():
     def get_current_advertisers(self):
         new_advertisers = self.query_advertisers(NEW_QUERY)
         logging.info("got new")
-        [self.db.execute(INSERT_CACHE, x) for x in new_advertisers]
+        [self.db.execute(INSERT_CACHE, (x,)) for x in new_advertisers]
         all_advertisers = self.query_advertisers(CURRENT_QUERY) + new_advertisers
         logging.info("got old and new")
         return all_advertisers
