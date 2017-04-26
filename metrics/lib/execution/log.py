@@ -23,4 +23,7 @@ def add_logging_to_python(name,code):
     splits = [splits[0]] + [LOG_STR % {"name":name}] + splits[1:]
     return "\n".join(splits)
 
-
+def remove_logging_from_python(name,code):
+    code = code.replace("import logging","")
+    splits = code.split("\n")
+    return "\n".join(splits)

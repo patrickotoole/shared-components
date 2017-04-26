@@ -13,9 +13,13 @@ JS_STR = """
 
 class ExecutionEnvironment(object):
 
-    def __init__(self,functions):
+    def __init__(self,functions, log_object):
 
-        self._env = {"logging":log.logging, "logging_info":log.logging_info}
+        if log_object:
+            log_object_to_use = {"logging":log_object}
+        else:
+            log_object_to_use ={"logging":log.logging, "logging_info":log.logging_info}
+        self._env = log_object_to_use
         for function in functions:
             try:
                 code = compile("import math\n\n" + function, '<string>', 'exec')
@@ -31,7 +35,7 @@ class ExecutionEnvironment(object):
         return env[func_name](*args, **kwargs)
 
 
-def wrap_py(name, code):
+def wrap_py(name, code, log_object):
 
     if not code.startswith("def %s" % name):
         
@@ -41,7 +45,10 @@ def wrap_py(name, code):
 
         code = FN + "\n".join(lines)
 
-    func = log.add_logging_to_python(name,code)
+    if log_object:
+        func = log.remove_logging_from_python(name,code)
+    else:
+        func = log.add_logging_to_python(name,code)
     return func
 
 def wrap_js(name,code):

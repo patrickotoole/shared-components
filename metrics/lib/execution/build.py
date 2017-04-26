@@ -3,7 +3,7 @@ import environment
 
 DEFAULT = "SELECT * FROM workqueue_scripts where active = 1 and deleted = 0"
 
-def build_execution_env_from_db(db,query=DEFAULT):
+def build_execution_env_from_db(db,query=DEFAULT, log_object=False):
     df = db.select_dataframe(query)
     assert "name" in df.columns
     assert "script" in df.columns
@@ -12,9 +12,9 @@ def build_execution_env_from_db(db,query=DEFAULT):
     python = df[df.name.map(lambda x: ".js" not in x)]
 
     js_funcs = [ environment.wrap_js(row['name'], row.script) for i,row in js.iterrows()]
-    py_funcs = [ environment.wrap_py(row['name'], row.script) for i,row in python.iterrows()]
+    py_funcs = [ environment.wrap_py(row['name'], row.script, log_object) for i,row in python.iterrows()]
 
-    return environment.ExecutionEnvironment(js_funcs + py_funcs)
+    return environment.ExecutionEnvironment(js_funcs + py_funcs, log_object)
 
 
     
