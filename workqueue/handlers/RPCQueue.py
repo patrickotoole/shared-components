@@ -14,7 +14,8 @@ def custom_script(**kwargs):
     connectors = kwargs.get("connectors")
     cc = connectors['crushercache']
     udf = kwargs['udf']
-    env = lib.execution.build.build_execution_env_from_db(cc, log_object=kwargs['log_object'])
+    log_obj = kwargs.get('log_object',False)
+    env = lib.execution.build.build_execution_env_from_db(cc, log_object=log_obj)
 
     try:
         env.run(udf,kwargs.get("params",{}))
