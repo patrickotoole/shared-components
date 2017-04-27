@@ -33,7 +33,6 @@ if __name__ == '__main__':
     connectors = {
         "db": lnk.dbs.crushercache,
         "rb": lnk.dbs.rockerbox,
-        "crushercache":lnk.dbs.crushercache,
         "api": lnk.api.console
     }
 

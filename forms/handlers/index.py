@@ -6,7 +6,7 @@ class IndexHandler(tornado.web.RequestHandler):
 
     def initialize(self,**kwargs):
         self.db = kwargs.get("db",False) 
-        self.rb = kwargs.get("rb",False) 
+        self.rb = kwargs.get("rb",False)
 
         pass
 
@@ -19,7 +19,10 @@ class IndexHandler(tornado.web.RequestHandler):
 
         for i,row in form_fields.iterrows():
             if (row.sql):
-                df = self.rb.select_dataframe(row.sql)
+                if "crushercache" in row.sql:
+                    df = self.db.select_dataframe(row.sql)
+                else:
+                    df = self.rb.select_dataframe(row.sql)
                 values = df.to_dict('records')
                 form_fields.ix[i,'values'] = {"values":values}
 
