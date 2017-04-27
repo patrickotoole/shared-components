@@ -30,6 +30,7 @@ from handlers.permissions import *
 from handlers.login import *
 from handlers.comparison import *
 from handlers.adwords_mediaplan import *
+from handlers.yoshi_transform import *
 
 if __name__ == '__main__':
 
@@ -60,6 +61,7 @@ if __name__ == '__main__':
         (r'/segments/timeseries', SegmentTimeseriesHandler, connectors),
         (r'/line_item', LineItemHandler, connectors),
 
+        (r'/yoshi/mediaplans', TransformHandler, connectors),
 
         (r'/account/permissions', AccountPermissionsHandler, connectors),
         (r'/crusher/funnel/action', ActionHandler, connectors),
