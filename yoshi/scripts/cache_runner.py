@@ -1,9 +1,14 @@
 from link import lnk
+import ujson
+import hashlib
+import zlib
+import codecs
+import datetime
 
 
 ADVERTISER_QUERY = "select external_advertiser_id, pixel_source_name from advertiser where active =1 and deleted=0"
-INSERT = "insert into yoshi_cache (advertiser, advertiser_id, action_id, name, params_hash, zipped,date), values (%s, %s, %s, %s, %s, %s, %s )"
-REPLACE = "replace into yoshi_cache (advertiser, advertiser_id, action_id, name, params_hash, zipped,date), values (%s, %s, %s, %s, %s, %s, %s)"
+INSERT = "insert into yoshi_cache (advertiser, action_id, name, params_hash, zipped, date) values (%s, %s, %s, %s, %s, %s)"
+REPLACE = "replace into yoshi_cache (advertiser, action_id, name, params_hash, zipped, date) values (%s, %s, %s, %s, %s, %s)"
 
 class YoshiCaching():
 
@@ -24,8 +29,11 @@ class YoshiCaching():
         self.hindsight.user="a_%s" % advertiser
         self.hindsight.authenticate()
         URL = "/crusher/v1/visitor/mediaplan?format=json&%s" % url
-        resp = self.hindsight.get(URL, timeout =600)
-        data = resp.json['mediaplan']
+        resp = self.hindsight.get(URL, timeout=900)
+        try:
+            data = resp.json
+        except:
+            data = False
         return data
 
     def run_advertiser_endpoints(self,endpoints):
@@ -34,25 +42,26 @@ class YoshiCaching():
             url = endpoint["mediaplan_url"]
             advertiser = endpoint["advertiser"]
             resp  = self.request_hindsight(url, advertiser)
-            compressed = self.compress_data(resp.json)
-            hashed_endpoint = hashlib.md5(url).hexdigest()
-            filter_id = url.split("filter_id=")[1].split("&")[0]
-            advertiser_id = 0
-            self.write_to_db(advertiser,advertiser_id, filter_id, name,hashed_endpoint,compressed, date)
+            if resp:
+                compressed = self.compress_data(resp)
+                hashed_endpoint = hashlib.md5(url).hexdigest()
+                filter_id = url.split("filter_id=")[1].split("&")[0]
+                date =datetime.datetime.now().strftime("%Y-%m-%d")
+                self.write_to_db(advertiser, filter_id, name,hashed_endpoint,compressed, date)
 
     def compress_data(self,data):
-        compressed = zlib.compress(data)
+        compressed = zlib.compress(ujson.dumps(data))
         hexify = codecs.getencoder('hex')
         compress_as_hex = hexify(compressed)
         return compress_as_hex[0]
 
-    def write_to_db(self,data):
+    def write_to_db(self,advertiser, filter_id, name, hashed_endpoint, compressed,date):
         try:
             Q = INSERT
-            self.crushercache.execute(Q, (advertiser, advertiser_id, filter_id, name, hashed, data))
+            self.crushercache.execute(Q, (advertiser, filter_id, name, hashed_endpoint, compressed, date))
         except:
             Q = REPLACE
-            self.crushercache.execute(Q, (advertiser, advertiser_id, filter_id, name, hashed, data))
+            self.crushercache.execute(Q,  (advertiser, filter_id, name, hashed_endpoint, compressed, date))
 
     def get_advertisers(self):
         import requests
