@@ -11,6 +11,7 @@ class TransformHelper():
         self.hindsight = crusher_api
 
     def select_endpoint(self, advertiser_id):
+        advertiser_id = advertiser_id if advertiser_id else 0
         data = self.crushercache.select_dataframe(QUERY % advertiser_id)
         return data
 

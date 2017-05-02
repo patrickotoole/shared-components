@@ -22,14 +22,22 @@ class YoshiCaching():
         user ="a_%s" % advertiser
         self.hindsight_ai.user = str(user)
         self.hindsight_ai.authenticate()
-        resp = self.hindsight_ai.get("/yoshi/mediaplans", timeout=100)
-        return resp.json
+        try:
+            resp = self.hindsight_ai.get("/yoshi/mediaplans", timeout=100)
+            result = resp.json
+        except:
+            logging.info("error getting yoshi media plans")
+            result = {"mediaplans":[]}
+        return result
 
     def request_hindsight(self, url, advertiser):
         self.hindsight.user="a_%s" % advertiser
         self.hindsight.authenticate()
-        URL = "/crusher/v1/visitor/mediaplan?format=json&%s" % url
-        resp = self.hindsight.get(URL, timeout=900)
+        if "filter_id" not in url:
+            logging.info(url)
+            logging.info("filter id not in url")
+            return False
+        resp = self.hindsight.get(url, timeout=1000)
         try:
             data = resp.json
         except:
