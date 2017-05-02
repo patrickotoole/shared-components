@@ -4,7 +4,7 @@ import hashlib
 import zlib
 import codecs
 import datetime
-
+import logging
 
 ADVERTISER_QUERY = "select external_advertiser_id, pixel_source_name from advertiser where active =1 and deleted=0"
 INSERT = "insert into yoshi_cache (advertiser, action_id, name, params_hash, zipped, date) values (%s, %s, %s, %s, %s, %s)"
@@ -90,7 +90,7 @@ if __name__ == "__main__":
     db = lnk.dbs.rockerbox
     hindsight = lnk.api.crusher
     hindsight_ai = lnk.api.crusher
-    #hindsight_ai.base_url="http://hindsight.ai"
-    hindsight_ai.base_url="http://192.168.99.100:8888"
+    hindsight_ai.base_url="http://hindsight.ai"
+    #hindsight_ai.base_url="http://192.168.99.100:8888"
     yc= YoshiCaching(crushercache, db, hindsight, hindsight_ai)
     yc.runner()
