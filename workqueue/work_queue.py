@@ -138,7 +138,7 @@ class WorkQueue(object):
         import time
         job_id = hashlib.md5(data).hexdigest()
         self.logging.handlers[0].job_id = job_id
-        job_id = entry_id + "_" + job_id
+        job_id = str(entry_id) + "_" + str(job_id)
         self.log_process(job_id)
         try:
             self.run_job(data, job_id, entry_id)
