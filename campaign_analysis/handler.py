@@ -26,6 +26,7 @@ def build_tree(df, groups):
             tree.append({"name":name, 
                          "metrics": metrics.to_dict(), 
                          "level": group,
+                         "num_children": len(group),
                          "children": build_tree(gg, groups)})
 
     return tree
@@ -71,7 +72,7 @@ class IndexHandler(tornado.web.RequestHandler):
 
         self.render("index.html")
 
-LEVELS = ['conv_type','campaign_type','line_item_name','campaign_name']
+LEVELS = 'conv_type,campaign_type,line_item_name,campaign_name'
 
 from datetime import datetime, timedelta
 
@@ -88,7 +89,7 @@ class MetricsHandler(tornado.web.RequestHandler, DataBase):
         advertiser_id = self.get_query_argument("advertiser")
         start_date = self.get_query_argument("start_date", "20170101")
         end_date = self.get_query_argument("end_date", datetime.today().strftime("%Y%m%d"))
-        levels = self.get_query_argument("levels", LEVELS)
+        levels = self.get_query_argument("levels", LEVELS).split(",")
 
         data = self.get_data(advertiser_id, start_date, end_date)
 

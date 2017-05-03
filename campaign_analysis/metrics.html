@@ -12,13 +12,10 @@
 </head>
 
 <style>
-/*    .media_cost svg {
-      height: 300px;
-      width: 1000px;
-    }*/
+
     .chart svg {
-      height: 300px;
-      width: 1000px;
+      height: 250px;
+      width: 800px;
     }
     .node {
         cursor: pointer;
@@ -44,77 +41,74 @@
 <body>
 
         
-<!-- <div style="float: left;" id="campaignTree"></div>
- --><div  id="campaignTree" style="position:absolute; left:10px;"></div>
+    <div id="campaignTree" style="position:absolute; left:10px;"></div>
 
-<!-- <div style="float: right;" id="metricsSummary"> 
- --><div  id="metricsSummary" style="position:absolute; left:1000px; top:20px"> 
+    <div id="metricsSummary" style="position:absolute; left:1300px; top:20px"> 
 
-    
-    <div id="media_cost"><svg></svg></div>
-    
-    <div id="cpa"><svg></svg></div>
-
-</div>
-
+        <div id="selector" style="display:block"></div>
+        <div id="charts" style="display:block; width:2000px">
+            <div class="single" style = "float:left; width:50%"></div>
+            <div class="groups" style = "float:right; width:50%"></div>
+        </div>
+    </div>
 
 <script>
 
     var metricsSummary = function(data, obj){
-        
-        d3.select("#metricsSummary").selectAll("*").remove()
+        d3.select("#metricsSummary").select("#selector").selectAll("*").remove()
+        d3.select("#metricsSummary").select(".single").selectAll("*").remove()
+        d3.select("#metricsSummary").select(".groups").selectAll("*").remove()
 
-        d3.select("#metricsSummary").append("h3").text("Choose grouping and metrics")
-        d3.select("#metricsSummary").append("br")
+        var selectWrapper = d3.select("#metricsSummary").select("#selector")
 
-        var form = d3.select("#metricsSummary").append("form") 
-        form.selectAll("*").remove()
+        selectWrapper.append("h3").text("Choose grouping and metrics")
+        selectWrapper.append("br")
 
-        form.append("input")
-            .attr('type', 'radio')
-            .attr('value', 'self')
-            .attr('name', 'level')
-            .property('checked', true)
+        var select = selectWrapper.append("select").attr('multiple',true)
 
-        form.append("label").text(obj['name'])
-        form.append("br")
+        select.append("option")
+                .property("selected",true)
+                .property("value", "single")
+                .text(obj["name"]) 
 
         if (obj.children && obj.children.length > 0){
-            form.append("input")
-                .attr('type', 'radio')
-                .attr('value', obj.children[0].level)
-                .attr('name', 'level')
-            form.append("label").text(obj.children[0].level)
-            form.append("br")
+            select.append("option")
+                    .property("value","groups")
+                    .text(obj.children[0].level)
         }
-
         if (obj._children && obj._children.length > 0){
-            form.append("input")
-                .attr('type', 'radio')
-                .attr('value', obj._children[0].level)
-                .attr('name', 'level')
-            form.append("label").text(obj._children[0].level)
-            form.append("br")
+            select.append("option")
+                    .property("value", "groups")
+                    .text(obj._children[0].level)
         }
-        form.style("margin","10px")
+        
+        drawMetrics(d3.select("#metricsSummary").select("#charts").selectAll("div.single"), data, null, obj['name'])
 
-        form.selectAll("input").on("click", function(d){
+        select.on("click", function(x){
 
-            if(this.value == "self"){
-                drawMetrics(data, null, obj['name'])
-            } else{
-                drawMetrics(data, this.value)
-            }
-        })
+            d3.select(this).selectAll("option").filter(function (d, i) { return this.selected }).each(function(d, i){
+                
+                var wrapper;
+                var group  = null;
 
-        drawMetrics(data, null, obj['name'])
+                if(this.value == "single"){
+                    wrapper = d3.select("#metricsSummary").select("#charts").selectAll("div.single")
 
+                }
+                else if (this.value == "groups"){
+                    wrapper = d3.select("#metricsSummary").select("#charts").selectAll("div.groups")
+                    group = this.text
+                }
+                //debugger;
+                drawMetrics(wrapper, data, group, obj['name'])
 
+            })
+        }) 
     }
 
-    var drawMetrics = function(data, group, name){
-        d3.select("#metricsSummary").selectAll(".chart").remove()
+    var drawMetrics = function(wrapper, data, group, name){
 
+        wrapper.selectAll("div").remove()
 
         function getSummedDates(data, startDate, endDate){
 
@@ -140,6 +134,15 @@
                 }
             })
             summed = summed.sort(function(a,b){return d3.ascending(a.key, b.key)})
+
+            summed = summed.map(function(d,i){
+
+                d['values']['imps_7d'] = d3.sum(summed.slice(Math.max(0,i-6),i+1), function(x) {return x.values['imps']})
+                d['values']['media_cost_7d'] = d3.sum(summed.slice(Math.max(0,i-6),i+1), function(x) {return x.values['media_cost']})
+                d['values']['conv_7d'] = d3.sum(summed.slice(Math.max(0,i-6),i+1), function(x) {return x.values['conv']})                
+                return d
+            })
+
             return summed
         }
         
@@ -148,7 +151,6 @@
         var grouped;
 
         if (group){
-
             grouped = d3.nest().key(function(d){ return d[group] })
                                 .rollup(function(group){
                                     return getSummedDates(group, startDate, endDate)
@@ -161,7 +163,7 @@
         
         grouped.map(function(d){
             d.values.map(function(x){
-                x['values']['CPA'] = x['values']['conv'] >0 ? x['values']['media_cost'] / x['values']['conv'] : NaN
+                x['values']['CPA_7d'] = x['values']['conv_7d'] >0 ? x['values']['media_cost_7d'] / x['values']['conv_7d'] : NaN
                 return x
             })
             return d
@@ -179,10 +181,10 @@
 
             chart.yAxis.tickFormat(d3.format('$,.2f'));
 
-            var wrapper = d3.select('#metricsSummary').append("div")
-            wrapper.classed("chart",true)
-
-            wrapper.append('svg')
+            var div = wrapper.append("div")
+            div.append("h2").text("Media Cost")
+            div.classed("chart",true)
+            div.append('svg')
                 .datum(grouped)
                 .classed("chart",true)
                 .transition()
@@ -205,10 +207,10 @@
 
             chart.yAxis.tickFormat(d3.format(',.0f'));
 
-            var wrapper = d3.select('#metricsSummary').append("div")
-            wrapper.classed("chart",true)
-
-            wrapper.append('svg')
+            var div = wrapper.append("div")
+            div.classed("chart",true)
+            div.append("h2").text("Conversions")
+            div.append('svg')
                 .datum(grouped)
                 .classed("chart",true)
                 .transition()
@@ -222,7 +224,7 @@
         nv.addGraph(function() {
             var chart = nv.models.lineChart()
                         .x(function(d){return parseInt(new Date(d.key).getTime())})
-                        .y(function(d){return d.values['CPA']})
+                        .y(function(d){return d.values['CPA_7d']})
                         .useInteractiveGuideline(true)
                         .clipEdge(true)
             chart.xAxis
@@ -230,10 +232,10 @@
                 .tickFormat(function(d) {  return d3.time.format('%x')(new Date(d)) });
             chart.yAxis.tickFormat(d3.format('$,.2f'));
 
-            var wrapper = d3.select('#metricsSummary').append("div")
-            wrapper.classed("chart",true)
-
-            wrapper.append('svg')
+            var div = wrapper.append("div")
+            div.classed("chart",true)
+            div.append("h2").text("7d CPA")
+            div.append('svg')
                 .datum(grouped)
                 .classed("chart",true)
                 .transition()
@@ -251,7 +253,7 @@
     var svg = d3.select("#campaignTree").selectAll("svg").data([data]).enter().append("svg")
 
     var margin = {top: 20, right: 120, bottom: 20, left: 120},
-    width = 960 - margin.right - margin.left,
+    width = 1000 - margin.right - margin.left,
     height = 1500 - margin.top - margin.bottom;
 
     var i = 0,
@@ -324,11 +326,13 @@
         nodeLink.on("click", function(d){
 
             var data  = d3.select("#campaignTree").selectAll("svg").datum()
-
-            data = data.filter(function(x){return x[d.level] == d.name})
-            if (d.parent && d.parent.level){
-                data = data.filter(function(x){return x[d.parent.level] == d.parent.name})
+            if(d.level){
+                data = data.filter(function(x){return x[d.level] == d.name})
+                if (d.parent && d.parent.level){
+                    data = data.filter(function(x){return x[d.parent.level] == d.parent.name})
+                }   
             }
+
             metricsSummary(data, d)
         })
 
@@ -346,6 +350,14 @@
             .attr("dy", "3.5em")
             .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
             .text(function(d) { return "Yest Spend : "+ d3.format('$,.2f')(d['metrics']['media_cost_yest']); })
+
+        nodeEnter.append("text")
+            .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
+            .attr("dx", "1.5em")
+            .attr("dy", "5em")
+            .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
+            .text(function(d) { return "Yest CPA : "+ d3.format('$,.2f')(d['metrics']['cpa_yest']); })
+
 
 
         // Transition nodes to their new position.
