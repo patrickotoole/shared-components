@@ -13,9 +13,14 @@
 
 <style>
 
-    .chart svg {
-      height: 250px;
-      width: 800px;
+/*    .chart svg {
+      height: 350px;
+      width: 700px;
+    }*/
+
+    .chart {
+      height: 350px;
+      width: 850px;
     }
     .node {
         cursor: pointer;
@@ -35,6 +40,9 @@
       stroke: #ccc;
       stroke-width: 1.5px;
     }
+    select {
+        margin:10px;
+    }
 
 </style>
 
@@ -45,8 +53,13 @@
 
     <div id="metricsSummary" style="position:absolute; left:1300px; top:20px"> 
 
-        <div id="selector" style="display:block"></div>
-        <div id="charts" style="display:block; width:2000px">
+        <div id="selector" style="display:inline-block">
+            <h3>Choose grouping and metrics</h3>
+            <div class="grouping" style = "float:left; width:50%; margin:5px;"></div>
+            <div class="metrics" style = "float:right; width:50%; margin:5px;"></div>
+        </div>
+
+        <div id="charts" style="display:inline-block; width:2000px">
             <div class="single" style = "float:left; width:50%"></div>
             <div class="groups" style = "float:right; width:50%"></div>
         </div>
@@ -55,15 +68,13 @@
 <script>
 
     var metricsSummary = function(data, obj){
-        d3.select("#metricsSummary").select("#selector").selectAll("*").remove()
-        d3.select("#metricsSummary").select(".single").selectAll("*").remove()
-        d3.select("#metricsSummary").select(".groups").selectAll("*").remove()
 
-        var selectWrapper = d3.select("#metricsSummary").select("#selector")
+        // d3.select("#metricsSummary").select('#selector').selectAll("h3").remove()
+        // d3.select("#metricsSummary").select('#selector').append("h3").text("Choose grouping and metrics")
 
-        selectWrapper.append("h3").text("Choose grouping and metrics")
-        selectWrapper.append("br")
+        d3.select("#metricsSummary").selectAll("select").remove()
 
+        var selectWrapper = d3.select("#metricsSummary").select("#selector").select(".grouping")
         var select = selectWrapper.append("select").attr('multiple',true)
 
         select.append("option")
@@ -81,34 +92,77 @@
                     .property("value", "groups")
                     .text(obj._children[0].level)
         }
-        
-        drawMetrics(d3.select("#metricsSummary").select("#charts").selectAll("div.single"), data, null, obj['name'])
 
-        select.on("click", function(x){
+        var metricSelectWrapper = d3.select("#metricsSummary").select("#selector").select(".metrics")
+        metricSelectWrapper.selectAll("select").remove()
 
-            d3.select(this).selectAll("option").filter(function (d, i) { return this.selected }).each(function(d, i){
-                
+        metricSelectWrapper
+            .append("select")
+            .attr('multiple',true)
+
+        metricSelectWrapper.select("select").selectAll("option").data(['media_cost',"imps",'conv','CPA_7d','CPA_proj','conv_rate_7d','CPM'])
+        .enter()
+        .append("option")
+        .property("value", function(d){return d})
+        .text(function(d){return d})
+        .property("selected", function(d){
+            if(d == "media_cost" || d == "conv"){
+                return true
+            } else{
+                return false
+            }
+        })
+
+        d3.select("#metricsSummary").select("#selector").on("change", function(x){
+
+            var metrics = d3.select(this).select(".metrics").selectAll("option").filter(function (d, i) { return this.selected })[0].map(function(d){return d.value })
+
+            d3.select("#metricsSummary").select("#charts").selectAll("svg").remove()
+            d3.select(this).select(".grouping").selectAll("option").filter(function (d, i) { return this.selected }).each(function(d, i){
+
                 var wrapper;
                 var group  = null;
 
                 if(this.value == "single"){
                     wrapper = d3.select("#metricsSummary").select("#charts").selectAll("div.single")
-
                 }
+
                 else if (this.value == "groups"){
                     wrapper = d3.select("#metricsSummary").select("#charts").selectAll("div.groups")
                     group = this.text
                 }
-                //debugger;
-                drawMetrics(wrapper, data, group, obj['name'])
+
+                drawMetrics(wrapper, data, group, obj['name'], metrics)
 
             })
-        }) 
+        })
+
+        var metrics = d3.select("#selector").select(".metrics").selectAll("option").filter(function (d, i) { return this.selected })[0].map(function(d){return d.value })
+        
+        drawMetrics(d3.select("#metricsSummary").select("#charts").selectAll("div.single"), data, null, obj['name'], metrics)
+
+        // select.on("click", function(x){
+
+        //     d3.select(this).selectAll("option").filter(function (d, i) { return this.selected }).each(function(d, i){
+                
+        //         var wrapper;
+        //         var group  = null;
+
+        //         if(this.value == "single"){
+        //             wrapper = d3.select("#metricsSummary").select("#charts").selectAll("div.single")
+        //         }
+
+        //         else if (this.value == "groups"){
+        //             wrapper = d3.select("#metricsSummary").select("#charts").selectAll("div.groups")
+        //             group = this.text
+        //         }
+        //         drawMetrics(wrapper, data, group, obj['name'])
+
+        //     })
+        // }) 
     }
 
-    var drawMetrics = function(wrapper, data, group, name){
-
-        wrapper.selectAll("div").remove()
+    var drawMetrics = function(wrapper, data, group, name, metrics){
 
         function getSummedDates(data, startDate, endDate){
 
@@ -129,7 +183,7 @@
             var dates = summed.map(function(x){return x.key})
             allDates.map(function(d){
 
-                if (dates.indexOf(d)==-1){
+                if (dates.indexOf(d) <= -1){
                     summed.push({'key':d, 'values':{'imps':0,'media_cost':0,'conv':0} })
                 }
             })
@@ -143,108 +197,90 @@
                 return d
             })
 
+            summed = summed.map(function(d){
+                d['values']['CPA'] = d['values']['conv'] >0 ? d['values']['media_cost'] / d['values']['conv'] : NaN
+                d['values']['CPM'] = d['values']['imps'] >0 ? d['values']['media_cost']*1000 / d['values']['imps'] : NaN
+                d['values']['conv_rate_7d'] = d['values']['imps'] >0 ? d['values']['conv_7d'] / d['values']['imps_7d'] : NaN
+                d['values']['CPA_7d'] = d['values']['conv_7d'] >0 ? d['values']['media_cost_7d'] / d['values']['conv_7d'] : NaN
+                d['values']['CPA_proj'] = d['values']['conv_rate_7d'] >0 ? (d['values']['CPM']/1000) / d['values']['conv_rate_7d'] : NaN
+                return d
+            })
             return summed
         }
         
         var [startDate, endDate] = d3.extent(data, function(d){return d.date})
-        
+
         var grouped;
 
         if (group){
+
+            var top = d3.nest().key(function(d){ return d[group] }).rollup(function(d){return d3.sum(d, function(x){return x['imps']})}).entries(data)
+                            .sort(function(a,b){return d3.descending(a.values, b.values)}).slice(0,5).map(function(d){return d.key})
+
+            var tranformed = data.map(function(d){
+                if(top.indexOf(d[group]) <= -1  ){
+                    d[group] = "Other"
+                }
+                return d
+            })
+
             grouped = d3.nest().key(function(d){ return d[group] })
                                 .rollup(function(group){
                                     return getSummedDates(group, startDate, endDate)
                                 })
-                                .entries(data)            
+                                .entries(tranformed)            
         } else{
             grouped = getSummedDates(data, startDate, endDate)
             grouped = [{'key':name, 'values': grouped}]
         }
-        
-        grouped.map(function(d){
-            d.values.map(function(x){
-                x['values']['CPA_7d'] = x['values']['conv_7d'] >0 ? x['values']['media_cost_7d'] / x['values']['conv_7d'] : NaN
-                return x
-            })
-            return d
+
+        var divs = wrapper.selectAll("div").data(metrics)
+        divs.enter().append('div')
+        divs.classed("chart",true)
+        divs.exit().remove()
+
+        divs.each(function(d){
+
+            var self = d3.select(this)
+            self.selectAll("*").remove()
+
+            self.append("h2").text(d)
+
+            var chart;
+            if ( d.indexOf("media_cost") > -1 || d.indexOf("imps") > -1 || d == "conv" ){
+                chart = nv.models.stackedAreaChart()
+            }
+            else {
+                chart = nv.models.lineChart()
+                    .interpolate("basis")
+                    .options({'strokeWidth':5})
+            }
+            chart
+                .x(function(x){return parseInt(new Date(x.key).getTime())})
+                .y(function(x){return x.values[d]})
+                .useInteractiveGuideline(true)
+                .clipEdge(true)
+            
+            chart.xAxis
+                .showMaxMin(false)
+                .tickFormat(function(x) {  return d3.time.format('%x')(new Date(x)) });
+            
+
+            if(d.indexOf("media_cost") > -1 || d.indexOf('CPM')>-1 || d.indexOf('CPA') > -1){
+                chart.yAxis.tickFormat(d3.format('$,.2f'));
+            }
+            else if (d.indexOf("rate") > -1){
+                chart.yAxis.tickFormat(d3.format(".4%"));
+            }
+            else{
+                chart.yAxis.tickFormat(d3.format(",.0f"));
+            }
+
+            self.append('svg').datum(grouped).classed("chart",true)
+                    .transition().duration(500).call(chart);
+
         })
 
-        nv.addGraph(function() {
-            var chart = nv.models.stackedAreaChart()
-                        .x(function(d) { return  parseInt(new Date(d.key).getTime()) })
-                        .y(function(d) {  return d.values.media_cost })
-                        .clipEdge(true)
-                        .useInteractiveGuideline(true);
-            chart.xAxis
-                .showMaxMin(false)
-                .tickFormat(function(d) {  return d3.time.format('%x')(new Date(d)) });
-
-            chart.yAxis.tickFormat(d3.format('$,.2f'));
-
-            var div = wrapper.append("div")
-            div.append("h2").text("Media Cost")
-            div.classed("chart",true)
-            div.append('svg')
-                .datum(grouped)
-                .classed("chart",true)
-                .transition()
-                .duration(500).call(chart);
-
-            nv.utils.windowResize(chart.update);
-
-            return chart;
-        });
-
-        nv.addGraph(function() {
-            var chart = nv.models.stackedAreaChart()
-                        .x(function(d) { return  parseInt(new Date(d.key).getTime()) })
-                        .y(function(d) {  return d.values.conv })
-                        .clipEdge(true)
-                        .useInteractiveGuideline(true);
-            chart.xAxis
-                .showMaxMin(false)
-                .tickFormat(function(d) {  return d3.time.format('%x')(new Date(d)) });
-
-            chart.yAxis.tickFormat(d3.format(',.0f'));
-
-            var div = wrapper.append("div")
-            div.classed("chart",true)
-            div.append("h2").text("Conversions")
-            div.append('svg')
-                .datum(grouped)
-                .classed("chart",true)
-                .transition()
-                .duration(500).call(chart);
-
-            nv.utils.windowResize(chart.update);
-
-            return chart;
-        });
-
-        nv.addGraph(function() {
-            var chart = nv.models.lineChart()
-                        .x(function(d){return parseInt(new Date(d.key).getTime())})
-                        .y(function(d){return d.values['CPA_7d']})
-                        .useInteractiveGuideline(true)
-                        .clipEdge(true)
-            chart.xAxis
-                .showMaxMin(false)
-                .tickFormat(function(d) {  return d3.time.format('%x')(new Date(d)) });
-            chart.yAxis.tickFormat(d3.format('$,.2f'));
-
-            var div = wrapper.append("div")
-            div.classed("chart",true)
-            div.append("h2").text("7d CPA")
-            div.append('svg')
-                .datum(grouped)
-                .classed("chart",true)
-                .transition()
-                .duration(500).call(chart);
-                
-
-            nv.utils.windowResize(chart.update);
-            return chart
-        });
     }
 
 
@@ -321,7 +357,7 @@
             .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
             .text(function(d) { return d.name; })
             .style("fill-opacity", 1e-6)
-            .style({ "font": "12px sans-serif" });
+            .style({ "font": "14px sans-serif" });
 
         nodeLink.on("click", function(d){
 
@@ -342,22 +378,21 @@
             .attr("dx", "1.5em")
             .attr("dy", "2em")
             .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
-            .text(function(d) {  return "7d CPA : "+ d3.format('$,.2f')(d['metrics']['cpa_7d']); })
-        
+            .text(function(d) { return "Yest Spend : "+ d3.format('$,.2f')(d['metrics']['media_cost_yest']); })
+
         nodeEnter.append("text")
             .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
             .attr("dx", "1.5em")
             .attr("dy", "3.5em")
             .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
-            .text(function(d) { return "Yest Spend : "+ d3.format('$,.2f')(d['metrics']['media_cost_yest']); })
+            .text(function(d) { return "Yest CPA : "+ d3.format('$,.2f')(d['metrics']['cpa_yest']); })
 
         nodeEnter.append("text")
             .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
             .attr("dx", "1.5em")
             .attr("dy", "5em")
             .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
-            .text(function(d) { return "Yest CPA : "+ d3.format('$,.2f')(d['metrics']['cpa_yest']); })
-
+            .text(function(d) {  return "7d CPA : "+ d3.format('$,.2f')(d['metrics']['cpa_7d']); })
 
 
         // Transition nodes to their new position.

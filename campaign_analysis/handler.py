@@ -87,8 +87,8 @@ class MetricsHandler(tornado.web.RequestHandler, DataBase):
     def get(self):
 
         advertiser_id = self.get_query_argument("advertiser")
-        start_date = self.get_query_argument("start_date", "20170101")
-        end_date = self.get_query_argument("end_date", datetime.today().strftime("%Y%m%d"))
+        start_date = str(self.get_query_argument("start_date", "20170101"))
+        end_date = str(self.get_query_argument("end_date", datetime.today().strftime("%Y%m%d")))
         levels = self.get_query_argument("levels", LEVELS).split(",")
 
         data = self.get_data(advertiser_id, start_date, end_date)
