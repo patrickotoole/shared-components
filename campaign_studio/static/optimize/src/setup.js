@@ -37,6 +37,7 @@ Setup.prototype = {
     draw: function() {
 
       var self = this
+
       var setup_wrap = d3_wrapper_with_title(this._target,"Setup","setup",this._data)
 
       var advertiser_wrap = d3_class(setup_wrap,"advertiser")

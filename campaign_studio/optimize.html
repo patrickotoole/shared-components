@@ -44,7 +44,19 @@
   <script>
 
     var qs_state = state.qs().from(document.location.search)
-    qs_state.settings = qs_state.settings || []
+    qs_state.settings = qs_state.settings || [
+        {"key":"append","value":""}
+      , {"key":"opt_type","value":"Duplicate"}
+      , {"key":"breakout","value":"Breakout"}
+      , {"key":"line_item_id","value":""}
+      , {"key":"template_campaign","value":""}
+      , {"key":"create_group","value":""}
+      , {"key":"advertiser","value":""}
+      , {"key":"report_advertiser","value":""}
+      , {"key":"sql_advertiser","value":""}
+      , {"key":"imp_budget","value":""}
+      , {"key":"spend_budget","value":""}
+    ]
     var _state = state.state(qs_state)
 
       
@@ -145,11 +157,12 @@ var formatAsPercent = function(x) {var dthis = d3.select(this);var t = this.pare
           .on("report",function(v) {
             try {
               var values = JSON.parse(v.report)
+              v.report = values
             } catch(e) { return }
 
             values['report_advertiser'] = v.report_advertiser
 
-            _state.publish("report",JSON.parse(v.report))
+            _state.publish("report",v.report)
 
             var settings = JSON.parse(JSON.stringify(_state._state.settings || []))
               .filter(function(x) { return x.key !== "report_advertiser" })
@@ -161,7 +174,7 @@ var formatAsPercent = function(x) {var dthis = d3.select(this);var t = this.pare
             _state.publish("settings",settings)
     
             d3.xhr("/reporting")
-              .post( JSON.stringify(values), function(err, data){
+              .post( JSON.stringify(v), function(err, data){
                 var jj = JSON.parse(data.response)
     
                 _state.publishStatic("headers",Object.keys(jj[0]))

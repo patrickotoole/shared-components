@@ -58,7 +58,7 @@
 
   load.prototype = Load.prototype
 
-  function select$1(target,selected,option_key) {
+  function select(target,selected,option_key) {
     // {key: String, values: [{key: String, value: ?}...] }
 
     var option_key = option_key || "values"
@@ -90,20 +90,23 @@
         var target = this._target
 
         try {
-          var selectedAdvertiser = target.datum().settings.filter(function(x) { return x.key == "report_advertiser" }).value
+          var selectedAdvertiser = target.datum().settings.filter(function(x) { return x.key == "report_advertiser" })[0].value
         } catch (e) {}
 
         var report_row = d3_class(target,"report-row") 
         d3_class(report_row,"report-label","span").text("Upload a file: ")
 
         var text = d3_updateable(report_row,"textarea","textarea").attr("type","file")
+          .text(function(x) {
+            return JSON.stringify(x.report)
+          })
 
         var report_advertiser_row = d3_class(target,"report-advertiser-row")
 
         d3_class(report_advertiser_row,"report-advertiser-label","span")
           .text("Report Advertiser: ")    
 
-        d3_select(
+        var select = d3_select(
           report_advertiser_row, 
           function(x) { return x.advertisers }, 
           function(x) { return x.key }, 
@@ -257,7 +260,7 @@
 
     var row = d3_updateable(target,".row","div",data).classed("row",true)
 
-    return select$1(row,selected)
+    return select(row,selected)
 
   }
 
@@ -493,6 +496,7 @@
       draw: function() {
 
         var self = this
+
         var setup_wrap = d3_wrapper_with_title(this._target,"Setup","setup",this._data)
 
         var advertiser_wrap = d3_class(setup_wrap,"advertiser")
