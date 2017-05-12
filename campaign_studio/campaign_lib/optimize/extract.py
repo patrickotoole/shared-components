@@ -26,7 +26,6 @@ def format_venue_targets(df):
 def get_dma_targets(df):
     if "geo_dma_id" in df.columns and "geo_dma_name":
         df["geo_dma"] = df.apply(lambda x:  (x["geo_dma_name"],x["geo_dma_id"]), axis = 1)
-    import ipdb; ipdb.set_trace()
     return df
 
 def get_mobile_targets(df,_c):
@@ -113,7 +112,6 @@ def build_agg_funcs(df,groupby):
     return aggs
 
 def run_agg(df,groupby,aggs):
-    import ipdb; ipdb.set_trace()
     cols = get_cols(df)
     df = df[cols].set_index(groupby)
 

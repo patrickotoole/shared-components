@@ -141,7 +141,6 @@ def runner(params,data,_c,name=""):
     for k,v in transform.FIELD_NAMES.items():
         if k in grouped.columns: params[v] = params['action']
 
-    import ipdb; ipdb.set_trace()
 
     grouped = build_objects(grouped,ADVERTISER,LINE_ITEM,params)
     logging.info("opt - built new objects for updates.")

@@ -44,7 +44,6 @@ FORMAT_EXTRA = {
 }
    
 def format(_type,values,action):
-    import ipdb; ipdb.set_trace()
     formatted_values = [FORMATTERS[_type](i,action) for i in values] 
     formatted_field = FIELD_FORMATTERS[_type](formatted_values)
     additional_fields = FORMAT_EXTRA.get(_type, lambda x: {})(action)
@@ -92,7 +91,6 @@ def modify_exisiting_campaign(original_campaign,LINE_ITEM):
  
 def build_campaign_name(new_campaign,final_profile,params):
     #new_campaign['name'] = original_campaign['name']
-    import ipdb; ipdb.set_trace()
     if params.get('platform_placement_targets',False) == 'include':
         new_campaign['name'] += " - include platform_placement_targets: %s" % final_profile['platform_placement_targets'][0]['id']
 
