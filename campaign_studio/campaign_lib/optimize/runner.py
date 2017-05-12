@@ -17,6 +17,7 @@ def extract_and_group(df,GROUPBY,params,_c):
 
     df = extract.get_mobile_targets(df,_c) 
     df = extract.format_venue_targets(df) 
+    df = extract.get_dma_targets(df)
 
     aggs = extract.build_agg_funcs(df,GROUPBY)
     grouped = extract.run_agg(df,GROUPBY,aggs)
@@ -30,6 +31,7 @@ def extract_and_group(df,GROUPBY,params,_c):
         cols = get_cols(df)
         for c in cols:
             grouped[c] = grouped[c].map(lambda x: [x])
+
 
     if params['create'] or params['deactivate'] or params['modify'] or params['duplicate'] or params['replace']:
         grouped = grouped.reset_index()
@@ -112,7 +114,7 @@ def runner(params,data,_c,name=""):
 
 
     LINE_ITEM = params['line_item_id']
-    ADVERTISER = params['advertiser']
+    ADVERTISER = str(params['advertiser'])
     GROUPBY = params["create_group"] if params["create_group"] and params["create_group"] != "" else "campaign_id"
 
     logging.info("opt - running %s for %s %s %s" % (name, ADVERTISER,LINE_ITEM,GROUPBY) )
@@ -138,6 +140,8 @@ def runner(params,data,_c,name=""):
 
     for k,v in transform.FIELD_NAMES.items():
         if k in grouped.columns: params[v] = params['action']
+
+    import ipdb; ipdb.set_trace()
 
     grouped = build_objects(grouped,ADVERTISER,LINE_ITEM,params)
     logging.info("opt - built new objects for updates.")

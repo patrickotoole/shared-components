@@ -12,7 +12,8 @@ FORMATTERS = {
     "placement_id": lambda x, action: { "id":x, "action": action },
     "venue_id": lambda x, action: x,
     "seller_id": lambda x, action: { "id": x, "action": action },
-    "site_domain": lambda x, action: {"domain": x}
+    "site_domain": lambda x, action: {"domain": x},
+    "geo_dma": lambda x, action: {"dma":x[1], "name": x[0]}
 }
 
 FIELD_FORMATTERS = {
@@ -20,7 +21,8 @@ FIELD_FORMATTERS = {
     "placement_id": lambda x: x,
     "venue_id": lambda x: x,
     "seller_id": lambda x: x,
-    "site_domain": lambda x: x
+    "site_domain": lambda x: x,
+    "geo_dma": lambda x: x
 }
 
 FIELD_NAMES = {
@@ -28,17 +30,21 @@ FIELD_NAMES = {
     "placement_id": "platform_placement_targets",
     "venue_id": "venue_targets",
     "seller_id": "member_targets",
-    "site_domain": "domain_targets"
+    "site_domain": "domain_targets",
+    "geo_dma": "dma_targets",
+    # "geo_dma_name": "dma_targets"
 }
 
 FORMAT_EXTRA = {
     "venue_id": lambda x: {"venue_action": x, "member_targets":[], "platform_placement_targets":[]} if x == "include" else {"venue_action": x} ,
     "seller_id": lambda x: {"member_default_action": x },
     "placement_id": lambda x: {"member_targets":[]} if x == "include" else {} ,
-    "site_domain": lambda x: {"domain_action": x }
+    "site_domain": lambda x: {"domain_action": x },
+    "geo_dma": lambda x: {"dma_action": x, "city_targets":[], "region_targets":[],"country_targets":[]} if x == "include" else {"dma_action": x}
 }
    
 def format(_type,values,action):
+    import ipdb; ipdb.set_trace()
     formatted_values = [FORMATTERS[_type](i,action) for i in values] 
     formatted_field = FIELD_FORMATTERS[_type](formatted_values)
     additional_fields = FORMAT_EXTRA.get(_type, lambda x: {})(action)
@@ -50,14 +56,12 @@ def format(_type,values,action):
 def build_profile_overrides(items,params):
 
     profile = [{}]
-
     for i, values in items:
 
         action = params.get(FIELD_NAMES.get(i,False),"none")
         if ("profile" not in i) and ("campaign" not in i) and action != "none":
             obj = format(i,values,action)
             profile = [dict(profile[0].items() + obj.items())]
-
     return profile[0]
 
 def modify_exisiting_profile(original_profile,new_profile,advertiser,append=False):
@@ -88,8 +92,7 @@ def modify_exisiting_campaign(original_campaign,LINE_ITEM):
  
 def build_campaign_name(new_campaign,final_profile,params):
     #new_campaign['name'] = original_campaign['name']
-
-
+    import ipdb; ipdb.set_trace()
     if params.get('platform_placement_targets',False) == 'include':
         new_campaign['name'] += " - include platform_placement_targets: %s" % final_profile['platform_placement_targets'][0]['id']
 
@@ -98,6 +101,9 @@ def build_campaign_name(new_campaign,final_profile,params):
 
     if params.get('domain_targets',False) == 'include':
         new_campaign['name'] += " - include domain: %s" % final_profile['domain_targets'][0]['domain']
+
+    if params.get('dma_targets',False) == 'include':
+        new_campaign['name'] += " - include dma: %s" % final_profile['dma_targets'][0]['name']
 
     return new_campaign
 

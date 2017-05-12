@@ -607,7 +607,7 @@
           .text("Save")
           .on("click",this.on("save"))
 
-        var create = d3_updateable(this._target,".create","button").classed("create hidden",true)
+        var create = d3_updateable(this._target,".create","button").classed("create",true)
           .text("Run")
           .on("click",this.on("run"))
 

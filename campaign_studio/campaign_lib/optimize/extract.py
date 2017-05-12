@@ -23,6 +23,12 @@ def format_venue_targets(df):
             df['venues'] = ",".join(map(str,df['venue_id'].unique()[df['venue_id'].unique() < 1000]))
     return df
 
+def get_dma_targets(df):
+    if "geo_dma_id" in df.columns and "geo_dma_name":
+        df["geo_dma"] = df.apply(lambda x:  (x["geo_dma_name"],x["geo_dma_id"]), axis = 1)
+    import ipdb; ipdb.set_trace()
+    return df
+
 def get_mobile_targets(df,_c):
     if "mobile_application_id" in df.columns and "os_family_id" in df.columns:
         import json
@@ -94,7 +100,7 @@ def get_campaigns_and_profiles(df,_c):
     return df
 
 
-SUPPORTED_COLS = ["campaign_id","placement_id","venue_id","segment_id","seller_id","site_domain","seller_member_name"]
+SUPPORTED_COLS = ["campaign_id","placement_id","venue_id","segment_id","seller_id","site_domain","seller_member_name","geo_dma"]
 AGG_TO_GROUP = lambda x: list(set(x))
 
 def get_cols(df):
@@ -107,6 +113,7 @@ def build_agg_funcs(df,groupby):
     return aggs
 
 def run_agg(df,groupby,aggs):
+    import ipdb; ipdb.set_trace()
     cols = get_cols(df)
     df = df[cols].set_index(groupby)
 

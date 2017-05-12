@@ -291,6 +291,15 @@ var formatAsPercent = function(x) {var dthis = d3.select(this);var t = this.pare
             return 
           })
           .on("run",function(){ 
+            var data = {
+              "data": _state._state.filtered_data,
+              "name": _state._state.name,
+              "params": _state._state.settings,
+            }
+            debugger;
+
+            d3.xhr("/optimize")
+              .post( JSON.stringify(data) )
             return 
           })
 
