@@ -32,7 +32,6 @@ FIELD_NAMES = {
     "seller_id": "member_targets",
     "site_domain": "domain_targets",
     "geo_dma": "dma_targets",
-    # "geo_dma_name": "dma_targets"
 }
 
 FORMAT_EXTRA = {
