@@ -72,7 +72,8 @@ def update_campaign(advertiser_id,campaign_id,data,console,name=""):
 
     try:
         return campaign.json['response']['campaign']['id']
-    except:
+    except Exception as e:
+        logging.info("opt - %s" %(str(e)))
         logging.info("opt - update campaign failed for %s"%campaign_id)
         raise Exception("missing campaign_id %s" %campaign_id)
 
@@ -85,7 +86,8 @@ def update_profile(advertiser_id,profile_id,data,console,name=""):
 
     try:
         return profile.json['response']['profile']['id']
-    except:
+    except Exception as e:
+        logging.info(e)
         logging.info("opt - update campaign failed for %s"%profile_id)
         raise Exception("missing profile_id %s" %profile_id)
 
@@ -103,6 +105,7 @@ def push_campaigns(df,advertiser,line_item,name=""):
     logging.info("opt - pushing campaigns to appnexus")
     # PUSH to appnexus
     import ujson
+    import time
 
     from link import lnk
 
@@ -127,15 +130,15 @@ def push_campaigns(df,advertiser,line_item,name=""):
             # logging.info("opt - campaign: %s" % campaign_id)
             time.sleep(1)
 
-        except:
-
-            import time
+        except Exception as e:
+            logging.info("opt - %s" %(str(e)))
             time.sleep(10)
             print "FAILED"
             logging.info("opt - FAILED") 
 
 def update_campaigns(df,advertiser,name=""):
     # PUSH to appnexus
+    import time
     logging.info("opt - updating campaigns")
     import ujson
 
@@ -169,9 +172,9 @@ def update_campaigns(df,advertiser,name=""):
 
             time.sleep(1)
 
-        except:
-
-            import time
+        except Exception as e:
+            logging.info("opt - %s" %(str(e)))
+            
             time.sleep(10)
             print "FAILED" 
             logging.info("opt - FAILED") 

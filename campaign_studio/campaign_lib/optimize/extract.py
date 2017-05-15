@@ -75,7 +75,8 @@ def get_campaigns_and_profiles(df,_c):
             print "got: %s" % row.campaign_id
             # logging.info("opt - got: %s" % row.campaign_id)
             time.sleep(1.5)
-        except:
+        except Exception as e:
+            logging.info("opt - %s" %(str(e)))
 
             print "failed: %s" % row.campaign_id
             logging.info("opt - failed: %s" % row.campaign_id)
