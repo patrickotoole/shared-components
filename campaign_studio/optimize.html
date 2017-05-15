@@ -296,10 +296,9 @@ var formatAsPercent = function(x) {var dthis = d3.select(this);var t = this.pare
               "name": _state._state.name,
               "params": _state._state.settings,
             }
-            debugger;
 
-            d3.xhr("/optimize")
-              .post( JSON.stringify(data) )
+            d3.xhr("/optimize").post( JSON.stringify(data) )
+            //d3.xhr("http://workqueue.crusher.getrockerbox.com/jobs/").post( JSON.stringify({'data':data,"name":"campaign_studio_wq_post"}) )
             return 
           })
 
