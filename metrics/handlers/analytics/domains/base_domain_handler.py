@@ -162,19 +162,8 @@ class BaseDomainHandler(BaseHandler, AnalyticsBase, CassandraRangeQuery, VisitDo
         results = self.run_sample_cache(pattern,advertiser,dates,0,5,results) 
         if len(results)>0:
             return pandas.DataFrame(results)
-        if allow_sample is None:
-            results = self.run_uncache(pattern,advertiser,dates,results)
-            force_sample = True if len(results) >4000 else False
 
-            if not force_sample and (force_cache or (len(df[df.num_days > 5]) > 0)):
-                results = self.run_cache(pattern,advertiser,dates,sample[0],sample[1],results)
-                logging.info("Results in cache: %s" % len(results))
-        else:
-            if allow_sample:
-                #true is we want sample
-                results = self.run_uncache(pattern,advertiser,dates,results)
-            else:
-                results = self.run_cache(pattern,advertiser,dates,sample[0],sample[1],results)
+        results = self.run_uncache(pattern,advertiser,dates,results)
 
         df = pandas.DataFrame(results)
 
