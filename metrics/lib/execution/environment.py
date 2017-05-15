@@ -1,4 +1,3 @@
-import log
 import logging
 
 FN_STR = "def %(name)s(params={}):\n"
