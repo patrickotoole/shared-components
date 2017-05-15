@@ -34,6 +34,11 @@ class ExecutionEnvironment(object):
         return env[func_name](*args, **kwargs)
 
 
+def remove_logging_from_python(name,code):
+    code = code.replace("import logging","")
+    splits = code.split("\n")
+    return "\n".join(splits)
+
 def wrap_py(name, code, log_object):
 
     if not code.startswith("def %s" % name):
@@ -44,7 +49,7 @@ def wrap_py(name, code, log_object):
 
         code = FN + "\n".join(lines)
 
-    func = log.remove_logging_from_python(name,code)
+    func = remove_logging_from_python(name,code)
     return func
 
 def wrap_js(name,code):
