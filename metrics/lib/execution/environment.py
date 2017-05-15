@@ -15,10 +15,9 @@ class ExecutionEnvironment(object):
 
     def __init__(self,functions, log_object):
 
-        if log_object:
-            log_object_to_use = {"logging":log_object}
-        else:
-            log_object_to_use ={"logging":log.logging, "logging_info":log.logging_info}
+        log_object_in_env = log_object or logging
+        log_object_to_use = {"logging":log_object}
+        
         self._env = log_object_to_use
         for function in functions:
             try:
@@ -45,10 +44,7 @@ def wrap_py(name, code, log_object):
 
         code = FN + "\n".join(lines)
 
-    if log_object:
-        func = log.remove_logging_from_python(name,code)
-    else:
-        func = log.add_logging_to_python(name,code)
+    func = log.remove_logging_from_python(name,code)
     return func
 
 def wrap_js(name,code):

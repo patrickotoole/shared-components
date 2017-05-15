@@ -1,6 +1,3 @@
-LOG_STR = """
-    logging.info = logging_info('%(name)s')
-"""
 
 class DotDict(dict):
     def __getattr__(self, name):
@@ -16,12 +13,6 @@ def logging_info(name):
         apply(logging.root.info, ("[script:" + name + "] " + msg,)+args, kwargs)
 
     return info
-
-def add_logging_to_python(name,code):
-    code = code.replace("import logging","")
-    splits = code.split("\n")
-    splits = [splits[0]] + [LOG_STR % {"name":name}] + splits[1:]
-    return "\n".join(splits)
 
 def remove_logging_from_python(name,code):
     code = code.replace("import logging","")
