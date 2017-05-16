@@ -134,8 +134,9 @@ class OptimizeHandler(tornado.web.RequestHandler):
     def post(self):
         dd = json.loads(self.request.body)
         run_local = self.get_query_argument("run_local", "False")
+        run_local = True
 
-        if run_local == "True":
+        if run_local == True:
             import campaign_lib.optimize.parse as parse
             dparams = parse.parse(dd)
 
@@ -144,7 +145,7 @@ class OptimizeHandler(tornado.web.RequestHandler):
 
         else:
             import requests
-            import ipdb; ipdb.set_trace()
+            # import ipdb; ipdb.set_trace()
             requests.post("http://workqueue.crusher.getrockerbox.com/jobs/", data = json.dumps({"data":dd, "name":"campaign_studio_wq_post"}), 
                 auth = ("rockerbox","RBOXX2017"))
 
