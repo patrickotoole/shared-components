@@ -12,18 +12,17 @@ REPLACE = "replace into yoshi_cache (advertiser, action_id, name, params_hash, z
 
 class YoshiCaching():
 
-    def __init__(self, crushercache, db, hindsight, hindsight_ai):
+    def __init__(self, crushercache, db, hindsight):
         self.crushercache = crushercache
         self.db = db
         self.hindsight = hindsight
-        self.hindsight_ai = hindsight_ai
 
     def select_endpoint(self, advertiser):
         user ="a_%s" % advertiser
-        self.hindsight_ai.user = str(user)
-        self.hindsight_ai.authenticate()
+        self.hindsight.user = str(user)
+        self.hindsight.authenticate()
         try:
-            resp = self.hindsight_ai.get("/yoshi/mediaplans", timeout=100)
+            resp = self.hindsight.get("/crusher/adwords_mediaplan?plan=media", timeout=100)
             result = resp.json
         except:
             logging.info("error getting yoshi media plans")
@@ -76,15 +75,13 @@ class YoshiCaching():
         data = requests.get("http://portal.getrockerbox.com/admin/pixel/advertiser_data",auth=("rockerbox","RBOXX2017"))
         return data.json()
 
-def runner(**kwargs):        
-    import ipdb; ipdb.set_trace()
+def runner(**kwargs):
     crushercache = kwargs["crushercache"] if kwargs.get("crushercache", False) else kwargs["connectors"]["crushercache"]
-    db = kwargs["rockerbox"] if kwargs.get("rockerbox",False) else kwargs["connectors"]["rockerbox"]
+    db = kwargs["rockerbox"] if kwargs.get("rockerbox",False) else kwargs["connectors"]["db"]
     hindsight = kwargs["hindsight"] if kwargs.get("hindsight",False) else kwargs["connectors"]["crusher_wrapper"]
-    hindsight_ai = kwargs["hindsight_ai"] if kwargs.get("hindsight",False) else kwargs["connectors"]["crusher_wrapper"]
-    #hindsight_ai.base_url="http://hindsight.ai"
-    hindsight_ai.base_url="http://localhost:8888"
-    yc = YoshiCaching(crushercache, db, hindsight, hindsight_ai)
+    hindsight.base_url="http://localhost:9001"
+    hindsight.authenticate()
+    yc = YoshiCaching(crushercache, db, hindsight)
     advertisers = yc.get_advertisers()
     for advertiser,segments in advertisers.items():
         endpoints = yc.select_endpoint(advertiser)
@@ -97,9 +94,5 @@ if __name__ == "__main__":
     crushercache = lnk.dbs.crushercache
     db = lnk.dbs.rockerbox
     hindsight = lnk.api.crusher
-    hindsight_ai = lnk.api.crusher
-    #hindsight_ai.base_url="http://hindsight.ai"
-    #hindsight_ai.base_url="http://192.168.99.100:8888"
-    hindsight_ai.base_url="http://localhost:8888"
-    kwargs = {"crushercache":crushercache, "rockerbox":db, "hindsight":hindsight, "hindsight_ai":hindsight_ai}
+    kwargs = {"crushercache":crushercache, "rockerbox":db, "hindsight":hindsight}
     runner(**kwargs)
