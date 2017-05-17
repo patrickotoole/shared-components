@@ -28,6 +28,11 @@ def get_dma_targets(df):
         df["geo_dma"] = df.apply(lambda x:  (x["geo_dma_name"],x["geo_dma_id"]), axis = 1)
     return df
 
+def get_size_targets(df):
+    if "size" in df.columns:
+        df["size"] = df["size"].apply(lambda x: tuple(x.split("x")))
+    return df
+
 def get_mobile_targets(df,_c):
     if "mobile_application_id" in df.columns and "os_family_id" in df.columns:
         import json
@@ -100,7 +105,7 @@ def get_campaigns_and_profiles(df,_c):
     return df
 
 
-SUPPORTED_COLS = ["campaign_id","placement_id","venue_id","segment_id","seller_id","site_domain","seller_member_name","geo_dma"]
+SUPPORTED_COLS = ["campaign_id","placement_id","venue_id","segment_id","seller_id","site_domain","seller_member_name","geo_dma", "size"]
 AGG_TO_GROUP = lambda x: list(set(x))
 
 def get_cols(df):

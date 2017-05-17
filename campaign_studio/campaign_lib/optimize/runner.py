@@ -18,6 +18,7 @@ def extract_and_group(df,GROUPBY,params,_c):
     df = extract.get_mobile_targets(df,_c) 
     df = extract.format_venue_targets(df) 
     df = extract.get_dma_targets(df)
+    df = extract.get_size_targets(df)
 
     aggs = extract.build_agg_funcs(df,GROUPBY)
     grouped = extract.run_agg(df,GROUPBY,aggs)
