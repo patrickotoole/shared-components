@@ -119,7 +119,7 @@ class BaseDomainHandler(BaseHandler, AnalyticsBase, CassandraRangeQuery, VisitDo
 
         return [r for r in results if len(r['uid']) > 3]
 
-    def run_uncache(self,pattern,advertiser,dates,results=[],limit=1500):
+    def run_uncache(self,pattern,advertiser,dates,results=[],limit=200000):
         # run SAMPLE
 
         zk_lock = ZKPool(zk=self.zookeeper)
