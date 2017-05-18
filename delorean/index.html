@@ -73,7 +73,8 @@ margin-top:-1px;
     <div style="width:50px">seg val</div>
     <div style="width:500px">timeseries</div>
     <div style="width:80px">users / min</div>
-    <div style="width:400px">appnexus name</div>
+    <div style="width:350px">appnexus name</div>
+    <div style="width:50px">domain</div>
   </div>
   <div id="advertiser-content"> </div>
 </div>
@@ -113,9 +114,12 @@ var filter = {
 d3.select("#filter").on("change", function() {
   var v = this.value
   cur_page = 1
-  if (v.length == 0) filter.filter = function() { return true }
-  filter.filter = function(x) { 
-    return x.value.appnexus_name.indexOf(v) > -1;
+    if (v.length == 0) filter.filter = function() { return true }
+  filter.filter = function(x) {
+    var textToSearch = x.value.appnexus_name + x.value.domain
+    var words = v.split(" ")
+    var index = words.reduce(function(acc,val){return Math.max(acc,textToSearch.indexOf(val))},-1)
+    return index > -1;
   }
 })
 
@@ -160,7 +164,7 @@ function pageBuffer(entries) {
 
   var row = d3_splat(d3.select("#advertiser-content"),".buffer-row","div",entries,function(x) { return x.key })
     .classed("buffer-row",true)
-    .style("width","1140px")
+    .style("width","1340px")
     .style("display","inline-block")
     .order()
 
@@ -175,7 +179,7 @@ function pageBuffer(entries) {
 
   var segment_value_container = d3_splat(row,".segment_value_container","div",function(x) { return x.values },function(x) { return x.key })
     .classed('segment_value_container',true)
-    .style("width","1040px")
+    .style("width","1240px")
     .style("display","inline-block")
     .style("float","right")
 
@@ -214,9 +218,16 @@ function pageBuffer(entries) {
 
   d3_updateable(segment_value_container,".appnexus_name","div")
     .classed('appnexus_name',true)
-    .style("width","380px")
+    .style("width","330px")
     .style("display","inline-block")
     .text(function(x) {return x.value.appnexus_name})
+
+  d3_updateable(segment_value_container,".domain","div")
+    .classed('domain',true)
+    .style("width","180px")
+    .style("display","inline-block")
+    .text(function(x) {return x.value.domain})
+
 }
 
 !(function(){
@@ -238,6 +249,7 @@ function pageBuffer(entries) {
       segments[seg_ID_Value].segment = seg.segment || ""
       segments[seg_ID_Value].segment_value = seg.segment_value || ""
       segments[seg_ID_Value].appnexus_name = seg.appnexus_name || ""
+      segments[seg_ID_Value].domain = seg.domain || ""
       segments[seg_ID_Value].updates = (segments[seg_ID_Value].updates.length < 60) ? buildBuffer(t-60) : segments[seg_ID_Value].updates
       updates[seg_ID_Value] = updates[seg_ID_Value] || {"time": t+1,"count":seg.uid}
     })
