@@ -306,12 +306,15 @@ var formatAsPercent = function(x) {var dthis = d3.select(this);var t = this.pare
           .draw()
       })
       .subscribe("new_data.data", function(err,data,values) {
-        _state.publishStatic("filtered_data",data)
+
+        var filtered_data = buildModifiedFilter(data,values.filters)
+
+        _state.publishStatic("filtered_data",filtered_data)
       })
       .subscribe("data.filtered_data", function(err,data,values) {
 
         var headers = values.headers
-          , data = values.data
+          , all_data = values.data
           , ff = values.filters || []
 
 
@@ -381,12 +384,15 @@ var formatAsPercent = function(x) {var dthis = d3.select(this);var t = this.pare
                 , "value": z.value
               }
             }).filter(function(x) { return x.value !== undefined } )
-  
-            var filtered_data = buildModifiedFilter(data,filters)
+
+
+            var filtered_data = buildModifiedFilter(all_data,filters)
   
             if (filters.length == x.length) {
-              _state.publish("filters",filters)
+              
+              //_state.publish("filters",filters)
               _state.publishStatic("filtered_data",filtered_data)
+
             }
   
   
@@ -397,7 +403,6 @@ var formatAsPercent = function(x) {var dthis = d3.select(this);var t = this.pare
 
 
         var tt = d3.selectAll(".outer-table-wrapper")
-
 
         table.table(tt)
           .data({"key":"Data","values":data}) 
