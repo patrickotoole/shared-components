@@ -67,20 +67,39 @@ def build_profile_overrides(items,params):
             profile = [dict(profile[0].items() + obj.items())]
     return profile[0]
 
+DISPLAY_SIZES = [
+    {"width":300, "height":250},
+    {"width":728, "height":90},
+    {"width":160, "height":600},
+    {"width":300, "height":600},
+    {"width":970, "height":90},
+    {"width":468, "height":60},
+    {"width":250, "height":250},
+    {"width":970, "height":250}
+]
+VIDEO_SIZES = [
+    {"width":1, "height":1}
+]
+MOBILE_SIZES = [
+    {"width":320, "height":50},
+    {"width":300, "height":250},
+    {"width":320, "height":480},
+    {"width":300, "height":50}   
+]
+
 def modify_size_targets(size_targets, original_profile):
-
-    # if len(size_targets) > 0:
-    #     if size_targets[0]["action"] == "include":
-    #         size_targets = [{"width":x["width"], "height": x["height"]} for x in size_targets]
-    #     else:
-
-    #         size_targets = [{ "width": int(x["width"]), "height":  int(x['height']) } for x in size_targets]
-    #         for x in size_targets:
-    #             original_size_targets.remove(x)
-    #         return original_size_targets
-
-    # return size_targets
-    pass
+    # import ipdb; ipdb.set_trace()
+    if original_profile.get("size_targets", False):
+        new_size_targets = original_profile.get("size_targets")
+        size_targets = [{ "width": int(x["width"]), "height":  int(x['height']) } for x in size_targets]
+        for x in size_targets:
+            if x in new_size_targets: new_size_targets.remove(x) 
+        return new_size_targets
+    else:
+        new_size_targets = [x for x in DISPLAY_SIZES]
+        for x in size_targets:
+             if x in new_size_targets: new_size_targets.remove(x)
+        return new_size_targets
 
 
 def modify_existing_profile(original_profile,new_profile,advertiser,append=False):
@@ -92,7 +111,7 @@ def modify_existing_profile(original_profile,new_profile,advertiser,append=False
                 original_profile[k] = v
             else:
                 if k == "size_targets":
-                    new_size_targets = modify_size_targets(size_targets, original_profile)
+                    original_profile[k] = modify_size_targets(v, original_profile)
                 else:
                     original_profile[k] = v + (original_profile[k] or [])
 
