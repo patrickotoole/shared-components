@@ -23,7 +23,7 @@ FORMATTERS = {
     "seller_id": lambda x, action: { "id": x, "action": action },
     "site_domain": lambda x, action: {"domain": x},
     "geo_dma": lambda x, action: {"dma":x[1], "name": x[0]},
-    "size": lambda x, action: {"width": x[0], "height": x[1], "action":action}
+    "size": lambda x, action: {"width": x[0], "height": x[1]}
 }
 
 FIELD_FORMATTERS = {
@@ -47,6 +47,7 @@ FORMAT_EXTRA = {
 }
    
 def format(_type,values,action):
+
     formatted_values = [FORMATTERS[_type](i,action) for i in values] 
     formatted_field = FIELD_FORMATTERS[_type](formatted_values)
     additional_fields = FORMAT_EXTRA.get(_type, lambda x: {})(action)
@@ -66,36 +67,36 @@ def build_profile_overrides(items,params):
             profile = [dict(profile[0].items() + obj.items())]
     return profile[0]
 
-def modify_size_targets(size_targets):
+def modify_size_targets(size_targets, original_profile):
 
-    if len(size_targets) > 0:
-        if size_targets[0]["action"] == "include":
-            size_targets = [{"width":x["width"], "height": x["height"]} for x in size_targets]
-        else:
-            width_to_exclude = size_targets[0]["width"]
-            height_to_exclude = size_targets[0]["height"]
+    # if len(size_targets) > 0:
+    #     if size_targets[0]["action"] == "include":
+    #         size_targets = [{"width":x["width"], "height": x["height"]} for x in size_targets]
+    #     else:
 
-            size_targets = [{"width":x["width"], "height": x["height"]} for x in size_targets if (x['width'] != width_to_exclude and x['height'] != height_to_exclude)]
+    #         size_targets = [{ "width": int(x["width"]), "height":  int(x['height']) } for x in size_targets]
+    #         for x in size_targets:
+    #             original_size_targets.remove(x)
+    #         return original_size_targets
 
-    return size_targets
+    # return size_targets
+    pass
 
 
-def modify_exisiting_profile(original_profile,new_profile,advertiser,append=False):
+def modify_existing_profile(original_profile,new_profile,advertiser,append=False):
     del original_profile['id']
     original_profile['advertiser_id'] = advertiser
     for k,v in new_profile.items():
         if append:
-            original_profile[k] = v + (original_profile[k] or [])
-            _set = {}
-            _list = []
-            for i in original_profile[k]:
-                if not _set.get(str(i['id']),False):
-                    _set[str(i['id'])] = True
-                    _list = _list + [i]
-            original_profile[k] = _list
+            if "action" in k:
+                original_profile[k] = v
+            else:
+                if k == "size_targets":
+                    new_size_targets = modify_size_targets(size_targets, original_profile)
+                else:
+                    original_profile[k] = v + (original_profile[k] or [])
+
         else:
-            if k == "size_targets":
-                v = modify_size_targets(v)
             original_profile[k] = v
 
     return original_profile
@@ -109,7 +110,7 @@ def modify_exisiting_campaign(original_campaign,LINE_ITEM):
     return original_campaign
  
 def build_campaign_name(new_campaign,final_profile,params):
-    #new_campaign['name'] = original_campaign['name']
+    
     if params.get('platform_placement_targets',False) == 'include':
         new_campaign['name'] += " - include platform_placement_targets: %s" % final_profile['platform_placement_targets'][0]['id']
 
@@ -123,7 +124,7 @@ def build_campaign_name(new_campaign,final_profile,params):
         new_campaign['name'] += " - include dma: %s" % final_profile['dma_targets'][0]['name']
 
     if params.get('size_targets',False) == 'include':
-        new_campaign['name'] += " - include size: %sx%s" % (final_profile['size_targets'][0]['width'],final_profile['size_targets'][0]['height'])
+        new_campaign['name'] += " - include size: " + ",".join([str(x['width']) + "x" + str(x['height'])  for x in final_profile['size_targets']])
 
     return new_campaign
 

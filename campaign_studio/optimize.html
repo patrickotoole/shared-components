@@ -307,12 +307,14 @@ var formatAsPercent = function(x) {var dthis = d3.select(this);var t = this.pare
       })
       .subscribe("new_data.data", function(err,data,values) {
 
-        var filtered_data = buildModifiedFilter(data,values.filters)
+        //var filtered_data = buildModifiedFilter(data,values.filters)
 
-        _state.publishStatic("filtered_data",filtered_data)
+        //_state.publishStatic("filtered_data",filtered_data)
+        _state.publishStatic("filtered_data",data)
       })
       .subscribe("data.filtered_data", function(err,data,values) {
 
+        debugger;
         var headers = values.headers
           , all_data = values.data
           , ff = values.filters || []
@@ -390,7 +392,7 @@ var formatAsPercent = function(x) {var dthis = d3.select(this);var t = this.pare
   
             if (filters.length == x.length) {
               
-              //_state.publish("filters",filters)
+              _state.publish("filters",filters)
               _state.publishStatic("filtered_data",filtered_data)
 
             }

@@ -56,7 +56,7 @@ def build_objects(grouped,ADVERTISER,LINE_ITEM,params):
         items = row.to_dict().items()
         profile_overrides = transform.build_profile_overrides(items,params)
         new_profile = json.loads(grouped.ix[campaign,'original_profile'])
-        transform.modify_exisiting_profile(new_profile,profile_overrides,ADVERTISER,params['append'])
+        transform.modify_existing_profile(new_profile,profile_overrides,ADVERTISER,params['append'])
 
         # make campaign
         new_campaign = json.loads(grouped.ix[campaign,'original_campaign']) 
