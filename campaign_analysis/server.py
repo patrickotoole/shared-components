@@ -20,6 +20,7 @@ define("port", default=9001, help="run on the given port", type=int)
 
 from link import lnk
 from handler import *
+from handlers import *
 
 if __name__ == '__main__':
 
@@ -33,6 +34,8 @@ if __name__ == '__main__':
     routes = [
         (r'/', IndexHandler, connectors),
         (r'/metrics', MetricsHandler, connectors),
+        (r'/opt', OptimizationHandler, connectors),
+        (r'/campaign', CampaignHandler, connectors),
         (r'/static/(.*)', tornado.web.StaticFileHandler, {"path":"static"}),
 
     ]
