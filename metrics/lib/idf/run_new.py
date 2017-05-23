@@ -7,6 +7,8 @@ import time
 from lib.cassandra_cache.pattern_cache import CacheBase
 USERS = 1000000
 
+TRUNC = "TRUNCATE pop_data"
+
 class Reader(CacheBase):
 
     def __init__(self,cassandra):
@@ -204,3 +206,4 @@ if __name__ == "__main__":
     crusher = lnk.api.crusher
 
     run(console, cass, crusher, rbidf)
+    rbidf.execute(TRUNC)
