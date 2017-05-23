@@ -24,7 +24,7 @@ def build_tree(df, levels, max_level):
                     'name': clean_name(name),
                     'level': level,
                     'metrics': dd.sum(numeric_only = True).to_dict(),
-                    # 'campaigns': dd['campaign_id'].tolist()
+                    'campaigns': dd['campaign_id'].tolist()
                 })
     else:
         for name, dd in df.groupby(level):
@@ -36,7 +36,7 @@ def build_tree(df, levels, max_level):
                     #'metrics': dd.sum(numeric_only = True).to_dict(),
                     'metrics': dd[pd.isnull(dd[levels[0]])].sum(numeric_only = True).to_dict(),
                     'children': build_tree(dd, levels, max_level),
-                    # 'campaigns': dd['campaign_id'].tolist()
+                    'campaigns': dd['campaign_id'].tolist()
                 })
     return tree
 
@@ -59,6 +59,9 @@ def build_metrics(df, groups, end_date = datetime.today().strftime("%Y%m%d")):
     metrics['cpa_7d'] = metrics['media_cost_7d']/ metrics['conv_7d']
     metrics['cpa_yest'] = metrics['media_cost_yest']/ metrics['conv_yest']
 
+    metrics['cpa_rb_30d'] = metrics['media_cost_30d']/ metrics['conv_rb_30d']
+    metrics['cpa_rb_7d'] = metrics['media_cost_7d']/ metrics['conv_rb_7d']
+    metrics['cpa_rb_yest'] = metrics['media_cost_yest']/ metrics['conv_rb_yest']
 
     metrics = metrics.fillna(0)
     metrics = metrics.replace([np.nan, np.inf, -np.inf],0)
@@ -83,7 +86,7 @@ class CampaignHandler(tornado.web.RequestHandler, DataBase):
         if campaign_id:
 
             data = self.get_data(advertiser_id, campaign_id, start_date, end_date)
-            campaign_metrics = build_metrics(data, ['line_item_name','campaign_name'], end_date)
+            campaign_metrics = build_metrics(data, ['line_item_name','campaign_name','campaign_id'], end_date)
             max_levels = campaign_metrics['campaign_name'].apply(lambda x: len(x.split(" - include "))).max()
 
             for k in range(max_levels):
@@ -103,9 +106,11 @@ class CampaignHandler(tornado.web.RequestHandler, DataBase):
                 campaign_list = campaign_list + campaign_opt_tree
 
             data = self.get_data_from_campaign_list(advertiser_id, start_date, end_date, ",".join(campaign_list))
-            campaign_metrics = build_metrics(data, ['line_item_name','campaign_name'], end_date)
+            campaign_metrics = build_metrics(data, ['line_item_name','campaign_name','campaign_id'], end_date)
 
             campaign_metrics['opt_level'] = campaigns['line_item_name'].iloc[0] + " - include " + campaign_metrics['campaign_name']
+
+            # import ipdb; ipdb.set_trace()
 
             max_levels = campaign_metrics['opt_level'].apply(lambda x: len(x.split(" - include "))).max()
 
@@ -116,5 +121,5 @@ class CampaignHandler(tornado.web.RequestHandler, DataBase):
 
             tree = build_tree(df =campaign_metrics, levels = levels, max_level = levels[-1])
 
-            self.render("campaignOptTreeRadial.html", tree = json.dumps(tree[0]) )
+            self.render("campaignOptTreeRadial.html", tree = json.dumps(tree[0]) , campaign_metrics = json.dumps(campaign_metrics.to_dict('records')))
 

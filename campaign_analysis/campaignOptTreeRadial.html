@@ -61,7 +61,7 @@
     
     var diameter = 1000;
 
-    var margin = {top: 20, right: 120, bottom: 20, left: 120},
+    var margin = {top: 50, right: 120, bottom: 20, left: 180},
         width = diameter,
         height = diameter;
         
@@ -83,7 +83,6 @@
         .attr("transform", "translate(" + diameter / 2 + "," + diameter / 2 + ")");
 
     root = {{tree}};
-            debugger;
 
     root.x0 = height / 2;
     root.y0 = 0;
@@ -96,7 +95,6 @@
     var tooltip = d3.select("body").append("div")   
     .attr("class", "tooltip")               
     .style("opacity", 0);
-
 
     svg.selectAll("text")
         .on("mouseover", function(d) {      
@@ -122,7 +120,6 @@
         // Compute the new tree layout.
         var nodes = tree.nodes(root),
         links = tree.links(nodes);
-
 
 
         var nested = d3.nest().key(function(d){return d.depth}).entries(nodes)
@@ -171,11 +168,11 @@
 
         nodeUpdate.select("circle")
             .attr("r", function(d){
-                return Math.max(3,d['metrics']['media_cost_yest']/2.)
-                //return Math.log((d['metrics']['imps_yest'] +1)*2)
+                debugger;
+                return Math.max(3,d['metrics']["media_cost_yest"]/2.)
             })
             .style("fill", function(d) { 
-                return colorScale(d['metrics']['cpa_30d'] == 0 ? 70: d['metrics']['cpa_30d'])
+                return colorScale(d['metrics']["cpa_7d"] == 0 ? 70: d['metrics']["cpa_7d"])
             })
 
         nodeUpdate.select("text")
@@ -184,7 +181,7 @@
                 if (d.depth==0){
                     return "rotate(-90)"
                 } else{
-                    return (d.x%360)  <= 180 ? "translate(0)" : "rotate(180)translate(-" + (d.name.length+15)  + ")"; 
+                    return (d.x%360)  <= 180 ? "translate(0)" : "rotate(180)translate(-" + (d.name.length+25)  + ")"; 
                 }
             });
 

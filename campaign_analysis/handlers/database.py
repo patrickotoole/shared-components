@@ -2,7 +2,7 @@ import pandas as pd
 import logging
 
 DATA = '''
-SELECT v4.*, v2.conv, c.campaign_name, c.line_item_name
+SELECT v4.*, v2.conv, v2.conv_rb, c.campaign_name, c.line_item_name
 FROM
 (
     SELECT date(date_add(date, INTERVAL - 4 HOUR)) as date,  campaign_id, SUM(imps) as imps, SUM(media_cost) as media_cost
@@ -15,7 +15,7 @@ FROM
 ) v4
 LEFT JOIN
 (
-    SELECT date(date_add(conversion_time, INTERVAL - 4 HOUR)) as date, campaign_id, COUNT(*) as conv
+    SELECT date(date_add(conversion_time, INTERVAL - 4 HOUR)) as date, campaign_id, COUNT(*) as conv, SUM(is_valid) as conv_rb
     FROM reporting.v2_conversion_reporting
     WHERE active =1  AND deleted = 0
     AND date(date_add(conversion_time, INTERVAL - 4 HOUR)) >= "%(start_date)s"
@@ -71,6 +71,7 @@ class DataBase(object):
         data['date'] = pd.to_datetime(data['date'])
         data['campaign_id'] = data['campaign_id'].astype(str)
         data['campaign_name'] = data['campaign_name'].astype(str)
+        data = data[data['imps']>0]
         data = data.fillna(0)
         logging.info("retrieved data")
         
