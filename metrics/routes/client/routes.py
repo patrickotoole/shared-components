@@ -112,6 +112,7 @@ class AdvertiserRoutes(Routes):
         import handlers.analytics.domains.user as user
         import handlers.analytics.domains.visitor as visitor
         import handlers.t300 as test
+        import handlers.mediaplans as mediaplans
 
 
         return [
@@ -128,6 +129,7 @@ class AdvertiserRoutes(Routes):
             (r'/visitor/300/(.*?)', test.RedirectHandler, self.connectors),        
             (r'/visitor/(.*?)/cache', visitor.transform_cache_handler.VisitorTransformCacheHandler, self.connectors),
             (r'/visitor/(.*?)', visitor.transform_handler.VisitorTransformHandler, self.connectors),
+            (r'/mediaplans', mediaplans.cache_handler.MediaplanCacheHandler, self.connectors),
 
 
         ]
@@ -143,6 +145,7 @@ class AdvertiserRoutes(Routes):
         import handlers.analytics.domains.visitor as visitor
         import handlers.artifacts.handler as artifacts
         import handlers.topics.handler as topics
+        import handlers.mediaplans as mediaplans
 
         return [
 
@@ -161,6 +164,7 @@ class AdvertiserRoutes(Routes):
 
             (r'/visitor/(.*?)/cache', visitor.transform_cache_handler.VisitorTransformCacheHandler, self.connectors),
             (r'/visitor/(.*?)', visitor.transform_handler.VisitorTransformHandler, self.connectors),
+            (r'/mediaplans', mediaplans.cache_handler.MediaplanCacheHandler, self.connectors),
 
         ]
 

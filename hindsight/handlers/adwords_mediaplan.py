@@ -1,13 +1,16 @@
 import tornado.web
 import ujson
+import json
 import pandas
 import mock
 import time
 import logging
 
+from lib import custom_defer
 from base import BaseHandler
 from twisted.internet import defer
 from lib.helpers import *
+from adwords_helper import *
 
 SELECT = '''
 SELECT a.* FROM
@@ -32,16 +35,26 @@ INSERT = "insert into adwords_campaign_endpoint (advertiser_id, name, endpoint) 
 INSERT2 = "insert into yoshi_setup (external_advertiser_id, mediaplan, line_item_name, num_domains) values (%s, %s, %s, 20)"
 
 
-class AdwordsHandler(BaseHandler):
+class AdwordsHandler(BaseHandler,AdwordsHelper):
 
     def initialize(self, db=None, crushercache=None, **kwargs):
         self.db = db
         self.crushercache = crushercache
 
+
+    @custom_defer.inlineCallbacksErrors
+    def pull_endpoints(self, advertiser_id, plan):
+        resp = yield self.build_response(advertiser_id, plan)
+        self.write( json.dumps(resp) )
+        self.finish()
+
+    @tornado.web.authenticated
+    @tornado.web.asynchronous
+    @decorators.error_handling
     def get(self):
+        plan_type = self.get_argument("plan",False)
         advertiser_id = self.current_advertiser
-        data = self.crushercache.select_dataframe(SELECT % {'advertiser_id':advertiser_id})
-        self.write( ujson.dumps({"response":data.to_dict('records')}) )
+        self.pull_endpoints(advertiser_id, plan_type)
 
     def post(self):
         advertiser_id = self.current_advertiser

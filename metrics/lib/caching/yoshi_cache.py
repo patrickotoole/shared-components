@@ -79,7 +79,6 @@ def runner(**kwargs):
     crushercache = kwargs["crushercache"] if kwargs.get("crushercache", False) else kwargs["connectors"]["crushercache"]
     db = kwargs["rockerbox"] if kwargs.get("rockerbox",False) else kwargs["connectors"]["db"]
     hindsight = kwargs["hindsight"] if kwargs.get("hindsight",False) else kwargs["connectors"]["crusher_wrapper"]
-    hindsight.base_url="http://localhost:9001"
     hindsight.authenticate()
     yc = YoshiCaching(crushercache, db, hindsight)
     advertisers = yc.get_advertisers()
