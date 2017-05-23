@@ -86,13 +86,15 @@
     update(root)
 
 
-    d3.select(self.frameElement).style("height", "800px");
+    //d3.select(self.frameElement).style("height", "800px");
 
     function update(source) {
 
         // Compute the new tree layout.
         var nodes = tree.nodes(root).reverse(),
             links = tree.links(nodes);
+
+        //debugger;
 
         // Normalize for fixed-depth.
         nodes.forEach(function(d) { d.y = d.depth * 180; });
@@ -104,7 +106,7 @@
         // Enter any new nodes at the parent's previous position.
         var nodeEnter = node.enter().append("g")
             .attr("class", "node")
-            .attr("transform", function(d) { debugger; return "translate(" + source.y0 + "," + source.x0 + ")"; })
+            .attr("transform", function(d) {  return "translate(" + source.y0 + "," + source.x0 + ")"; })
             .on("click", click);
 
         nodeEnter.append("circle")
@@ -121,19 +123,26 @@
             .style({ "font": "14px sans-serif" });
 
 
-        nodeEnter.append("text")
-            .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
-            .attr("dx", "1.5em")
-            .attr("dy", "2em")
-            .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
-            .text(function(d) { return "Conv : "+ d3.format(',.0f')(d['metrics']['conv']); })
+        // nodeEnter.append("text")
+        //     .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
+        //     .attr("dx", "1.5em")
+        //     .attr("dy", "2em")
+        //     .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
+        //     .text(function(d) { return "Conv : "+ d3.format(',.0f')(d['metrics']['conv_30d']); })
 
-        nodeEnter.append("text")
-            .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
-            .attr("dx", "1.5em")
-            .attr("dy", "3.5em")
-            .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
-            .text(function(d) { return "CPA : "+ d3.format('$,.2f')(d['metrics']['cpa']); })
+        // nodeEnter.append("text")
+        //     .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
+        //     .attr("dx", "1.5em")
+        //     .attr("dy", "3.5em")
+        //     .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
+        //     .text(function(d) { return "CPA : "+ d3.format('$,.2f')(d['metrics']['cpa_7d']); })
+        
+        // nodeEnter.append("text")
+        //     .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
+        //     .attr("dx", "1.5em")
+        //     .attr("dy", "5em")
+        //     .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
+        //     .text(function(d) { return "Spend : "+ d3.format('$,.2f')(d['metrics']['media_cost_yest']); })
 
         // Transition nodes to their new position.
         var nodeUpdate = node.transition()
@@ -141,7 +150,9 @@
             .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
 
         nodeUpdate.select("circle")
-            .attr("r", 4.5)
+            .attr("r", function(d){
+                return Math.log(d['metrics']['imps_yest'])
+            })
             .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
 
         nodeUpdate.select("text")
