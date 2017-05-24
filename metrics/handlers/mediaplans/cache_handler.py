@@ -59,10 +59,16 @@ class MediaplanCacheHandler(BaseHandler,Render):
         return decomp_data
 
     @custom_defer.inlineCallbacksErrors
-    def first_step(self, advertiser, filter_id, filter_date, filter_name):
+    def first_step(self, advertiser, filter_id, filter_date, filter_name, resp_type):
         data = yield self.get_from_db(advertiser, filter_id, filter_date, filter_name)
-        _resp = ujson.loads(data)
-        self.compress(ujson.dumps(_resp))
+        if resp_type =="csv":
+            df = pandas.DataFrame(ujson.loads(data)['domains'])
+            _resp = df.to_csv()
+            self.write(_resp)
+            self.finish()
+        else:
+            _resp = ujson.loads(data)
+            self.compress(ujson.dumps(_resp))
 
     @tornado.web.authenticated
     @tornado.web.asynchronous
@@ -72,6 +78,7 @@ class MediaplanCacheHandler(BaseHandler,Render):
         filter_id = self.get_argument("filter_id", False)
         filter_date = self.get_argument("date",False)
         filter_name = self.get_argument("name",False)
+        resp_type = self.get_argument("type","json")
 
         filter_id = int(filter_id)
-        self.first_step(advertiser, filter_id, filter_date, filter_name)
+        self.first_step(advertiser, filter_id, filter_date, filter_name,resp_type)
