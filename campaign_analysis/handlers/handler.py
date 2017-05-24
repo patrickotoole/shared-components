@@ -110,8 +110,6 @@ class CampaignHandler(tornado.web.RequestHandler, DataBase):
 
             campaign_metrics['opt_level'] = campaigns['line_item_name'].iloc[0] + " - include " + campaign_metrics['campaign_name']
 
-            # import ipdb; ipdb.set_trace()
-
             max_levels = campaign_metrics['opt_level'].apply(lambda x: len(x.split(" - include "))).max()
 
             for k in range(max_levels):
@@ -120,6 +118,10 @@ class CampaignHandler(tornado.web.RequestHandler, DataBase):
             levels = ["level%s"%str(i) for i in range(max_levels) ] 
 
             tree = build_tree(df =campaign_metrics, levels = levels, max_level = levels[-1])
+
+            campaign_params = self.get_campaign_params(advertiser_id)
+
+            campaign_metrics = pd.merge(campaign_metrics, campaign_params[['campaign_id','bid','bid_type','budget','budget_type']], on ='campaign_id', how = 'left')
 
             self.render("campaignOptTreeRadial.html", tree = json.dumps(tree[0]) , campaign_metrics = json.dumps(campaign_metrics.to_dict('records')))
 

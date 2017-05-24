@@ -10,12 +10,36 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.8.5/nv.d3.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.28.10/js/jquery.tablesorter.min.js"></script>
 
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 </head>
 
 <style>
 
+/* tables */
+    table.tablesorter {
+        font-family:arial;background-color: #CDCDCD;margin:10px 0pt 15px;font-size: 10pt;width: 100%;text-align: left;
+    }
+
+    table.tablesorter thead tr th, table.tablesorter tfoot tr th {
+        background-color: #e6EEEE;border: 1px solid #FFF;font-size: 10pt;padding: 4px;
+    }
+
+    table.tablesorter thead tr .header {background-image: url(bg.gif);background-repeat: no-repeat;background-position: center right;cursor: pointer;}
+
+    table.tablesorter tbody td {
+        color: #3D3D3D;padding: 4px;background-color: #FFF;vertical-align: top;
+    }
+    table.tablesorter tbody tr.odd td {
+        background-color:#F0F0F6;}table.tablesorter thead tr .headerSortUp {background-image: url(asc.gif);
+    }
+    table.tablesorter thead tr .headerSortDown {
+        background-image: url(desc.gif);
+    }
+
+    table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSortUp {background-color: #8dbdd8;}
 
     .chart {
       height: 350px;
@@ -58,7 +82,7 @@
     var colorScale = d3.scale.quantize()
         .range(colorbrewer.RdYlGn[8])
         .domain([70, 0]);
-    
+    debugger;
     var diameter = 1000;
 
     var margin = {top: 50, right: 120, bottom: 20, left: 180},
@@ -101,9 +125,9 @@
             tooltip.style("opacity", 2);      
             tooltip.html(
                 d.name + "<br>" +
-                "30d Conv: " + d.metrics['conv_30d'] + "<br>" +
-                "30d CPA: " + d3.format('$,.2f')(d.metrics['cpa_30d']) + "<br>" + 
-                "7d CPA: " + d3.format('$,.2f')(d.metrics['cpa_7d']) + "<br>" + 
+                "30d Conv: " + d.metrics['conv_rb_30d'] + "<br>" +
+                "30d CPA: " + d3.format('$,.2f')(d.metrics['cpa_rb_30d']) + "<br>" + 
+                "7d CPA: " + d3.format('$,.2f')(d.metrics['cpa_rb_7d']) + "<br>" + 
                 "Yest Spend: " + d3.format('$,.2f')(d.metrics['media_cost_yest']) 
             ) 
                 .style("left", (d3.event.pageX) + "px")     
@@ -138,7 +162,7 @@
         // Enter any new nodes at the parent's previous position.
         var nodeEnter = node.enter().append("g")
             .attr("class", "node")
-            .on("click", click);
+            //.on("click", click);
 
         nodeEnter.append("circle")
             .attr("r", 1e-6)
@@ -168,11 +192,10 @@
 
         nodeUpdate.select("circle")
             .attr("r", function(d){
-                debugger;
                 return Math.max(3,d['metrics']["media_cost_yest"]/2.)
             })
             .style("fill", function(d) { 
-                return colorScale(d['metrics']["cpa_7d"] == 0 ? 70: d['metrics']["cpa_7d"])
+                return colorScale(d['metrics']["cpa_rb_7d"] == 0 ? 70: d['metrics']["cpa_rb_7d"])
             })
 
         nodeUpdate.select("text")
@@ -253,6 +276,108 @@
     }
 
 
+    d3.select(".campaign_metrics").data([{{campaign_metrics}}]).enter().append('div').classed("campaign_metrics",true)
+
+    d3.selectAll("svg").selectAll("text").on("click", function(d){
+
+        columns = [ 'campaign_id','campaign_name','cpa_rb_7d','conv_rb_7d',
+                    'imps_yest','media_cost_yest', 
+                    'imps_today','media_cost_today', 'budget','bid']
+
+        var campaigns = d3.select(".campaign_metrics").data()[0].filter(function(x){
+            return d.campaigns.indexOf(x.campaign_id) > - 1
+        })
+
+        debugger;
+
+        var columns = columns.map(function(x){
+            var obj =  {
+                'name': x,
+                'type': 'text',
+            }
+            if( x.indexOf('cpa') > -1 || x.indexOf('media_cost') > -1 || x.indexOf('bid') > -1){
+                obj['formatter'] =  d3.format("$,.2f")
+            }
+            if( x.indexOf('imps') > -1 || x.indexOf('conv') > -1){
+                obj['formatter'] =  d3.format(",.0f")
+            }
+            if (x == "budget"){
+                obj['class']="budget"
+                // obj['text']=""
+                obj['type']="input"
+            }
+            if (x == "bid"){
+                obj['class']="bid"
+                // obj['text']= ""
+                obj['type']="input"
+            }
+            return obj
+        })
+
+        d3.select("body").selectAll("table").remove()
+
+        var table = make_table(d3.select("body"), columns, campaigns)
+        table.classed("tablesorter table-striped table-hover table-bordered",true).attr("id","optTable")
+        table.style({'width': "50px"})
+        $("#optTable").tablesorter()
+
+    })
+
+    
+
+
+    function make_table(selection, columns, data){
+
+      var table = selection.append('table').classed('table',true)
+      
+      thead = table.append('thead')
+
+      thead.append('tr')
+       .selectAll('th')
+       .data(columns).enter()
+       .append('th')
+       .text(function(x){return x['name']});
+      
+      
+      tbody = table.append('tbody')
+
+      
+      var trows = tbody
+        .selectAll('tr')
+        .data(data).enter()
+        .append('tr')
+      
+      
+      trows.selectAll('td')
+        .data(function(row) {
+            return columns.map(function(c){
+                var cell = {}
+                cell['name'] = c['name']
+                cell['value'] = c['formatter'] ? c['formatter'](row[c['name']]) : row[c['name']]
+                cell['class']= c['class']
+                cell['type'] = c['type']
+                cell['text'] = c['text']
+                
+                return cell 
+            })
+        })
+        .enter()
+        .append('td')
+        .attr('class',function(x){
+                return x['class']
+        })
+        .text(function(x){
+            var k = x['text']!= null ? x['text'] : x['value']
+            return k
+      })
+      trows.selectAll('td').append(function(d){
+            return document.createElement(d['type'])
+      })
+      
+      
+      return table
+
+    }
 
 
 </script>

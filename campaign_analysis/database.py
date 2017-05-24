@@ -2,7 +2,7 @@ import pandas as pd
 import logging
 
 ALL_DATA = '''
-SELECT v4.*, v2.conv, c.campaign_name, c.line_item_name
+SELECT v4.*, v2.conv, v2.conv_rb, c.campaign_name, c.line_item_name
 FROM
 (
     SELECT date(date_add(date, INTERVAL - 4 HOUR)) as date,  campaign_id, SUM(imps) as imps, SUM(media_cost) as media_cost
@@ -14,9 +14,9 @@ FROM
 ) v4
 LEFT JOIN
 (
-    SELECT date(date_add(conversion_time, INTERVAL - 4 HOUR)) as date, campaign_id, COUNT(*) as conv
+    SELECT date(date_add(conversion_time, INTERVAL - 4 HOUR)) as date, campaign_id, COUNT(*) as conv, SUM(is_valid) as conv_rb
     FROM reporting.v2_conversion_reporting v2
-    WHERE active =1  AND deleted = 0 AND is_valid = 1
+    WHERE active =1  AND deleted = 0
     AND date(date_add(conversion_time, INTERVAL - 4 HOUR)) >= "%(start_date)s"
     AND date(date_add(conversion_time, INTERVAL - 4 HOUR)) <= "%(end_date)s"
     AND external_advertiser_id = %(advertiser_id)s
@@ -55,13 +55,13 @@ class DataBase(object):
         df = self.db.select_dataframe(ALL_DATA%{'advertiser_id': advertiser_id, 'start_date':start_date, 'end_date':end_date}).fillna(0)
 
         df['date'] = pd.to_datetime(df['date'])
-        df['campaign_id'] = df['campaign_id'].astype(str)
+        df['campaign_id'] = df['campaign_id'].astype(int).astype(str)
         logging.info("retrieved data")
         return df
 
     def get_campaigns(self, advertiser_id):
         df =  self.db.select_dataframe(CAMPAIGNS%{'advertiser_id':advertiser_id})
-        df['campaign_id'] = df['campaign_id'].astype(str)
+        df['campaign_id'] = df['campaign_id'].astype(int).astype(str)
         return df
 
 
