@@ -1,0 +1,326 @@
+{% autoescape None %}
+
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<head>
+<script src="//d3js.org/d3.v3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.8.5/nv.d3.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.28.10/js/jquery.tablesorter.min.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/static/nv.css">
+<script src="/static/campaign_metrics.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+</head>
+
+<style>
+
+table.tablesorter {font-family:arial;background-color: #CDCDCD;margin:10px 0pt 15px;font-size: 10pt;width: 100%;text-align: left;}table.tablesorter thead tr th, table.tablesorter tfoot tr th {background-color: #e6EEEE;border: 1px solid #FFF;font-size: 10pt;padding: 4px;}table.tablesorter thead tr .header {background-image: url(bg.gif);background-repeat: no-repeat;background-position: center right;cursor: pointer;}table.tablesorter tbody td {color: #3D3D3D;padding: 4px;background-color: #FFF;vertical-align: top;}table.tablesorter tbody tr.odd td {background-color:#F0F0F6;}table.tablesorter thead tr .headerSortUp {background-image: url(asc.gif);}table.tablesorter thead tr .headerSortDown {background-image: url(desc.gif);}table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSortUp {background-color: #8dbdd8;}
+/*    .chart svg {
+      height: 350px;
+      width: 700px;
+    }*/
+
+    .chart {
+      height: 350px;
+      width: 850px;
+    }
+    .node {
+        cursor: pointer;
+    }
+    .node circle {
+      fill: #fff;
+      stroke: steelblue;
+      stroke-width: 1.5px;
+    }
+
+    .node text {
+      font: 10px sans-serif;
+    }
+
+    .link {
+      fill: none;
+      stroke: #ccc;
+      stroke-width: 1.5px;
+    }
+    select {
+        margin:10px;
+    }
+    table tr:nth-child(even){background-color: #f2f2f2;}
+    table tr:hover {background-color: #ddd;}
+/*    td{
+        width:10px;
+    }*/
+
+</style>
+
+<body>
+    <div id="line-item" style="display:inline-block">
+        
+        <div id="campaignTree" style="position:relative; left:10px;"></div>
+
+    <div id="campaign-metrics" style="display:inline-block margin:10px"></div>
+
+<script>
+
+    var metrics = {{metrics}}
+
+    var svg = d3.select("#campaignTree").selectAll("svg").data([metrics]).enter().append("svg")
+
+    var margin = {top: 5, right: 120, bottom: 20, left: 120},
+    width = 1000 - margin.right - margin.left,
+    height = 1000 - margin.top - margin.bottom;
+
+    var i = 0,
+        duration = 750,
+        root;
+
+    var tree = d3.layout.tree()
+        .size([height, width]);
+
+    var diagonal = d3.svg.diagonal()
+        .projection(function(d) { return [d.y, d.x]; });
+
+
+    svg.attr("width", width + margin.right + margin.left)
+        .attr("height", height + margin.top + margin.bottom)
+    
+    var g = svg.append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    var root = {{tree}}
+    root.x0 = height ;
+    root.y0 = 0;
+
+    function collapse(d) {
+        if (d.children) {
+            d._children = d.children;
+            d._children.forEach(collapse);
+            d.children = null;
+        }
+    }
+    root.children.forEach(collapse);
+
+    update(root)
+
+
+    d3.select(self.frameElement).style("height", "800px");
+
+    function update(source) {
+
+        // Compute the new tree layout.
+        var nodes = tree.nodes(root).reverse(),
+            links = tree.links(nodes);
+
+        // Normalize for fixed-depth.
+        nodes.forEach(function(d) { d.y = d.depth * 180; });
+
+        // Update the nodes…
+        var node = g.selectAll("g.node")
+            .data(nodes, function(d) { return d.id || (d.id = ++i); });
+
+        // Enter any new nodes at the parent's previous position.
+        var nodeEnter = node.enter().append("g")
+            .attr("class", "node")
+            .attr("transform", function(d) { debugger; return "translate(" + source.y0 + "," + source.x0*2 + ")"; })
+            .on("click", click);
+
+        nodeEnter.append("circle")
+            .attr("r", 1e-6)
+            .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
+
+        var nodeLink = nodeEnter.append("a")
+        nodeLink.append("text")
+            .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
+            .attr("dy", ".35em")
+            .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
+            .text(function(d) { return d.name; })
+            .style("fill-opacity", 1e-6)
+            .style({ "font": "14px sans-serif" });
+
+        nodeLink.on("click", function(d){
+
+            var data  = d3.select("#campaignTree").selectAll("svg").datum()
+            var wrapper = d3.select("#campaign-metrics")
+            wrapper.selectAll("*").remove()
+
+            var filtered_data = data.filter(function(x){ return x[d['level']] == d['name'] })
+
+            columns = ['campaign_id','campaign_name','cpa_30d','cpa_7d','conv_7d','imps_yest','media_cost_yest','conv_yest', 'imps_today','media_cost_today']
+
+            var columns = columns.map(function(x){
+                var obj =  {
+                    'name': x,
+                    'type': 'text',
+                    'class': 'metricValue'
+                }
+                if( x.indexOf('cpa') > -1 || x.indexOf('media_cost') > -1){
+                    obj['formatter'] =  d3.format("$,.2f")
+                }
+                if( x.indexOf('imps') > -1 || x.indexOf('conv') > -1){
+                    obj['formatter'] =  d3.format(",.0f")
+                }
+                return obj
+            })
+
+            var table = make_table(wrapper, columns, filtered_data)
+            table.classed("tablesorter table-striped table-hover",true).attr("id","optTable")
+            table.style({'width': "50px"})
+            $("#optTable").tablesorter()
+
+        })
+
+
+        nodeEnter.append("text")
+            .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
+            .attr("dx", "1.5em")
+            .attr("dy", "2em")
+            .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
+            .text(function(d) { return "Yest Spend : "+ d3.format('$,.2f')(d['metrics']['media_cost_yest']); })
+
+        nodeEnter.append("text")
+            .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
+            .attr("dx", "1.5em")
+            .attr("dy", "3.5em")
+            .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
+            .text(function(d) { return "Yest CPA : "+ d3.format('$,.2f')(d['metrics']['cpa_yest']); })
+
+        nodeEnter.append("text")
+            .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
+            .attr("dx", "1.5em")
+            .attr("dy", "5em")
+            .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
+            .text(function(d) {  return "7d CPA : "+ d3.format('$,.2f')(d['metrics']['cpa_7d']); })
+
+
+        // Transition nodes to their new position.
+        var nodeUpdate = node.transition()
+            .duration(duration)
+            .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
+
+        nodeUpdate.select("circle")
+            .attr("r", 4.5)
+            .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
+
+        nodeUpdate.select("text")
+            .style("fill-opacity", 1);
+
+        // Transition exiting nodes to the parent's new position.
+        var nodeExit = node.exit().transition()
+            .duration(duration)
+            .attr("transform", function(d) { return "translate(" + source.y + "," + source.x + ")"; })
+            .remove();
+
+        nodeExit.select("circle")
+            .attr("r", 1e-6);
+
+        nodeExit.select("text")
+            .style("fill-opacity", 1e-6);
+
+        // Update the links…
+        var link = g.selectAll("path.link")
+            .data(links, function(d) { return d.target.id; });
+
+        // Enter any new links at the parent's previous position.
+        link.enter().insert("path", "g")
+            .attr("class", "link")
+            .attr("d", function(d) {
+                var o = {x: source.x0, y: source.y0};
+                return diagonal({source: o, target: o});
+            });
+
+        // Transition links to their new position.
+        link.transition()
+            .duration(duration)
+            .attr("d", diagonal);
+
+      // Transition exiting nodes to the parent's new position.
+        link.exit().transition()
+            .duration(duration)
+            .attr("d", function(d) {
+                var o = {x: source.x, y: source.y};
+                return diagonal({source: o, target: o});
+            })
+            .remove();
+
+        // Stash the old positions for transition.
+        nodes.forEach(function(d) {
+            d.x0 = d.x;
+            d.y0 = d.y;
+        });
+    }
+
+    // Toggle children on click.
+    function click(d) {
+        if (d.children) {
+          d._children = d.children;
+          d.children = null;
+        } else {
+          d.children = d._children;
+          d._children = null;
+        }
+        update(d);
+    }
+
+
+var make_table = function(selection, columns, data){
+
+  var table = selection.append('table').classed('table',true)
+  
+  thead = table.append('thead')
+
+  thead.append('tr')
+   .selectAll('th')
+   .data(columns).enter()
+   .append('th')
+   .text(function(x){return x['name']});
+  
+  
+  tbody = table.append('tbody')
+
+  
+  var trows = tbody
+    .selectAll('tr')
+    .data(data).enter()
+    .append('tr')
+  
+  
+  trows.selectAll('td')
+    .data(function(row) {
+        return columns.map(function(c){
+            debugger;
+            var cell = {}
+            cell['name'] = c['name']
+            cell['value'] = c['formatter'] ? c['formatter'](row[c['name']]) : row[c['name']]
+            cell['class']= c['class']
+            cell['type'] = c['type']
+            cell['text'] = c['text']
+            
+            return cell 
+        })
+    })
+    .enter()
+    .append('td')
+    .attr('class',function(x){
+            return x['class']
+    })
+    .text(function(x){
+        var k = x['text']!= null ? x['text'] : x['value']
+        return k
+  })
+  //trows.selectAll('td').append('br')
+  trows.selectAll('td').append(function(d){
+        return document.createElement(d['type'])
+  })
+  
+  
+  return table
+
+}
+
+
+
+
+</script>
+</body>

@@ -1,0 +1,451 @@
+{% autoescape None %}
+
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<head>
+<script src="//d3js.org/d3.v3.min.js"></script>
+<script src="//d3js.org/colorbrewer.v1.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.8.5/nv.d3.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.28.10/js/jquery.tablesorter.min.js"></script>
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+</head>
+
+<style>
+
+/* tables */
+    table.tablesorter {
+        font-family:arial;background-color: #CDCDCD;margin:10px 0pt 15px;font-size: 10pt;width: 100%;text-align: left;
+    }
+
+    table.tablesorter thead tr th, table.tablesorter tfoot tr th {
+        background-color: #e6EEEE;border: 1px solid #FFF;font-size: 10pt;padding: 4px;
+    }
+
+    table.tablesorter thead tr .header {background-image: url(bg.gif);background-repeat: no-repeat;background-position: center right;cursor: pointer;}
+
+    table.tablesorter tbody td {
+        color: #3D3D3D;padding: 4px;background-color: #FFF;vertical-align: top;
+    }
+    table.tablesorter tbody tr.odd td {
+        background-color:#F0F0F6;}table.tablesorter thead tr .headerSortUp {background-image: url(asc.gif);
+    }
+    table.tablesorter thead tr .headerSortDown {
+        background-image: url(desc.gif);
+    }
+
+    table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSortUp {background-color: #8dbdd8;}
+
+    tr:nth-child(even){background-color: #f2f2f2}
+
+
+    .chart {
+      height: 350px;
+      width: 850px;
+    }
+    .node {
+        cursor: pointer;
+    }
+
+    .node text {
+      font: 10px sans-serif;
+    }
+
+    .link {
+      fill: none;
+      stroke: #ccc;
+      stroke-width: 1.5px;
+    }
+    div.tooltip {   
+    position: absolute;         
+    text-align: center;         
+/*    width: 60px;                    
+    height: 28px;                   
+*/    padding: 2px;               
+    font: 10px sans-serif;      
+    background: lightsteelblue; 
+    border: 0px;        
+    border-radius: 8px;         
+    pointer-events: none;           
+}
+
+
+
+</style>
+
+<body>
+
+
+<script>
+
+    var campaign_metrics = {{campaign_metrics}};
+
+
+    var cpa_range = d3.extent(campaign_metrics, function(d){return d['cpa_attr_7d']})
+    cpa_range.reverse()
+    var colorScale = d3.scale.quantize()
+        .range(colorbrewer.RdYlGn[8])
+        .domain(cpa_range);
+
+    var diameter = 1000;
+
+    var margin = {top: 50, right: 120, bottom: 20, left: 180},
+        width = diameter,
+        height = diameter;
+        
+    var i = 0,
+        duration = 350,
+        root;
+
+    var tree = d3.layout.tree()
+        .size([360, diameter / 2 - 80])
+        .separation(function(a, b) { return (a.parent == b.parent ? 20: 10) / a.depth; });
+
+    var diagonal = d3.svg.diagonal.radial()
+        .projection(function(d) { return [d.y, d.x / 180 * Math.PI]; });
+
+    var svg = d3.select("body").append("svg")
+        .attr("width", width )
+        .attr("height", height )
+      .append("g")
+        .attr("transform", "translate(" + diameter / 2 + "," + diameter / 2 + ")");
+
+    root = {{tree}};
+
+    root.x0 = height / 2;
+    root.y0 = 0;
+
+    update(root, 150);
+
+    d3.select(self.frameElement).style("height", "1300px");
+    
+    // Tooltip
+    var tooltip = d3.select("body").append("div")   
+    .attr("class", "tooltip")               
+    .style("opacity", 0);
+
+
+    svg.selectAll("text")
+        .on("mouseover", function(d) {      
+            tooltip.style("opacity", 2);      
+            tooltip.html(
+                function(x){
+                    var tooltipColumns = ["imps_30d", "attr_conv_7d","cpa_attr_7d", "media_cost_yest","imps_yest"]
+                    var tooltipString = tooltipColumns.map(function(t){
+                        return t + ": "  + (formatter(t) ? formatter(t)(d.metrics[t]) : d.metrics[t]) + "<br>" 
+                    })
+                    .join("")
+                    tooltipString = d.name + "<br>" + tooltipString
+                    return tooltipString
+                }
+
+            ) 
+                .style("left", (d3.event.pageX) + "px")     
+                .style("top", (d3.event.pageY - 28) + "px");  
+            })  
+        .on("mousemove", function(d) {      
+            tooltip.style("opacity", 2);      
+            tooltip.html(
+                function(x){
+                    var tooltipColumns = ["imps_30d", "attr_conv_7d","cpa_attr_7d", "media_cost_yest","imps_yest"]
+                    var tooltipString = tooltipColumns.map(function(t){
+                        return t + ": "  + (formatter(t) ? formatter(t)(d.metrics[t]) : d.metrics[t]) + "<br>" 
+                    })
+                    .join("")
+                    tooltipString = d.name + "<br>" + tooltipString
+                    return tooltipString
+                }
+
+            ) 
+                .style("left", (d3.event.pageX) + "px")     
+                .style("top", (d3.event.pageY - 28) + "px");  
+            })                 
+        .on("mouseout", function(d) {       
+            tooltip.transition()        
+                .style("opacity", 0);   
+        });
+
+    // Optimization Tree
+    function update(source, depth) {
+
+        // Compute the new tree layout.
+        var nodes = tree.nodes(root),
+        links = tree.links(nodes);
+
+
+        var nested = d3.nest().key(function(d){return d.depth}).entries(nodes)
+
+        // Normalize for fixed-depth.
+        nodes.forEach(function(d) { 
+            d.y = d.depth * depth; 
+        });
+
+        // Update the nodes…
+        var node = svg.selectAll("g.node")
+            .data(nodes, function(d) { return d.id || (d.id = ++i); });
+
+        // Enter any new nodes at the parent's previous position.
+        var nodeEnter = node.enter().append("g")
+            .attr("class", "node")
+            //.on("click", click);
+
+        nodeEnter.append("circle")
+            .attr("r", 1e-6)
+            .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
+
+        nodeEnter.append("text")
+            .attr("x", 10)
+            .attr("dy", ".35em")
+            .attr("text-anchor", function(d){
+                if(d.depth == 0){
+                    return "middle"
+                }
+                else if((d.x%360)  <= 180){
+                    return "start"
+                }
+                else{
+                    return "end"
+                }
+            })
+            .text(function(d) { return d.name })
+            .style("fill-opacity", 1e-6);
+
+        // Transition nodes to their new position.
+        var nodeUpdate = node.transition()
+            .duration(duration)
+            .attr("transform", function(d) { return "rotate(" + (d.x - 90) + ")translate(" + d.y + ")"; })
+
+        nodeUpdate.select("circle")
+            .attr("r", function(d){
+                return Math.max(3,d['metrics']["media_cost_yest"]/2.)
+            })
+            .style("fill", function(d) { 
+                return colorScale(d['metrics']["cpa_attr_7d"] == 0 ? cpa_range[0]: d['metrics']["cpa_attr_7d"])
+            })
+
+        nodeUpdate.select("text")
+            .style("fill-opacity", 1)
+            .attr("transform", function(d) { 
+                if (d.depth==0){
+                    return "rotate(-90)"
+                } else{
+                    return (d.x%360)  <= 180 ? "translate(0)" : "rotate(180)translate(-" + (d.name.length-10)  + ")"; 
+                }
+            });
+
+        var nodeExit = node.exit().transition()
+            .duration(duration)
+            //.attr("transform", function(d) { return "diagonal(" + source.y + "," + source.x + ")"; })
+            .remove();
+
+        nodeExit.select("circle")
+            .attr("r", 1e-6);
+
+        nodeExit.select("text")
+            .style("fill-opacity", 1e-6);
+
+        // Update the links…
+        var link = svg.selectAll("path.link")
+            .data(links, function(d) { return d.target.id; });
+
+        // Enter any new links at the parent's previous position.
+        link.enter().insert("path", "g")
+            .attr("class", "link")
+            .attr("d", function(d) {
+                var o = {x: source.x0, y: source.y0};
+                return diagonal({source: o, target: o});
+            });
+
+        // Transition links to their new position.
+        link.transition()
+            .duration(duration)
+            .attr("d", diagonal);
+
+        // Transition exiting nodes to the parent's new position.
+        link.exit().transition()
+            .duration(duration)
+            .attr("d", function(d) {
+                var o = {x: source.x, y: source.y};
+                return diagonal({source: o, target: o});
+            })
+            .remove();
+
+        // Stash the old positions for transition.
+        nodes.forEach(function(d) {
+            d.x0 = d.x;
+            d.y0 = d.y;
+        });
+
+    }
+
+    // Toggle children on click.
+    function click(d) {
+      if (d.children) {
+        d._children = d.children;
+        d.children = null;
+      } else {
+        d.children = d._children;
+        d._children = null;
+      }
+      
+      update(d);
+    }
+
+    // Collapse nodes
+    function collapse(d) {
+      if (d.children) {
+          d._children = d.children;
+          d._children.forEach(collapse);
+          d.children = null;
+        }
+    }
+
+
+    d3.select(".campaign_metrics").data([campaign_metrics]).enter().append('div').classed("campaign_metrics",true)
+
+    d3.selectAll("svg").selectAll("text").on("click", function(d){
+
+        var columns = [ 'campaign_id','campaign_name','imps_30d','cpa_attr_7d','attr_conv_7d',
+                    'imps_yest','media_cost_yest', 
+                    'imps_today','media_cost_today', 'cpm','bid','budget', 'enable_pacing']
+
+        var campaigns = d3.select(".campaign_metrics").data()[0].filter(function(x){
+            return d.campaigns.indexOf(x.campaign_id) > - 1
+        })
+
+        columns = columns.map(function(x){
+            var obj =  {
+                'name': x,
+                'type': 'text',
+                'formatter': formatter(x)
+            }
+            if (x == "budget" || x == "bid"  || x == "enable_pacing"){
+                obj['class']=x
+                obj['type']="input"
+            }
+            return obj
+        })
+
+        d3.select("body").selectAll("table").remove()
+
+        var table = make_table(d3.select("body"), columns, campaigns)
+        table.classed("tablesorter table-striped table-hover table-bordered",true).attr("id","optTable")
+        table.attr("border", "1px solid gray").attr("rules","rows")
+        table.style({'width': "50px"})
+        table.selectAll("input").classed("input-small",true)
+
+        $("#optTable").tablesorter()
+
+    })
+
+
+    var commit = d3.select("body").append("a")
+        .classed("btn-success btn btn-small btn-default", true)
+        .text("Commit All")
+
+    commit.on("click", function(x){
+
+        var adjustments = d3.selectAll("table").selectAll("input")[0].map(function(x){  
+            var old = d3.select(x).datum()['value']
+            var value = d3.select(x).property("value")
+            var field = d3.select(x).datum()['name']
+            var campaign_id = d3.select(x.parentNode.parentNode).datum()['campaign_id']
+
+            if (field == "budget"){
+                field = d3.select(x.parentNode.parentNode).datum()['budget_type']
+            }
+            if (field == "bid"){
+                field = d3.select(x.parentNode.parentNode).datum()['bid_type']
+            }
+
+            if( d3.select(x).property("value") != "" ){
+                return {'field':field, 'new':value, "campaign_id": campaign_id, "old":old}
+            }
+        }) 
+        adjustments = adjustments.filter(function(n){ return n != undefined })
+
+        var advertiser = getParameterByName("advertiser")
+        d3.xhr("/adjustments?advertiser="+advertiser).post(JSON.stringify(adjustments))
+
+    })
+
+    function formatter(x){
+        if( x.indexOf('cpa') > -1 || x.indexOf('media_cost') > -1  || x.indexOf('cpm') > -1){
+            return d3.format("$,.2f")
+        }
+
+        if( x.indexOf('imps') > -1 || x.indexOf('conv') > -1){
+            return d3.format(",.0f")
+        }
+    }
+
+    function make_table(selection, columns, data){
+
+      var table = selection.append('table').classed('table',true)
+      
+      thead = table.append('thead')
+
+      thead.append('tr')
+       .selectAll('th')
+       .data(columns).enter()
+       .append('th')
+       .text(function(x){return x['name']});
+      
+      
+      tbody = table.append('tbody')
+
+      
+      var trows = tbody
+        .selectAll('tr')
+        .data(data).enter()
+        .append('tr')
+      
+      
+      trows.selectAll('td')
+        .data(function(row) {
+            return columns.map(function(c){
+                var cell = {}
+                cell['name'] = c['name']
+                cell['value'] = c['formatter'] ? c['formatter'](row[c['name']]) : row[c['name']]
+                cell['class']= c['class']
+                cell['type'] = c['type']
+                cell['text'] = c['text']
+                
+                return cell 
+            })
+        })
+        .enter()
+        .append('td')
+        .attr('class',function(x){
+                return x['class']
+        })
+        .text(function(x){
+            var k = x['text']!= null ? x['text'] : x['value']
+            return k
+      })
+      trows.selectAll('td').append(function(d){
+            return document.createElement(d['type'])
+      })
+      
+      return table
+
+    }
+
+    function getParameterByName(name, url) {
+        if (!url) url = window.location.href;
+        name = name.replace(/[\[\]]/g, "\\$&");
+        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+            results = regex.exec(url);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
+
+
+</script>
+</body>
