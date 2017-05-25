@@ -29,6 +29,7 @@ if __name__ == '__main__':
     connectors = {
         "db": lnk.dbs.rockerbox,
         "reporting": lnk.dbs.reporting,
+        "api": lnk.api.console
     }
 
     routes = [
@@ -36,6 +37,7 @@ if __name__ == '__main__':
         (r'/metrics', MetricsHandler, connectors),
         (r'/opt', OptimizationHandler, connectors),
         (r'/campaign', CampaignHandler, connectors),
+        (r'/adjustments', AdjustmentHandler, connectors),
         (r'/static/(.*)', tornado.web.StaticFileHandler, {"path":"static"}),
 
     ]

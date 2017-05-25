@@ -282,13 +282,11 @@
 
         columns = [ 'campaign_id','campaign_name','cpa_rb_7d','conv_rb_7d',
                     'imps_yest','media_cost_yest', 
-                    'imps_today','media_cost_today', 'budget','bid']
+                    'imps_today','media_cost_today', 'budget','bid', 'enable_pacing']
 
         var campaigns = d3.select(".campaign_metrics").data()[0].filter(function(x){
             return d.campaigns.indexOf(x.campaign_id) > - 1
         })
-
-        debugger;
 
         var columns = columns.map(function(x){
             var obj =  {
@@ -301,14 +299,8 @@
             if( x.indexOf('imps') > -1 || x.indexOf('conv') > -1){
                 obj['formatter'] =  d3.format(",.0f")
             }
-            if (x == "budget"){
-                obj['class']="budget"
-                // obj['text']=""
-                obj['type']="input"
-            }
-            if (x == "bid"){
-                obj['class']="bid"
-                // obj['text']= ""
+            if (x == "budget" || x == "bid"  || x == "enable_pacing"){
+                obj['class']=x
                 obj['type']="input"
             }
             return obj
@@ -323,7 +315,35 @@
 
     })
 
-    
+
+    var commit = d3.select("body").append("a")
+        .classed("btn-success btn btn-small btn-default", true)
+        .text("Commit All")
+
+    commit.on("click", function(x){
+
+        var adjustments = d3.selectAll("table").selectAll("input")[0].map(function(x){  
+            var old = x['value']
+            var value = d3.select(x).property("value")
+            var field = d3.select(x).datum()['name']
+            var campaign_id = d3.select(x.parentNode.parentNode).datum()['campaign_id']
+
+            if (field == "budget"){
+                field = d3.select(x.parentNode.parentNode).datum()['budget_type']
+            }
+            if (field == "bid"){
+                field = d3.select(x.parentNode.parentNode).datum()['bid_type']
+            }
+
+            if( d3.select(x).property("value") != "" ){
+                return {'field':field, 'new':value, "campaign_id": campaign_id, "old":old}
+            }
+        }) 
+        adjustments = adjustments.filter(function(n){ return n != undefined })
+
+        d3.xhr("/adjustments?advertiser=430556").post(JSON.stringify(adjustments))
+
+    })
 
 
     function make_table(selection, columns, data){
