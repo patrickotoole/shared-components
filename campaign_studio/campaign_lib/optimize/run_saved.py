@@ -82,6 +82,9 @@ def run(name=False):
             
             if 'transforms' not in _json.keys():
                 _json['transforms'] = [{'name':"null", 'eval':"1"}]
+            else:
+                _json['transforms'] = [x for x in _json['transforms'] if x['eval']!=""] + [{'name':"null", 'eval':"1"}]
+
             logging.info("opt - transforming: " + json.dumps(_json['transforms']) )
             data = run_transform(_json)
 
