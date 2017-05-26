@@ -3,6 +3,7 @@ import kafka
 from pykafka import KafkaClient
 import urlparse
 import ujson
+import logging
 
 BASE_QUERY = "insert into pmp.bids (biddable_auction_id, auction_key, json_object) values "
 
@@ -27,6 +28,7 @@ if __name__ == '__main__':
         if message is not None:
             try:
                 msg = ujson.loads(message.value)
+                logging.info(msg)
                 auction_id = msg.get('auction_id', False)
                 key = msg.get('key',False)
                 if key and auction_id:
@@ -35,4 +37,5 @@ if __name__ == '__main__':
                         batch_insert(batch)
                         batch = []
             except:
-                print message.value
+                logging.info("error")
+                logging.info(message.value)

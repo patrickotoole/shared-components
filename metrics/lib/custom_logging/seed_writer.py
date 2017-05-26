@@ -3,6 +3,7 @@ import kafka
 from pykafka import KafkaClient
 import urlparse
 import ujson
+import logging
 
 BASE_QUERY = "insert into pmp.seed (seed_auction_id, json_object) values "
 
@@ -32,4 +33,5 @@ if __name__ == '__main__':
                     batch_insert(batch)
                     batch = []
             except:
-                print message.value
+                logging.info("error")
+                logging.info(message.value)
