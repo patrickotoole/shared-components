@@ -47,7 +47,7 @@ def run_filter(df,opt_json):
     import pandas 
     return json.loads(data)
 
-def run(name=False):
+def run(name=False, advertiser=False):
     from link import lnk
 
     db = lnk.dbs.crushercache
@@ -55,10 +55,11 @@ def run(name=False):
     api = lnk.api.console
     logging.info("opt - initialized connectors")
 
-    if not name:
-        df = db.select_dataframe("SELECT * FROM recurring_optimizations where days like concat('%',DATE_FORMAT(NOW(),'%a'),'%')  and time like concat('%',DATE_FORMAT(NOW(),'%H'),'%') ")
+    if name and advertiser:
+        df = db.select_dataframe("SELECT * FROM optimization where name = '%s' and active = 1 and deleted = 0 and advertiser_id = %s" % (name, advertiser))
     else:
-        df = db.select_dataframe("SELECT * FROM optimization where name = '%s' and active = 1 and deleted = 0" % name)
+        df = db.select_dataframe("SELECT * FROM recurring_optimizations where days like concat('%',DATE_FORMAT(NOW(),'%a'),'%')  and time like concat('%',DATE_FORMAT(NOW(),'%H'),'%') ")
+        
 
 
     logging.info("opt - found scheduled jobs: %s" % len(df))
@@ -119,8 +120,11 @@ if __name__ == "__main__":
     from lib.report.utils.loggingutils import basicConfig
 
     define('console', default=True)
+    define('name', default=False)
+    define('advertiser', default=False)
+
 
     parse_command_line()
     basicConfig(options=options)
 
-    run()
+    run(options.name, options.advertiser)
