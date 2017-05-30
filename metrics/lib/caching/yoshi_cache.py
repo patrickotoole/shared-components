@@ -43,11 +43,10 @@ class YoshiCaching():
             data = False
         return data
 
-    def run_advertiser_endpoints(self,endpoints):
-        for endpoint in endpoints["mediaplans"]:
+    def run_advertiser_endpoints(self,endpoints, advertiser):
+        for endpoint in endpoints["response"]:
             name = endpoint['name']
-            url = endpoint["mediaplan_url"]
-            advertiser = endpoint["advertiser"]
+            url = endpoint["endpoint"]
             resp  = self.request_hindsight(url, advertiser)
             if resp:
                 compressed = self.compress_data(resp)
@@ -79,12 +78,13 @@ def runner(**kwargs):
     crushercache = kwargs["crushercache"] if kwargs.get("crushercache", False) else kwargs["connectors"]["crushercache"]
     db = kwargs["rockerbox"] if kwargs.get("rockerbox",False) else kwargs["connectors"]["db"]
     hindsight = kwargs["hindsight"] if kwargs.get("hindsight",False) else kwargs["connectors"]["crusher_wrapper"]
+    hindsight.base_url='http://localhost:9001'
     hindsight.authenticate()
     yc = YoshiCaching(crushercache, db, hindsight)
     advertisers = yc.get_advertisers()
     for advertiser,segments in advertisers.items():
         endpoints = yc.select_endpoint(advertiser)
-        yc.run_advertiser_endpoints(endpoints)
+        yc.run_advertiser_endpoints(endpoints, advertiser)
 
 
 if __name__ == "__main__":
