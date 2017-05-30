@@ -12,6 +12,6 @@ class TestHandler(BaseHandler):
 
     @tornado.web.authenticated
     def get(self,*args):
-        self.write(ujson({"value":"test"}))
+        self.write(ujson.dumps({"value":"test"}))
         self.finish()
 

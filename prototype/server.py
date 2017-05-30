@@ -22,6 +22,7 @@ define("port", default=8888, help="run on the given port", type=int)
 from link import lnk
 
 from handlers.test import *
+from handlers.api import *
 
 if __name__ == '__main__':
 
@@ -30,6 +31,7 @@ if __name__ == '__main__':
     connectors = {
         "db": lnk.dbs.rockerbox,
         "crushercache": lnk.dbs.crushercache,
+        "prototype": lnk.dbs.crushercache,
     }
 
 
@@ -39,6 +41,7 @@ if __name__ == '__main__':
     
 
     routes = [
+        (r'/prototype', ApiHandler, connectors),
         (r'/', TestHandler, connectors),
     ]
 
