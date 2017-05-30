@@ -1,6 +1,9 @@
 import logging
 from link import lnk
 import datetime
+from lib.custom_logging.check_logger import KafkaHandler
+from lib.kafka_stream import kafka_stream
+import sys
 
 ADVERTISERS = "select pixel_source_name from advertiser_caching where valid_pixel_fires_yesterday=1"
 SEGMENTS = "select a.action_id, a.action_name, a.url_pattern from action_with_patterns a join action b on a.action_id = b.action_id where a.pixel_source_name = '%s' and b.deleted=0 and b.active=1"
@@ -71,7 +74,8 @@ class CheckSegmentData():
         yesterday_date = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
         data_from_db = self.crushercache.select_dataframe(QUERY_YESTERDAY % (filter_id,yesterday_date))
         has_data_yesterday = 0 if len(data_from_db)==0 else data_from_db['pixel_fires'][0]
-        if str(has_data_yesterday) != str(check):
+        check_as_bin = 1 if check else 0
+        if str(has_data_yesterday) != str(check_as_bin):
             logging.info("changed expectation: segment %s changed from %s to %s" % (filter_id, has_data_yesterday, check))
 
     def update_db(self,has_data, advertiser, filter_id, pattern, job_id):
@@ -94,4 +98,28 @@ if __name__ =="__main__":
     import hashlib
     timestamp = datetime.datetime.now().strftime("%Y-%d-%m %HH:%MM:%SS")
     job_id=hashlib.md5(timestamp).hexdigest() 
+    
+    #USE OLD logging to kafka to allow chronos jobs to log to graylog via application_log queue
+    producer = kafka_stream.KafkaStream('application_log',"slave17:9092,slave16:9092,slave40:9092",True,False,False,10,1,False)
+
+    log_object = logging.getLogger()
+    log_object.setLevel(logging.INFO)
+
+    requests_log = logging.getLogger("kafka")
+    requests_log.setLevel(logging.WARNING)
+
+    ch = logging.StreamHandler(sys.stderr)
+    ch.setLevel(logging.INFO)
+
+    ch2 = KafkaHandler(producer, "segment_checks")
+    formater = logging.Formatter('%(asctime)s |%(name)s.%(funcName)s:%(lineno)d| %(message)s')
+    ch2.setFormatter(formater)
+    ch2.setLevel(logging.INFO)
+
+    log_object.addHandler(ch2)
+
+
+    #RUN chronos job
     csd.iter_segments(job_id)
+
+
