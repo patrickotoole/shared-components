@@ -6,7 +6,7 @@ import time
 import logging
 import json
 
-from base import BaseHandler
+from ..base import BaseHandler
 from twisted.internet import defer
 from lib.helpers import *
 from lib import custom_defer

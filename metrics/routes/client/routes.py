@@ -178,7 +178,7 @@ class AdvertiserRoutes(Routes):
         import handlers.pixel_status as pixel_status
         import handlers.analytics.domains.user as user
         import handlers.analytics.domains.visitor as visitor
-        import handlers.adwords_mediaplan as adwords
+        import handlers.mediaplans.adwords_mediaplan as adwords
 
         return [
             (r'/adwords_mediaplan', adwords.AdwordsHandler, self.connectors),
