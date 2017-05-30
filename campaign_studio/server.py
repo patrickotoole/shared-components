@@ -50,7 +50,6 @@ class SaveHandler(tornado.web.RequestHandler):
         name = body['name']
         _type = body['type']
         advertiser = body['advertiser']
-           
         self.db.execute("INSERT INTO optimization (advertiser_id,name,type,state) VALUES (%s,%s,%s,%s) ON DUPLICATE KEY UPDATE state = %s", (advertiser,name,_type,self.request.body, self.request.body) )
 
         self.write('{"response":"success"}')
@@ -142,7 +141,8 @@ class OptimizeHandler(tornado.web.RequestHandler):
             runner.runner(dparams,dd['data'],self.api,dd['name'])
         else:
             import requests
-            url = "http://workqueue.crusher.getrockerbox.com/jobs"
+            # url = "http://workqueue.crusher.getrockerbox.com/jobs"
+            url = "http://localhost:8888/jobs"
 
             opt_name = dd.get('name')
             advertiser = filter(lambda x: x['key']=='advertiser', dd.get('params'))[0]['value']

@@ -89,8 +89,11 @@ def run(opt_name=False, advertiser=False):
             logging.info("opt - transforming: " + json.dumps(_json['transforms']) )
             data = run_transform(_json)
 
-            logging.info("opt - filtering: " + json.dumps(_json['filters']) )
-            filter_data = run_filter(data, _json)
+            if 'filters' in _json.keys():
+                logging.info("opt - filtering: " + json.dumps(_json['filters']) )
+                filter_data = run_filter(data, _json)
+            else:
+                filter_data = data
 
             logging.info("opt - filtered data: %s to %s" % (len(data) , len(filter_data)) )
 
