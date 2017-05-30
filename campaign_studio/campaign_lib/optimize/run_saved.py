@@ -13,8 +13,7 @@ def get_data(_json,api,reporting):
 
 
     if _json.get("report",False):
-        dd = {'report': _json['report']}
-        raw_data = get_report(_json['report_advertiser'],dd,api,reporting)
+        raw_data = get_report(_json['report_advertiser'],_json,api,reporting)
 
     if _json.get("sql",False):
         raw_data = get_sql(_json['sql_advertiser'],_json, reporting)
