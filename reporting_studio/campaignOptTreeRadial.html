@@ -221,37 +221,38 @@ svg.selectAll("text").on("click", function(d){
     table.style({'width': "50px"})
     table.selectAll("input").classed("input-small",true)
 
+    commit.on("click", function(x){
+        var adjustments = table.selectAll("input")[0].map(function(x){  
+
+            var old = d3.select(x).datum()['value']
+            var value = d3.select(x).property("value")
+            var field = d3.select(x).datum()['name']
+            var campaign_id = d3.select(x.parentNode.parentNode).datum()['campaign_id']
+
+            if (field == "budget"){
+                field = d3.select(x.parentNode.parentNode).datum()['budget_type']
+            }
+            if (field == "bid"){
+                field = d3.select(x.parentNode.parentNode).datum()['bid_type']
+            }
+
+            if( d3.select(x).property("value") != "" ){
+                return {'field':field, 'new':value, "campaign_id": campaign_id, "old":old}
+            }
+        }) 
+        adjustments = adjustments.filter(function(n){ return n != undefined })
+
+        var advertiser = getParameterByName("advertiser")
+        d3.xhr("/adjustments?advertiser="+advertiser).post(JSON.stringify(adjustments))
+
+
+    })
+
     $("#optTable").tablesorter()
 
 })
 
 
-d3.selectAll("#adjustments .commit-all").on("click", function(x){
-
-    debugger;
-    var adjustments = d3.selectAll("#adjustments table input ")[0].map(function(x){  
-        var old = d3.select(x).datum()['value']
-        var value = d3.select(x).property("value")
-        var field = d3.select(x).datum()['name']
-        var campaign_id = d3.select(x.parentNode.parentNode).datum()['campaign_id']
-
-        if (field == "budget"){
-            field = d3.select(x.parentNode.parentNode).datum()['budget_type']
-        }
-        if (field == "bid"){
-            field = d3.select(x.parentNode.parentNode).datum()['bid_type']
-        }
-
-        if( d3.select(x).property("value") != "" ){
-            return {'field':field, 'new':value, "campaign_id": campaign_id, "old":old}
-        }
-    }) 
-    adjustments = adjustments.filter(function(n){ return n != undefined })
-
-    var advertiser = getParameterByName("advertiser")
-    d3.xhr("/adjustments?advertiser="+advertiser).post(JSON.stringify(adjustments))
-
-})
 
 function formatter(x){
     if( x.indexOf('cpa') > -1 || x.indexOf('media_cost') > -1  || x.indexOf('cpm') > -1){
