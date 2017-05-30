@@ -132,14 +132,25 @@ class OptimizeHandler(tornado.web.RequestHandler):
         self.render("optimize.html",campaign_templates=dd,profile_templates=pd,advertisers=ad)
 
 
-    def post(self):
+    def post(self, local = False):
         dd = json.loads(self.request.body)
+        if local:
+            import campaign_lib.optimize.parse as parse
+            dparams = parse.parse(dd)
 
-        import campaign_lib.optimize.parse as parse
-        dparams = parse.parse(dd)
+            import campaign_lib.optimize.runner as runner
+            runner.runner(dparams,dd['data'],self.api,dd['name'])
+        else:
+            import requests
+            url = "http://workqueue.crusher.getrockerbox.com/jobs"
 
-        import campaign_lib.optimize.runner as runner
-        runner.runner(dparams,dd['data'],self.api,dd['name'])
+            opt_name = dd.get('name')
+            advertiser = filter(lambda x: x['key']=='advertiser', dd.get('params'))[0]['value']
+
+            requests.post(url, data = json.dumps( {'name':'run_opt_scripts_single', 'opt_name':opt_name,'advertiser':advertiser} ),
+                auth = ('rockerbox','RBOXX2017') )
+
+
 
 
 class ReportHandler(tornado.web.RequestHandler):

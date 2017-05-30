@@ -47,7 +47,7 @@ def run_filter(df,opt_json):
     import pandas 
     return json.loads(data)
 
-def run(name=False, advertiser=False):
+def run(opt_name=False, advertiser=False):
     from link import lnk
 
     db = lnk.dbs.crushercache
@@ -55,8 +55,8 @@ def run(name=False, advertiser=False):
     api = lnk.api.console
     logging.info("opt - initialized connectors")
 
-    if name and advertiser:
-        df = db.select_dataframe("SELECT * FROM optimization where name = '%s' and active = 1 and deleted = 0 and advertiser_id = %s" % (name, advertiser))
+    if opt_name and advertiser:
+        df = db.select_dataframe("SELECT * FROM optimization where name = '%s' and active = 1 and deleted = 0 and advertiser_id = %s" % (opt_name, advertiser))
     else:
         df = db.select_dataframe("SELECT * FROM recurring_optimizations where days like concat('%',DATE_FORMAT(NOW(),'%a'),'%')  and time like concat('%',DATE_FORMAT(NOW(),'%H'),'%') ")
         
