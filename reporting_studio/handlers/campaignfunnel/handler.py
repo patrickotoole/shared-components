@@ -130,6 +130,8 @@ class CampaignHandler(tornado.web.RequestHandler, DataBase):
 
             campaign_metrics = pd.merge(campaign_metrics, campaign_params[['campaign_id','bid','bid_type','budget','budget_type']], on ='campaign_id', how = 'left')
 
+            data['date'] = data['date'].apply(lambda x: x.strftime("%Y-%m-%d %H:%M:%S"))
+            
             self.render("campaignOptTreeRadial.html", 
                         tree = json.dumps(tree[0]) , 
                         campaign_metrics = json.dumps(campaign_metrics.to_dict('records')), 

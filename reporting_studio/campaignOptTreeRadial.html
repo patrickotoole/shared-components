@@ -185,8 +185,16 @@
     d3.select("#adjustments").data([campaign_metrics]).enter().append('div').classed("campaign_metrics",true)
 
     svg.selectAll("text").on("click", function(d){
+        d3.select("#adjustments").selectAll("*").remove()
 
-        var columns = [ 'campaign_id','campaign_name','imps_30d','cpa_attr_7d','attr_conv_7d',
+        var commit = d3.select("#adjustments").append("a")
+            .classed("btn-success btn btn-small btn-default", true)
+            .text("Commit All")
+            .style("margin","5px")
+
+
+        var columns = [ 'campaign_id','campaign_name','imps_30d', "conv_30d",
+                     "media_cost_7d","imps_7d", 'cpa_attr_7d','attr_conv_7d',
                     'imps_yest','media_cost_yest', 
                     'imps_today','media_cost_today', 'cpm','bid','budget', 'enable_pacing']
 
@@ -207,8 +215,6 @@
             return obj
         })
 
-        d3.select("#adjustments").selectAll("table").remove()
-
         var table = make_table(d3.select("#adjustments"), columns, campaigns)
         table.classed("tablesorter table-striped table-hover table-bordered",true).attr("id","optTable")
         table.attr("border", "1px solid gray").attr("rules","rows")
@@ -220,9 +226,6 @@
     })
 
 
-    var commit = d3.select("body").append("a")
-        .classed("btn-success btn btn-small btn-default", true)
-        .text("Commit All")
 
     commit.on("click", function(x){
 
