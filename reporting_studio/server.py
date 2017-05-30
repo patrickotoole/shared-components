@@ -21,6 +21,10 @@ define("port", default=9001, help="run on the given port", type=int)
 from link import lnk
 from handler import *
 from handlers import *
+from slackclient import SlackClient
+
+SLACKTOKEN = "xoxp-2171079607-3074847889-26638050530-c10bb6093c"
+
 
 if __name__ == '__main__':
 
@@ -29,7 +33,8 @@ if __name__ == '__main__':
     connectors = {
         "db": lnk.dbs.rockerbox,
         "reporting": lnk.dbs.reporting,
-        "api": lnk.api.console
+        "api": lnk.api.console,
+        "slack": SlackClient(SLACKTOKEN)
     }
 
     routes = [

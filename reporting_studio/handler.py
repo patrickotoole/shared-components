@@ -32,10 +32,10 @@ def build_tree(df, groups):
     return tree
 
 def calculate_campaign_metrics(df):
-    df['cpa_30d'] = df['media_cost_30d'] / df['conv_30d']
+    # df['cpa_30d'] = df['media_cost_30d'] / df['conv_30d']
     df['cpa_7d'] = df['media_cost_7d'] / df['conv_7d']
     df['cpa_yest'] = df['media_cost_yest'] / df['conv_yest']
-    import ipdb; ipdb.set_trace()
+    # import ipdb; ipdb.set_trace()
     df['cpm'] = df['media_cost_yest'] * 1000. / df['imps_yest']
     df = df.fillna(0)
     df = df.replace([np.nan, np.inf, -np.inf],0)

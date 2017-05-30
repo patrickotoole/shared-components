@@ -9,6 +9,8 @@ from database import *
 from datetime import datetime, timedelta
 
 def clean_name(name):
+    name = name.replace("Yoshi |","")
+    name = name.replace("Delorean |","")
     return name.replace("platform_placement_targets: ","").replace("domain: ","").replace("size :","").replace("dma :","")
 
 def build_tree(df, levels, max_level):
@@ -65,9 +67,8 @@ def build_metrics(df, groups, end_date = datetime.today().strftime("%Y%m%d")):
 
     metrics['cpm'] = metrics['media_cost_yest']*1000./ metrics['imps_yest']
 
-
-    metrics = metrics.fillna(0)
-    metrics = metrics.replace([np.nan, np.inf, -np.inf],0)
+    # metrics = metrics.fillna(0)
+    metrics = metrics.replace([np.nan, np.inf, -np.inf], np.nan)
 
     return metrics
 
@@ -110,8 +111,9 @@ class CampaignHandler(tornado.web.RequestHandler, DataBase):
 
             data = self.get_data_from_campaign_list(advertiser_id, start_date, end_date, ",".join(campaign_list))
             campaign_metrics = build_metrics(data, ['line_item_name','campaign_name','campaign_id'], end_date)
+            line_item_metrics = build_metrics(data, ['line_item_name'], end_date)
 
-            campaign_metrics['opt_level'] = campaigns['line_item_name'].iloc[0] + " - include " + campaign_metrics['campaign_name']
+            campaign_metrics['opt_level'] = campaigns['line_item_name'].iloc[0] + " - include " + campaign_metrics['campaign_name']#.apply(lambda x: x.replace("Yoshi |","").replace(" | ", " - include "))
 
             max_levels = campaign_metrics['opt_level'].apply(lambda x: len(x.split(" - include "))).max()
 
@@ -128,5 +130,9 @@ class CampaignHandler(tornado.web.RequestHandler, DataBase):
 
             campaign_metrics = pd.merge(campaign_metrics, campaign_params[['campaign_id','bid','bid_type','budget','budget_type']], on ='campaign_id', how = 'left')
 
-            self.render("campaignOptTreeRadial.html", tree = json.dumps(tree[0]) , campaign_metrics = json.dumps(campaign_metrics.to_dict('records')))
+            self.render("campaignOptTreeRadial.html", 
+                        tree = json.dumps(tree[0]) , 
+                        campaign_metrics = json.dumps(campaign_metrics.to_dict('records')), 
+                        line_item_metrics = json.dumps(line_item_metrics.to_dict('records')),
+                        campaign_data = json.dumps(data.to_dict('records')))
 

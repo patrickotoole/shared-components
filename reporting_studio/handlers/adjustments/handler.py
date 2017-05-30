@@ -5,12 +5,11 @@ import logging
 import time
 from database import *
 
-from slackclient import SlackClient
 class SlackWriter():
     
-    def __init__(self, channel):
+    def __init__(self, slack, channel):
         TOKEN = "xoxp-2171079607-3074847889-26638050530-c10bb6093c"
-        self.slackclient = SlackClient(TOKEN)
+        self.slackclient = slack
         self.channel = channel
         
     def load_slack_did(self, name):
@@ -30,6 +29,7 @@ class AdjustmentHandler(tornado.web.RequestHandler, DataBase):
     def initialize(self,**kwargs):
         self.api = kwargs.get("api",False) 
         self.db = kwargs.get("db",False) 
+        self.slack = kwargs.get("slack", False)
 
     def post(self):
         advertiser_id = self.get_query_argument("advertiser")
@@ -62,7 +62,7 @@ class AdjustmentHandler(tornado.web.RequestHandler, DataBase):
 
         msg = "@"+mt + " ``` "+ str(msg) + " ```"
 
-        SW = SlackWriter(channel= "campaign_adjustments")
+        SW = SlackWriter(slack = self.slack, channel= "campaign_adjustments")
         SW.send_message(text = msg)
 
 
