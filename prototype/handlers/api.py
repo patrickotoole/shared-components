@@ -18,11 +18,23 @@ class ApiHandler(BaseHandler, ApiHelper):
         self.write(ujson.dumps(data))
         self.finish()
 
+    @custom_defer.inlineCallbacksErrors
+    def pull_keyword(self, keyword, filter_id):
+        data = yield self.keyword_query(keyword, filter_id)
+        self.write(ujson.dumps(data))
+        self.finish()
+
+
+
     @tornado.web.authenticated
     @tornado.web.asynchronous
     @decorators.error_handling
     def get(self,*args):
         domain_filter = self.get_argument("domain",False)
         filter_id = self.get_argument("filter_id",False)
-        self.pull_and_result(domain_filter, filter_id)
+        keyword = self.get_argument("keyword", False)
+        if keyword:
+            self.pull_keyword(keyword, filter_id)
+        else:
+            self.pull_and_result(domain_filter, filter_id)
 
