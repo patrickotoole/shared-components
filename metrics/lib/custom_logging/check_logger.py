@@ -14,7 +14,7 @@ class KafkaHandler(logging.StreamHandler):
     def emit(self, record):
         try:
             time = datetime.datetime.fromtimestamp(record.created).strftime('%Y-%m-%d %H:%M:%S')
-            msg = {"version":"1.1", "short_message":record.getMessage(), "source":"chronos","host":socket.gethostbyname(socket.gethostname()), "application":"chronos", "app_name":self.app_name+"."+socket.gethostname(),"location":record.name+"-"+record.pathname+":"+str(record.lineno)}
+            msg = {"version":"1.1", "short_message":record.getMessage(), "source":"chronos","host":socket.gethostname(), "application":"chronos", "app_name":self.app_name+"."+socket.gethostname(),"location":record.name+"-"+record.pathname+":"+str(record.lineno)}
             self.kafka.send_message(ujson.dumps(msg))
         except (KeyboardInterrupt, SystemExit):
             raise
