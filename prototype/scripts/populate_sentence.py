@@ -2,7 +2,7 @@ import pandas
 import ujson
 
 
-QUERY = "select full_url from prototype.offsite"
+QUERY = "select distinct full_url from prototype.offsite"
 BASEINSERT = "update prototype.offsite set url_sentence = '%s' where full_url = '%s'"
 
 
@@ -15,7 +15,7 @@ class PopulateSentence():
     def parse_url(self, url):
         url = url['full_url']
         suburl = url[url.find("."):]
-        suburl_after = suburl[suburl.find("/"):]
+        suburl_after = "|".join(suburl.split("/")[1:])
         sent = suburl_after.replace("_","|").replace("-","|").replace("/","|").replace(" ","|")
         sentence = " ".join(sent.split("|"))
         return sentence
