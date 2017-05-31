@@ -77,6 +77,8 @@ class CheckSegmentData():
         check_as_bin = 1 if check else 0
         if str(has_data_yesterday) != str(check_as_bin):
             logging.info("changed expectation: segment %s changed from %s to %s" % (filter_id, has_data_yesterday, check))
+            import time
+            time.sleep(1)
 
     def update_db(self,has_data, advertiser, filter_id, pattern, job_id):
         now = datetime.datetime.now().strftime("%Y-%m-%d")
