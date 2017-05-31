@@ -1,0 +1,176 @@
+{% autoescape None %}
+
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<head>
+<script src="//d3js.org/d3.v3.min.js"></script>
+<script src="//d3js.org/colorbrewer.v1.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.8.5/nv.d3.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.28.10/js/jquery.tablesorter.min.js"></script>
+<link rel="stylesheet" type="text/css" href="/static/nv.css">
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="/static/helper.js"></script>
+<script src="/static/metric_charts.js"></script>
+
+</head>
+
+<style>
+ 
+    table {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    table td, #customers th {
+        border: 1px solid #ddd;
+        padding: 8px;
+    }
+
+    table tr:nth-child(even){background-color: #f2f2f2;}
+
+    table tr:hover {background-color: #ddd;}
+    
+    .chart {
+      height: 200px;
+      width: 1000px;
+    }
+}
+
+</style>
+
+<body>
+    <div id="metrics" style = "position:absolute; left:10px"></div>
+    <div id="charts" style = "position:absolute; left:1300px; top:20px"></div>
+<script>
+
+    var line_metrics = {{metrics}}
+    var data = {{data}}
+
+    d3.select("#charts").data([data])
+
+    var main_columns = ["imps","media_cost", "cpa_attr","attr_conv","ctr","cpc"]
+
+    var line_columns = ["seed","line_item_name"]
+                        .concat(main_columns.map(function(d){return d + "_7d"}))
+                        .concat(main_columns.map(function(d){return d + "_yest"}))
+    
+
+    // var line_columns = ['seed', 'line_item_name','cpa_attr_7d','attr_conv_7d','imps_yest','media_cost_yest','cpa_attr_yest']
+    var line_columns = line_columns
+        .map(function(x){
+            var obj =  {
+                'name': x,
+                'type': 'text',
+                'formatter': formatter(x),
+            }
+            if (x === "line_item_name"){
+                obj['text'] = ''
+                obj['class'] = "line_item_name"
+            }
+
+            return obj
+        })
+
+    var table = make_table(d3.select("body"), line_columns, line_metrics)
+    table.style({'width': "50px"})
+    table.selectAll("th").style({"font-size":"12px"})
+
+    table.selectAll("td.line_item_name")
+        .append("a")
+        .text(function(d){return d['value']})
+        .on("click", function(d){
+
+            d3.select("#charts").selectAll("*").remove()
+
+            var filtered_data = d3.select("#charts").data()[0].filter(function(x){return x['line_item_name'] == d['value']})
+
+            var select = d3.select("#charts").append("select")
+                .attr('multiple',true)
+                .style({"margin":"5px", "height":"200px"})
+            
+            select.selectAll("option").data(['media_cost',"imps",'conv',"clicks",'CPA_7d','CPA_proj','conv_rate_7d','CTR_7d','CPC_7d','CPM'])
+                .enter()
+                .append("option")
+                .property("value", function(d){return d})
+                .text(function(d){return d})
+                .property("selected", function(d){
+                    if(d == "media_cost" || d == "conv"){
+                        return true
+                    } else{
+                        return false
+                    }
+                })
+            select.on("change", function(x){
+
+                var metrics = d3.select(this).selectAll("option").filter(function (d, i) { return this.selected })[0].map(function(d){return d.value })
+                d3.select("#charts").selectAll("svg").remove()
+                drawMetrics(d3.select("#charts"), filtered_data, false,  d['value'] , metrics)
+                
+                // Tracking table
+                var columns = ["date"].concat(main_columns).map(function(x){
+                    var obj =  {
+                        'name': x,
+                        'type': 'text',
+                        'formatter': formatter(x)
+                    }
+                    return obj
+                })
+                d3.select("#charts").selectAll(".tracking").remove()
+                filtered_data = filtered_data.sort(function(a,b){return d3.descending(a.date, b.date)})
+
+                var data_table = make_table(d3.select("#charts"), columns, filtered_data)
+                    .classed("tracking", true)
+                    .style("width", 10*columns.length+"px")
+                    .style("margin","5px")
+                    .attr("align", "center")
+            })
+
+            var metrics = select.selectAll("option").filter(function (d, i) { return this.selected })[0].map(function(d){return d.value })
+            drawMetrics(d3.select("#charts"), filtered_data, false,  d['value'] , metrics);
+
+            // Tracking table
+            var columns = ["date"].concat(main_columns).map(function(x){
+                var obj =  {
+                    'name': x,
+                    'type': 'text',
+                    'formatter': formatter(x)
+                }
+                return obj
+            })
+            d3.select("#charts").selectAll(".tracking").remove()
+            filtered_data = filtered_data.sort(function(a,b){return d3.descending(a.date, b.date)})
+            var data_table = make_table(d3.select("#charts"), columns, filtered_data)
+                .classed("tracking", true)
+                .style("width", 10*columns.length+"px")
+                .style("margin","5px")
+                .attr("align", "center")
+
+        })
+
+
+
+    function formatter(x){
+        if( x.indexOf('cpa') > -1 || x.indexOf('media_cost') > -1  || x.indexOf('cpm') > -1 || x.indexOf('cpc') > -1){
+            return d3.format("$,.2f")
+        }
+
+        if( x.indexOf('imps') > -1 || x.indexOf('conv') > -1){
+            return d3.format(",.0f")
+        }
+
+        if( x.indexOf('ctr') > -1){
+            return d3.format(",.4%")
+        }
+
+    }
+
+
+</script>
+</body>

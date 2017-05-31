@@ -82,7 +82,7 @@ WHERE external_advertiser_id = %(advertiser_id)s
 '''
 
 
-class DataBase(object):
+class CampaignsDatabase(object):
 
     def get_data_from_campaign_list(self, advertiser_id, start_date, end_date, campaign_list):
         logging.info("retrieving data from db")
@@ -103,18 +103,25 @@ class DataBase(object):
         logging.info("got campaigns")
         return df
 
-    def get_campaign_tree(self, advertiser_id, campaign_id):
+    def get_campaign_children(self, advertiser_id, campaign_id):
         logging.info("getting campaign tree for %s" %campaign_id)
         campaigns = self.db.select_dataframe(CAMPAIGNS_TREE%{'campaign_id':campaign_id, 'advertiser_id':advertiser_id})
         return campaigns['campaign_id'].astype(int).astype(str).tolist()
 
+    def get_campaigns_and_children(self, advertiser_id, campaigns):
+        campaign_list = []
+        for campaign_id in campaigns:
+            children = self.get_campaign_children(advertiser_id, campaign_id)
+            campaign_list = campaign_list + children
+        return campaign_list
 
-    def get_data(self, advertiser_id, campaign_id, start_date, end_date):
-        logging.info("retrieving data from db")
-        campaigns = self.db.select_dataframe(CAMPAIGNS_TREE%{'campaign_id':campaign_id, 'advertiser_id':advertiser_id})
-        campaign_list = ",".join(campaigns['campaign_id'].astype(int).astype(str).tolist())
-        data = self.get_data_from_campaign_list(advertiser_id, start_date, end_date, campaign_list)
-        return data
+
+    # def get_data(self, advertiser_id, campaign_id, start_date, end_date):
+    #     logging.info("retrieving data from db")
+    #     campaigns = self.db.select_dataframe(CAMPAIGNS_TREE%{'campaign_id':campaign_id, 'advertiser_id':advertiser_id})
+    #     campaign_list = ",".join(campaigns['campaign_id'].astype(int).astype(str).tolist())
+    #     data = self.get_data_from_campaign_list(advertiser_id, start_date, end_date, campaign_list)
+    #     return data
 
     def get_campaign_params(self, advertiser_id):
 

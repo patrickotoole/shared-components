@@ -42,6 +42,7 @@ if __name__ == '__main__':
         (r'/metrics', MetricsHandler, connectors),
         (r'/opt', OptimizationHandler, connectors),
         (r'/campaign', CampaignHandler, connectors),
+        (r'/lineitems', LineItemHandler, connectors),
         (r'/adjustments', AdjustmentHandler, connectors),
         (r'/static/(.*)', tornado.web.StaticFileHandler, {"path":"static"}),
 

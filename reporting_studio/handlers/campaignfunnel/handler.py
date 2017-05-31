@@ -74,67 +74,52 @@ def build_metrics(df, groups, end_date = datetime.today().strftime("%Y%m%d")):
 
 
 
-class CampaignHandler(tornado.web.RequestHandler, DataBase):
+class CampaignHandler(tornado.web.RequestHandler, CampaignsDatabase):
 
     def initialize(self,**kwargs):
         self.db = kwargs.get("reporting",False) 
+
+    def create_optimization_tree(self, campaign_metrics):
+        campaign_metrics['opt_level'] = campaign_metrics['seed_line_item']+ " - include " + campaign_metrics['campaign_name']
+
+        max_levels = campaign_metrics['opt_level'].apply(lambda x: len(x.split(" - include "))).max()
+        for k in range(max_levels):
+            campaign_metrics['level%s'%str(k)] = campaign_metrics['opt_level'].apply(lambda x:  x.split(" - include ")[k] if len(x.split(" - include "))>k else None   )
+
+        levels = ["level%s"%str(i) for i in range(max_levels) ] 
+
+        tree = build_tree(df =campaign_metrics, levels = levels, max_level = levels[-1])
+        return tree
+
 
     def get(self):
 
         advertiser_id = self.get_query_argument("advertiser")
         start_date = str(self.get_query_argument("start_date", "20170101"))
         end_date = str(self.get_query_argument("end_date", datetime.today().strftime("%Y%m%d")))
-        campaign_id = self.get_query_argument("campaign_id", False)
         line_item_id = self.get_query_argument("line_item_id", False)
 
-        if campaign_id:
+        line_item_campaigns = self.campaigns_from_line_items(advertiser_id,line_item_id)        
+        campaign_list = self.get_campaigns_and_children(advertiser_id, line_item_campaigns['campaign_id'].tolist())
 
-            data = self.get_data(advertiser_id, campaign_id, start_date, end_date)
-            campaign_metrics = build_metrics(data, ['line_item_name','campaign_name','campaign_id'], end_date)
-            max_levels = campaign_metrics['campaign_name'].apply(lambda x: len(x.split(" - include "))).max()
+        data = self.get_data_from_campaign_list(advertiser_id, start_date, end_date, ",".join(campaign_list))
+        campaign_metrics = build_metrics(data, ['line_item_name','campaign_name','campaign_id'], end_date)
+        line_item_metrics = build_metrics(data, ['line_item_name'], end_date)
 
-            for k in range(max_levels):
-                campaign_metrics['level%s'%str(k)] = campaign_metrics['campaign_name'].apply(lambda x:  x.split(" - include ")[k] if len(x.split(" - include "))>k else None   )
+        campaign_metrics['seed_line_item'] = line_item_campaigns['line_item_name'].iloc[0]
+        tree = self.create_optimization_tree(campaign_metrics)
 
-            levels = ["level%s"%str(i) for i in range(max_levels) ] 
-            tree = build_tree(df =campaign_metrics, levels = levels, max_level = levels)
-            self.render("campaignOptTreeRadial.html", tree = json.dumps(tree[0]) )
+        campaign_params = self.get_campaign_params(advertiser_id)
+        campaign_params['bid'] = campaign_params['bid_type'] + " $" + campaign_params["bid"].astype(str)
+        campaign_params['budget'] = campaign_params['budget_type'] +" "+ campaign_params["budget"].apply(lambda x: "{:,.0f}".format(x)).astype(str)
 
-        elif line_item_id:
+        campaign_metrics = pd.merge(campaign_metrics, campaign_params[['campaign_id','bid','bid_type','budget','budget_type']], on ='campaign_id', how = 'left')
 
-            campaigns = self.campaigns_from_line_items(advertiser_id,line_item_id)
-
-            campaign_list = []
-            for campaign_id in campaigns['campaign_id'].tolist():
-                campaign_opt_tree = self.get_campaign_tree(advertiser_id, campaign_id)
-                campaign_list = campaign_list + campaign_opt_tree
-
-            data = self.get_data_from_campaign_list(advertiser_id, start_date, end_date, ",".join(campaign_list))
-            campaign_metrics = build_metrics(data, ['line_item_name','campaign_name','campaign_id'], end_date)
-            line_item_metrics = build_metrics(data, ['line_item_name'], end_date)
-
-            campaign_metrics['opt_level'] = campaigns['line_item_name'].iloc[0] + " - include " + campaign_metrics['campaign_name']#.apply(lambda x: x.replace("Yoshi |","").replace(" | ", " - include "))
-
-            max_levels = campaign_metrics['opt_level'].apply(lambda x: len(x.split(" - include "))).max()
-
-            for k in range(max_levels):
-                campaign_metrics['level%s'%str(k)] = campaign_metrics['opt_level'].apply(lambda x:  x.split(" - include ")[k] if len(x.split(" - include "))>k else None   )
-
-            levels = ["level%s"%str(i) for i in range(max_levels) ] 
-
-            tree = build_tree(df =campaign_metrics, levels = levels, max_level = levels[-1])
-
-            campaign_params = self.get_campaign_params(advertiser_id)
-            campaign_params['bid'] = campaign_params['bid_type'] + " $" + campaign_params["bid"].astype(str)
-            campaign_params['budget'] = campaign_params['budget_type'] +" "+ campaign_params["budget"].apply(lambda x: "{:,.0f}".format(x)).astype(str)
-
-            campaign_metrics = pd.merge(campaign_metrics, campaign_params[['campaign_id','bid','bid_type','budget','budget_type']], on ='campaign_id', how = 'left')
-
-            data['date'] = data['date'].apply(lambda x: x.strftime("%Y-%m-%d %H:%M:%S"))
-            
-            self.render("campaignOptTreeRadial.html", 
-                        tree = json.dumps(tree[0]) , 
-                        campaign_metrics = json.dumps(campaign_metrics.to_dict('records')), 
-                        line_item_metrics = json.dumps(line_item_metrics.to_dict('records')),
-                        campaign_data = json.dumps(data.to_dict('records')))
+        data['date'] = data['date'].apply(lambda x: x.strftime("%Y-%m-%d %H:%M:%S"))
+        
+        self.render("campaignOptTreeRadial.html", 
+                    tree = json.dumps(tree[0]) , 
+                    campaign_metrics = json.dumps(campaign_metrics.to_dict('records')), 
+                    line_item_metrics = json.dumps(line_item_metrics.to_dict('records')),
+                    campaign_data = json.dumps(data.to_dict('records')))
 
