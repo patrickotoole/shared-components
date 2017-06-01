@@ -97,9 +97,10 @@ class ActionDatabase(object):
             where = "active = 1 and deleted=0 and pixel_source_name = '{}'".format(advertiser)
             result = self.db.select_dataframe(GET % {"where":where})
             patterns = self.get_patterns(result.action_id.tolist())
-            subfilters = self.db.select_dataframe(GETFILTERS % result.action_id.to_list())
+            subfilters = self.db.select_dataframe(GETFILTERS % str(tuple(result.action_id.tolist())))
             joined_no_filters = result.set_index("action_id").join(patterns)
-            joined = joined_no_filters.join(subfilters, on = "action_id")
+            joined = joined_no_filters.join(subfilters)
+            joined= joined[[u'advertiser', u'action_name', u'action_type', u'featured', u'url_pattern', u'filter_pattern']]
             try:
                 filters = self.has_filter(result.action_id.tolist())
                 joined = joined.join(filters)
@@ -117,9 +118,10 @@ class ActionDatabase(object):
             where = "pixel_source_name = '%s' and action_id = %s" % (advertiser,action_id)
             result = self.db.select_dataframe(GET % {"where":where})
             patterns = self.get_patterns(result.action_id.tolist())
-            subfilters = self.db.select_dataframe(GETFILTERS % result.action_id.tolist())
-            joined_no_filters = result.set_index("action_id").join(patterns)
-            joined = joined_no_filters.join(subfilters, on = "action_id")
+            subfilters = self.db.select_dataframe(GETFILTERS % str(tuple(result.action_id.tolist())))
+            joined_no_filters = result.reset_index("action_id").join(patterns)
+            joined = joined_no_filters.join(subfilters)
+            joined= joined[[u'advertiser', u'action_name', u'action_type', u'featured', u'url_pattern', u'filter_pattern']]
             return joined.reset_index()
         except:
             return pandas.DataFrame()
