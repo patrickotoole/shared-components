@@ -157,7 +157,6 @@ class ActionDatabase(object):
         zk.set_tree()
 
     def _insert_database(self, action, cursor):
-        import ipdb; ipdb.set_trace()
         cursor.execute(INSERT_ACTION % action)
         action_id = cursor.lastrowid
         if "subfilters" in action:
@@ -233,13 +232,18 @@ class ActionDatabase(object):
         except:
             logging.error("could not add updated pattern to zookeeper try on put %s" % action)
         #Database Update
+
+        subfilters = action.get('subfilters',False)
+        if subfilters:
+            action.pop('subfilters')
+
         action['fields'] = self.make_set_fields(action)
         cursor.execute(UPDATE_ACTION % action)
         
         #Update subfilters
-        if "subfilters" in action:
+        if subfilters:
             all_subfilters = []
-            for subfilter in action['subfilters']:
+            for subfilter in subfilters:
                 base_string = "('{}','{}')"
                 all_subfilters.append(base_string.format(action_id, subfilter))
             INSERT_SUBFILTER_FULL = INSERT_SUBFILTER.format(",".join(all_subfilters))
