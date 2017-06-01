@@ -236,6 +236,8 @@ class ActionDatabase(object):
         subfilters = action.get('subfilters',False)
         if subfilters:
             action.pop('subfilters')
+        if action.get("zookeeper_tree",False):
+            action.pop("zookeeper_tree")
 
         action['fields'] = self.make_set_fields(action)
         cursor.execute(UPDATE_ACTION % action)
