@@ -140,8 +140,8 @@ class OptimizeHandler(tornado.web.RequestHandler):
             runner.runner(dparams,dd['data'],self.api,dd['name'])
         else:
             import requests
-            # url = "http://workqueue.crusher.getrockerbox.com/jobs"
-            url = "http://localhost:8888/jobs"
+            url = "http://workqueue.crusher.getrockerbox.com/jobs"
+            # url = "http://localhost:8888/jobs"
 
             opt_name = dd.get('name')
             advertiser = filter(lambda x: x['key']=='advertiser', dd.get('params'))[0]['value']
