@@ -8,6 +8,10 @@ GET = """
 SELECT pixel_source_name as advertiser, action_name, action_id, action_type, featured from action where %(where)s
 """
 
+GETFILTERS = """
+SELECT action_id, filter_pattern from action_filters where action_id in %s
+"""
+
 GET_PATTERNS = """
 SELECT *  from action_patterns where %(where)s
 """
@@ -51,6 +55,8 @@ SQL_NAME_QUERY= "select pixel_source_name from action where action_id = '{}'"
 
 SQL_ACTION_QUERY = "select a.action_id, a.pixel_source_name from action a join action_patterns b on a.action_id=b.action_id where b.url_pattern = '{}' and a.pixel_source_name = '{}'"
 
+INSERT_SUBFILTER = "insert into action_filters (action_id, filter_pattern) values {}"
+
 class ActionDatabase(object):
 
     def get_patterns(self,ids):
@@ -91,7 +97,9 @@ class ActionDatabase(object):
             where = "active = 1 and deleted=0 and pixel_source_name = '{}'".format(advertiser)
             result = self.db.select_dataframe(GET % {"where":where})
             patterns = self.get_patterns(result.action_id.tolist())
-            joined = result.set_index("action_id").join(patterns)
+            subfilters = self.db.select_dataframe(GETFILTERS % result.action_id.to_list())
+            joined_no_filters = result.set_index("action_id").join(patterns)
+            joined = joined_no_filters.join(subfilters, on = "action_id")
             try:
                 filters = self.has_filter(result.action_id.tolist())
                 joined = joined.join(filters)
@@ -109,8 +117,9 @@ class ActionDatabase(object):
             where = "pixel_source_name = '%s' and action_id = %s" % (advertiser,action_id)
             result = self.db.select_dataframe(GET % {"where":where})
             patterns = self.get_patterns(result.action_id.tolist())
-            joined = result.set_index("action_id").join(patterns)
-
+            subfilters = self.db.select_dataframe(GETFILTERS % result.action_id.tolist())
+            joined_no_filters = result.set_index("action_id").join(patterns)
+            joined = joined_no_filters.join(subfilters, on = "action_id")
             return joined.reset_index()
         except:
             return pandas.DataFrame()
@@ -148,8 +157,16 @@ class ActionDatabase(object):
         zk.set_tree()
 
     def _insert_database(self, action, cursor):
+        import ipdb; ipdb.set_trace()
         cursor.execute(INSERT_ACTION % action)
         action_id = cursor.lastrowid
+        if "subfilters" in action:
+            all_subfilters = []
+            for subfilter in action['subfilters']:
+                base_string = "('{}','{}')"
+                all_subfilters.append(base_string.format(action_id, subfilter))
+            INSERT_SUBFILTER_FULL = INSERT_SUBFILTER.format(",".join(all_subfilters))
+            cursor.execute(INSERT_SUBFILTER_FULL)
         for url in action["url_pattern"]:
             pattern = self.make_pattern_object(action_id,url)
             cursor.execute(INSERT_ACTION_PATTERNS % pattern)
@@ -180,7 +197,7 @@ class ActionDatabase(object):
                         cache.run_backfill,
                         [action["advertiser"],pattern[0],_cache_date,_cache_date + " backfill"]
                         ))
-                CustomQueue.CustomQueue(self.zookeeper,"python_queue").put(work,i)
+                CustomQueue.CustomQueue(self.zookeeper,"python_queue","log", "v01", 0).put(work,i)
 
 
     @decorators.multi_commit_cursor
@@ -218,7 +235,15 @@ class ActionDatabase(object):
         #Database Update
         action['fields'] = self.make_set_fields(action)
         cursor.execute(UPDATE_ACTION % action)
-
+        
+        #Update subfilters
+        if "subfilters" in action:
+            all_subfilters = []
+            for subfilter in action['subfilters']:
+                base_string = "('{}','{}')"
+                all_subfilters.append(base_string.format(action_id, subfilter))
+            INSERT_SUBFILTER_FULL = INSERT_SUBFILTER.format(",".join(all_subfilters))
+            cursor.execute(INSERT_SUBFILTER_FULL)
         to_add, to_remove = self.get_pattern_diff(action)
 
         for url in to_add:
