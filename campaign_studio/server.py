@@ -106,7 +106,6 @@ class CreateHandler(tornado.web.RequestHandler):
         assert len(fields) > 0 
         assert len(data) > 0 
 
-
         import campaign_lib.create.runner as runner
         runner.runner(CAMPAIGN_TYPE,LINE_ITEM,ADVERTISER,data,fields)
 
