@@ -199,3 +199,8 @@ class ActionTest(AsyncHTTPTestCase):
 
         df = self.db.select_dataframe(Q % action_get_json[0]['action_id']) 
         self.assertEqual(len(df),1)
+
+    def test_delete(self):
+        _a = ujson.loads(self.fetch("/?id=2",method="DELETE").body)
+        self.assertEqual(_a["response"]['action_id'],"2")
+        self.assertEqual(_a["status"],"ok")
