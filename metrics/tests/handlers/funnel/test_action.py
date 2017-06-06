@@ -61,6 +61,14 @@ ACTION_FIXTURE_4 = """
 insert into action_patterns (action_id, url_pattern) values( 2, '/')
 """
 
+SUBFILTER_1 = """
+insert into action_filters (action_id, filter_pattern) values (1, "testpattern")
+"""
+SUBFILTER_2 =  """
+insert into action_filters (action_id, filter_pattern) values (1, "anothertestpattern")
+"""
+
+
 class ActionTest(AsyncHTTPTestCase):
 
     
@@ -76,6 +84,8 @@ class ActionTest(AsyncHTTPTestCase):
         if len(len_check2.as_dataframe())>0:
             self.db.execute("DROP TABLE action")
 
+        self.db.execute("TRUNCATE table action_filters")
+
         self.db.execute(CREATE_ACTION_TABLE) 
         self.db.execute(CREATE_PATTERN_TABLE)  
 
@@ -85,6 +95,8 @@ class ActionTest(AsyncHTTPTestCase):
         self.db.execute(ACTION_FIXTURE_2)
         self.db.execute(ACTION_FIXTURE_3)
         self.db.execute(ACTION_FIXTURE_4)
+        self.db.execute(SUBFILTER_1)
+        self.db.execute(SUBFILTER_2)
         
 
         self.app = Application([
@@ -116,6 +128,10 @@ class ActionTest(AsyncHTTPTestCase):
         self.assertEqual(len(_a["response"]),1)
         self.assertEqual(len(_b["response"]),1)
 
+    def test_get_subfilter(self):
+        _a = ujson.loads(self.fetch("/?format=json&advertiser=alan",method="GET").body)
+        self.assertEqual(len(_a["response"][0]["filter_pattern"]),2)
+
     def test_post(self):
         action_json = """{
           "advertiser": "homie",
@@ -123,7 +139,8 @@ class ActionTest(AsyncHTTPTestCase):
           "url_pattern": ["a","b","c"],
           "operator": "and",
           "deleted":"0",
-          "action_type":"segment"
+          "action_type":"segment",
+          "subfilters": ["filterA", "filterB"]
         }"""
 
         _a = self.fetch("/?format=json&",method="POST",body=action_json).body
@@ -132,6 +149,7 @@ class ActionTest(AsyncHTTPTestCase):
         ojson = ujson.loads(action_json)
         self.assertEqual(ajson['response']['action_name'],ojson['action_name'])
         self.assertEqual(ajson['response']['url_pattern'],ojson['url_pattern']) 
+        self.assertEqual(len(ajson['response']['subfilters']), 2)
 
     def test_put_param_check(self):
         action_put = self.fetch("/?format=json", method="PUT", body=ujson.dumps({})).body
