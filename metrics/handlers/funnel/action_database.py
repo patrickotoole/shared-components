@@ -9,7 +9,7 @@ SELECT pixel_source_name as advertiser, action_name, action_id, action_type, fea
 """
 
 GETFILTERS = """
-SELECT action_id, filter_pattern from action_filters where action_id in %s
+SELECT action_id, filter_pattern from action_filters where action_id in (%s)
 """
 
 GET_PATTERNS = """
@@ -97,13 +97,13 @@ class ActionDatabase(object):
             where = "active = 1 and deleted=0 and pixel_source_name = '{}'".format(advertiser)
             result = self.db.select_dataframe(GET % {"where":where})
             patterns = self.get_patterns(result.action_id.tolist())
-            subfilters = self.db.select_dataframe(GETFILTERS % str(tuple(result.action_id.tolist())))
-            joined_no_filters = result.set_index("action_id").join(patterns)
-            joined = joined_no_filters.join(subfilters)
-            joined= joined[[u'advertiser', u'action_name', u'action_type', u'featured', u'url_pattern', u'filter_pattern']]
+            subfilters = self.db.select_dataframe(GETFILTERS % ",".join(result.action_id.apply(lambda x : str(x)).tolist()))
+            joined = result.set_index("action_id").join(patterns)
             try:
                 filters = self.has_filter(result.action_id.tolist())
                 joined = joined.join(filters)
+                subfilters = subfilters.groupby('action_id')['filter_pattern'].apply(list)
+                joined = joined.reset_index().merge(subfilters.reset_index(), on='action_id').set_index('action_id')
             except:
                 pass
 
@@ -118,10 +118,12 @@ class ActionDatabase(object):
             where = "pixel_source_name = '%s' and action_id = %s" % (advertiser,action_id)
             result = self.db.select_dataframe(GET % {"where":where})
             patterns = self.get_patterns(result.action_id.tolist())
-            subfilters = self.db.select_dataframe(GETFILTERS % str(tuple(result.action_id.tolist())))
-            joined_no_filters = result.reset_index("action_id").join(patterns)
-            joined = joined_no_filters.join(subfilters)
-            joined= joined[[u'advertiser', u'action_name', u'action_type', u'featured', u'url_pattern', u'filter_pattern']]
+            subfilters = self.db.select_dataframe(GETFILTERS % str(tuple(result.action_id.tolist())).replace(",",""))
+            joined = result.set_index("action_id").join(patterns)
+            filters = self.has_filter(result.action_id.tolist())
+            joined = joined.join(filters)
+            subfilters = subfilters.groupby('action_id')['filter_pattern'].apply(list)
+            joined = joined.reset_index().merge(subfilters.reset_index(), on='action_id').set_index('action_id')
             return joined.reset_index()
         except:
             return pandas.DataFrame()

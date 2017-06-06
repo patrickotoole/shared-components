@@ -61,7 +61,7 @@ class ActionHandler(BaseHandler,ActionAuth,APIHelpers,ActionDatabase):
         try:
             if action_id:
                 results = self.get_advertiser_action(advertiser,action_id)
-            if action_type:
+            elif action_type:
                 results = self.get_vendor_actions(advertiser, action_type)
             else:
                 results = self.get_advertiser_actions(advertiser)

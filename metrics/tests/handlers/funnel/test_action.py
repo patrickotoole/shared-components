@@ -32,6 +32,17 @@ CREATE TABLE `action_patterns` (
 )
 """
 
+CREATE_SUBFILTER_TABLE = """
+CREATE TABLE IF NOT EXISTS action_filters (  `action_id` int(11) NOT NULL,
+  `filter_pattern` varchar(256) NOT NULL DEFAULT '',
+  `active` int(1) DEFAULT '1',
+  `deleted` tinyint(1) DEFAULT '0',
+  `created_on` datetime DEFAULT NULL,
+  `last_activity` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  KEY `action_id` (`action_id`)
+)
+"""
+
 ACTION_FIXTURE_1 = """
 INSERT INTO action (`action_id`,`start_date`,`end_date`, `operator`, `pixel_source_name`, `action_name`, `action_type`, `active`, `featured`) 
 VALUES (1,0,0,"and","alan","alans_action","segment",1,1)
@@ -40,6 +51,14 @@ VALUES (1,0,0,"and","alan","alans_action","segment",1,1)
 ACTION_FIXTURE_2 = """
 INSERT INTO action (`action_id`,`start_date`,`end_date`, `operator`, `pixel_source_name`, `action_name`, `action_type`, `active`, `featured`) 
 VALUES (2,0,0,"and","will","wills_action", "segment",1,1) 
+"""
+
+ACTION_FIXTURE_3 = """
+insert into action_patterns (action_id, url_pattern) values( 1, '/')
+"""
+
+ACTION_FIXTURE_4 = """
+insert into action_patterns (action_id, url_pattern) values( 2, '/')
 """
 
 class ActionTest(AsyncHTTPTestCase):
@@ -59,8 +78,14 @@ class ActionTest(AsyncHTTPTestCase):
 
         self.db.execute(CREATE_ACTION_TABLE) 
         self.db.execute(CREATE_PATTERN_TABLE)  
+
+        self.db.execute(CREATE_SUBFILTER_TABLE)
+
         self.db.execute(ACTION_FIXTURE_1)
         self.db.execute(ACTION_FIXTURE_2)
+        self.db.execute(ACTION_FIXTURE_3)
+        self.db.execute(ACTION_FIXTURE_4)
+        
 
         self.app = Application([
             ('/',action.ActionHandler, dict(db=self.db)),
