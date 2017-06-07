@@ -5,7 +5,7 @@ from pykafka.simpleconsumer import OwnedPartition, OffsetType
 from lib.kafka_stream.kafka_stream import KafkaStream
 import datetime
 
-QUERY  = "select * from campaign_map"
+QUERY  = "select * from campaign_segment_map where active=1 and deleted=0"
 
 def get_from_db(db):
     campaign_map = db.select_dataframe(QUERY)
