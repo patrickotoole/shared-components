@@ -67,7 +67,7 @@ class ActionDatabase(ActionDatabaseHelper):
 
     def get_vendor_actions(self, advertiser, vendor):
         try:
-            result, patterns = self.query_action(advertiser, vendor)
+            result, patterns = self.query_action(advertiser, vendor=vendor)
             joined = result.set_index("action_id").join(patterns)
             return joined.reset_index()
         except:
@@ -96,14 +96,13 @@ class ActionDatabase(ActionDatabaseHelper):
 
     def get_advertiser_action(self, advertiser, action_id):
         try:
-            where = "pixel_source_name = '%s' and action_id = %s" % (advertiser,action_id)
-            result = self.db.select_dataframe(GET % {"where":where})
-            patterns = self.get_patterns(result.action_id.tolist())
-            subfilters = self.db.select_dataframe(GETFILTERS % str(tuple(result.action_id.tolist())).replace(",",""))
+            result, patterns = self.query_action(advertiser, action_id=action_id)
             joined = result.set_index("action_id").join(patterns)
+
             filters = self.has_filter(result.action_id.tolist())
             joined = joined.join(filters)
-            subfilters = subfilters.groupby('action_id')['filter_pattern'].apply(list)
+
+            subfilters = self.get_subfilters(result)
             joined = joined.reset_index().merge(subfilters.reset_index(), on='action_id').set_index('action_id')
             return joined.reset_index()
         except:
@@ -135,54 +134,6 @@ class ActionDatabase(ActionDatabaseHelper):
 
         return (to_add,to_remove)
 
-    def _insert_zookeeper_tree(self, zookeeper, action):
-        zk = zke.ZKEndpoint(zookeeper,tree_name=action["zookeeper_tree"])
-        for url in action["url_pattern"]:
-            updated_tree = zk.add_advertiser_pattern(action["advertiser"],url,zk.tree)
-        zk.set_tree()
-
-    def _insert_database(self, action, cursor):
-        cursor.execute(INSERT_ACTION % action)
-        action_id = cursor.lastrowid
-        if "subfilters" in action:
-            all_subfilters = []
-            for subfilter in action['subfilters']:
-                base_string = "('{}','{}')"
-                all_subfilters.append(base_string.format(action_id, subfilter))
-            INSERT_SUBFILTER_FULL = INSERT_SUBFILTER.format(",".join(all_subfilters))
-            cursor.execute(INSERT_SUBFILTER_FULL)
-        for url in action["url_pattern"]:
-            pattern = self.make_pattern_object(action_id,url)
-            cursor.execute(INSERT_ACTION_PATTERNS % pattern)
-        action['action_id'] = action_id
-
-    def _insert_work_queue(self, action, zookeeper):
-        from lib.zookeeper import CustomQueue
-        import lib.cassandra_cache.run as cache
-        import pickle
-        import datetime
-
-        #added to previous code from pattern search end point search_base
-        pattern = action["url_pattern"]
-
-        today = datetime.datetime.now()
-        children = zookeeper.get_children("/active_pattern_cache")
-        child = action["advertiser"] + "=" + pattern[0].replace("/","|")
-
-        if child in children:
-            logging.info("already exists")
-        else:
-            self.zookeeper.ensure_path("/active_pattern_cache/" + child)
-
-            for i in range(0,21):
-                delta = datetime.timedelta(days=i)
-                _cache_date = datetime.datetime.strftime(today - delta,"%Y-%m-%d")
-                work = pickle.dumps((
-                        cache.run_backfill,
-                        [action["advertiser"],pattern[0],_cache_date,_cache_date + " backfill"]
-                        ))
-                CustomQueue.CustomQueue(self.zookeeper,"python_queue","log", "v01", 0).put(work,i)
-
 
     @decorators.multi_commit_cursor
     def perform_update(self,body,zookeeper,cursor=None):
@@ -190,33 +141,21 @@ class ActionDatabase(ActionDatabaseHelper):
         self.assert_required_params(["id"])
         action_id = self.get_argument("id")
 
-        #Delete record from tree and then insert with update
         #treeName = self.get_argument("zookeeper_tree","for_play")
         treeName = self.get_argument("zookeeper_tree","/kafka-filter/tree/visit_events_tree")
         zk = zke.ZKEndpoint(zookeeper, treeName)
-        #Delete
-        urls = self.db.select_dataframe(SQL_PATTERN_QUERY.format(action_id))
-        advertiser = self.db.select_dataframe(SQL_NAME_QUERY.format(action_id))
-        if len(urls) >0 and len(advertiser) > 0:
-            urls = urls.ix[0][0]
-            advertiser = advertiser.ix[0][0]
-            advertiser_ids = self.db.select_dataframe(SQL_ACTION_QUERY.format(urls, advertiser))
-        try:
-            if len(advertiser_ids)==1:
-                zk.remove_advertiser_children_pattern(advertiser, zk.tree, [urls])
-                zk.set_tree()
-        except:
-            logging.error("url not in tree for advertiser %s" % ( advertiser))
+
+        remove_from_zk, advertiser, url = self.zk_remove_check(action_id)
+
+        if remove_from_zk:
+            zk.remove_advertiser_children_pattern(advertiser, urls, zk.tree)
+            zk.set_tree()
 
         #insert
         try:
-            zk = zke.ZKEndpoint(zookeeper,tree_name=action["zookeeper_tree"])
-            for url in action["url_pattern"]:
-                updated_tree = zk.add_advertiser_pattern(action["advertiser"],url,zk.tree)
-                zk.set_tree()
+            self._insert_zookeeper_tree(self, zk, action)
         except:
             logging.error("could not add updated pattern to zookeeper try on put %s" % action)
-        #Database Update
 
         subfilters = action.get('subfilters',False)
         if subfilters:
@@ -227,14 +166,6 @@ class ActionDatabase(ActionDatabaseHelper):
         action['fields'] = self.make_set_fields(action)
         cursor.execute(UPDATE_ACTION % action)
         
-        #Update subfilters
-        if subfilters:
-            all_subfilters = []
-            for subfilter in subfilters:
-                base_string = "('{}','{}')"
-                all_subfilters.append(base_string.format(action_id, subfilter))
-            INSERT_SUBFILTER_FULL = INSERT_SUBFILTER.format(",".join(all_subfilters))
-            cursor.execute(INSERT_SUBFILTER_FULL)
         to_add, to_remove = self.get_pattern_diff(action)
 
         for url in to_add:
@@ -244,6 +175,9 @@ class ActionDatabase(ActionDatabaseHelper):
         for url in to_remove:
             pattern = self.make_pattern_object(action_id, url)
             cursor.execute(DELETE_ACTION_PATTERNS % pattern)
+
+        if len(to_add) == 1:
+            self.update_subfilter(action_id, subfilters)
 
         return action
 
@@ -257,16 +191,12 @@ class ActionDatabase(ActionDatabaseHelper):
 
         zk = zke.ZKEndpoint(zookeeper,tree_name=action["zookeeper_tree"])
 
-        urls = self.db.select_dataframe(SQL_PATTERN_QUERY.format(action_id))
-        advertiser = self.db.select_dataframe(SQL_NAME_QUERY.format(action_id))
-        if len(urls) >0 and len(advertiser) > 0:
-            urls = urls.ix[0][0]
-            advertiser = advertiser.ix[0][0]
-            advertiser_ids = self.db.select_dataframe(SQL_ACTION_QUERY.format(urls, advertiser))
-
-        if len(advertiser_ids)==1:
+        remove_from_zk, advertiser, url = self.zk_remove_check(action_id)
+        
+        if remove_from_zk:
             zk.remove_advertiser_children_pattern(advertiser, urls, zk.tree)
             zk.set_tree()
+
         cursor.execute(DELETE_ACTION % action)
 
         return action
@@ -288,8 +218,10 @@ class ActionDatabase(ActionDatabaseHelper):
 
         action["zookeeper_tree"] = self.get_argument("zookeeper_tree","/kafka-filter/tree/visit_events_tree")
         #action["zookeeper_tree"] = self.get_argument("zookeeper_tree","for_play")
+        zk = zke.ZKEndpoint(zookeeper,tree_name=action["zookeeper_tree"])
+
         try:
-            self._insert_zookeeper_tree(zookeeper, action)
+            self._insert_zookeeper_tree(zk, action)
             self._insert_database(action, cursor)
 
             if zookeeper:

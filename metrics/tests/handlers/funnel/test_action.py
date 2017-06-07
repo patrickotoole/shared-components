@@ -8,6 +8,7 @@ from link import lnk
 import logging
 import handlers.funnel.action as action
 import lib.zookeeper.zk_endpoint as zke
+import handlers.funnel.action_database_helpers as adh
 
 CREATE_ACTION_TABLE = """
 CREATE TABLE `action` (
