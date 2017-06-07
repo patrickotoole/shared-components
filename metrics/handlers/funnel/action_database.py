@@ -20,6 +20,10 @@ HAS_FILTER = """
 SELECT distinct action_id, 1 has_filter from action_filters where %(where)s
 """
 
+GET_PARAMETERS = """
+SELECT filter_id as action_id, parameters from advertiser_udf_parameter where %(where)s
+"""
+
 INSERT_ACTION = """
 INSERT INTO action
     (start_date, end_date, operator, pixel_source_name, action_name, action_type, featured)
@@ -57,36 +61,13 @@ SQL_ACTION_QUERY = "select a.action_id, a.pixel_source_name from action a join a
 
 INSERT_SUBFILTER = "insert into action_filters (action_id, filter_pattern) values {}"
 
-class ActionDatabase(object):
+from action_database_helpers import ActionDatabaseHelper
 
-    def get_patterns(self,ids):
-        where = "action_id in (%s)" % ",".join(map(str,ids))
-        patterns = self.db.select_dataframe(GET_PATTERNS % {"where":where})
-        grouped = patterns.groupby("action_id").agg(lambda x: x.T.to_dict().values())
-        return grouped
-
-    def has_filter(self,ids):
-        where = "action_id in (%s)" % ",".join(map(str,ids))
-        patterns = self.db.select_dataframe(HAS_FILTER % {"where":where}).set_index("action_id")
-        return patterns
-
-    def get_all(self):
-        # this is no longer a thing...
-        #where = "1=1"
-        where ="deleted=0"
-        result = self.db.select_dataframe(GET % {"where":where})
-        patterns = self.get_patterns(result.action_id.tolist())
-        filters = self.has_filter(result.action_id.tolist())
-
-        joined = result.set_index("action_id").join(patterns).join(filters)
-
-        return joined.reset_index()
+class ActionDatabase(ActionDatabaseHelper):
 
     def get_vendor_actions(self, advertiser, vendor):
         try:
-            where = "pixel_source_name = '%s' and action_type = '%s'" % (format(advertiser), format(vendor))
-            result = self.db.select_dataframe(GET % {"where":where})
-            patterns = self.get_patterns(result.action_id.tolist())
+            result, patterns = self.query_action(advertiser, vendor)
             joined = result.set_index("action_id").join(patterns)
             return joined.reset_index()
         except:
@@ -94,20 +75,20 @@ class ActionDatabase(object):
 
     def get_advertiser_actions(self, advertiser):
         try:
-            where = "active = 1 and deleted=0 and pixel_source_name = '{}'".format(advertiser)
-            result = self.db.select_dataframe(GET % {"where":where})
-            patterns = self.get_patterns(result.action_id.tolist())
-            subfilters = self.db.select_dataframe(GETFILTERS % ",".join(result.action_id.apply(lambda x : str(x)).tolist()))
+            import ipdb; ipdb.set_trace()
+            result, patterns = self.query_action(advertiser)
             joined = result.set_index("action_id").join(patterns)
-            try:
-                filters = self.has_filter(result.action_id.tolist())
-                joined = joined.join(filters)
-                subfilters = subfilters.groupby('action_id')['filter_pattern'].apply(list)
-                joined = joined.reset_index().merge(subfilters.reset_index(), on='action_id').set_index('action_id')
-            except:
-                pass
 
+            filters = self.has_filter(result.action_id.tolist())
+            joined = joined.join(filters)
 
+            parameters = self.get_parameters(advertiser)
+            joined = joined.reset_index().merge(parameters, on="action_id").set_index("action_id")
+
+            import ipdb; ipdb.set_trace()
+
+            subfilters = self.get_subfilters(result)
+            joined = joined.reset_index().merge(subfilters.reset_index(), on='action_id', how='left').set_index('action_id')
 
             return joined.reset_index()
         except:

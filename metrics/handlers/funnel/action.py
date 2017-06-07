@@ -15,6 +15,7 @@ class ActionHandler(BaseHandler,ActionAuth,APIHelpers,ActionDatabase):
     def initialize(self, db=None, zookeeper=None, **kwargs):
         self.db = db
         self.zookeeper = zookeeper
+        self.crushercache = kwargs['crushercache']
         self.required_cols = ["advertiser", "action_name"]
 
 
