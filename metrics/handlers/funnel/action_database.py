@@ -4,24 +4,9 @@ from lib.helpers import decorators
 import lib.zookeeper.zk_endpoint as zke
 import logging
 
-GET = """
-SELECT pixel_source_name as advertiser, action_name, action_id, action_type, featured from action where %(where)s
-"""
-
-GETFILTERS = """
-SELECT action_id, filter_pattern from action_filters where action_id in (%s)
-"""
 
 GET_PATTERNS = """
 SELECT *  from action_patterns where %(where)s
-"""
-
-HAS_FILTER = """
-SELECT distinct action_id, 1 has_filter from action_filters where %(where)s
-"""
-
-GET_PARAMETERS = """
-SELECT filter_id as action_id, parameters from advertiser_udf_parameter where %(where)s
 """
 
 INSERT_ACTION = """
@@ -53,13 +38,6 @@ GET_MAX_ACTION_PLUS_1 = "select max(action_id)+1 from action"
 
 RESET_AUTO_INCR_ACTION = "alter table action auto_increment = %s"
 
-SQL_PATTERN_QUERY = "select url_pattern from action_patterns where action_id = '{}'"
-
-SQL_NAME_QUERY= "select pixel_source_name from action where action_id = '{}'"
-
-SQL_ACTION_QUERY = "select a.action_id, a.pixel_source_name from action a join action_patterns b on a.action_id=b.action_id where b.url_pattern = '{}' and a.pixel_source_name = '{}'"
-
-INSERT_SUBFILTER = "insert into action_filters (action_id, filter_pattern) values {}"
 
 from action_database_helpers import ActionDatabaseHelper
 
@@ -75,23 +53,21 @@ class ActionDatabase(ActionDatabaseHelper):
 
     def get_advertiser_actions(self, advertiser):
         try:
-            import ipdb; ipdb.set_trace()
             result, patterns = self.query_action(advertiser)
             joined = result.set_index("action_id").join(patterns)
 
             filters = self.has_filter(result.action_id.tolist())
             joined = joined.join(filters)
-
+            
             parameters = self.get_parameters(advertiser)
-            joined = joined.reset_index().merge(parameters, on="action_id").set_index("action_id")
-
-            import ipdb; ipdb.set_trace()
-
+            joined = joined.reset_index().merge(parameters, on="action_id", how='left').set_index("action_id")
+            
             subfilters = self.get_subfilters(result)
             joined = joined.reset_index().merge(subfilters.reset_index(), on='action_id', how='left').set_index('action_id')
 
             return joined.reset_index()
-        except:
+        except Exception as e:
+            logging.info(str(e))
             return pandas.DataFrame()
 
     def get_advertiser_action(self, advertiser, action_id):
@@ -102,8 +78,11 @@ class ActionDatabase(ActionDatabaseHelper):
             filters = self.has_filter(result.action_id.tolist())
             joined = joined.join(filters)
 
+            #parameters = self.get_parameters(advertiser)
+            #joined = joined.reset_index().merge(parameters, on="action_id", how='left').set_index("action_id")
+
             subfilters = self.get_subfilters(result)
-            joined = joined.reset_index().merge(subfilters.reset_index(), on='action_id').set_index('action_id')
+            joined = joined.reset_index().merge(subfilters.reset_index(), on='action_id', how='left').set_index('action_id')
             return joined.reset_index()
         except:
             return pandas.DataFrame()
@@ -145,7 +124,7 @@ class ActionDatabase(ActionDatabaseHelper):
         treeName = self.get_argument("zookeeper_tree","/kafka-filter/tree/visit_events_tree")
         zk = zke.ZKEndpoint(zookeeper, treeName)
 
-        remove_from_zk, advertiser, url = self.zk_remove_check(action_id)
+        remove_from_zk, advertiser, urls = self.zk_remove_check(action_id)
 
         if remove_from_zk:
             zk.remove_advertiser_children_pattern(advertiser, urls, zk.tree)
@@ -164,6 +143,7 @@ class ActionDatabase(ActionDatabaseHelper):
             action.pop("zookeeper_tree")
 
         action['fields'] = self.make_set_fields(action)
+        logging.info(action['fields'])
         cursor.execute(UPDATE_ACTION % action)
         
         to_add, to_remove = self.get_pattern_diff(action)
@@ -177,7 +157,7 @@ class ActionDatabase(ActionDatabaseHelper):
             cursor.execute(DELETE_ACTION_PATTERNS % pattern)
 
         if len(to_add) == 1:
-            self.update_subfilter(action_id, subfilters)
+            self.update_subfilters(action_id, subfilters)
 
         return action
 
@@ -191,7 +171,7 @@ class ActionDatabase(ActionDatabaseHelper):
 
         zk = zke.ZKEndpoint(zookeeper,tree_name=action["zookeeper_tree"])
 
-        remove_from_zk, advertiser, url = self.zk_remove_check(action_id)
+        remove_from_zk, advertiser, urls = self.zk_remove_check(action_id)
         
         if remove_from_zk:
             zk.remove_advertiser_children_pattern(advertiser, urls, zk.tree)

@@ -5,6 +5,51 @@ import lib.zookeeper.zk_endpoint as zke
 import logging
 
 
+GET = """
+SELECT pixel_source_name as advertiser, action_name, action_id, action_type, featured from action where %(where)s
+"""
+
+GETFILTERS = """
+SELECT action_id, filter_pattern from action_filters where action_id in (%s)
+"""
+
+GET_PATTERNS = """
+SELECT *  from action_patterns where %(where)s
+"""
+
+HAS_FILTER = """
+SELECT distinct action_id, 1 has_filter from action_filters where %(where)s
+"""
+
+GET_PARAMETERS = """
+SELECT filter_id as action_id, parameters from advertiser_udf_parameter where %(where)s
+"""
+
+INSERT_ACTION = """
+INSERT INTO action
+    (start_date, end_date, operator, pixel_source_name, action_name, action_type, featured)
+VALUES
+    ("%(start_date)s", "%(end_date)s", "%(operator)s", "%(advertiser)s", "%(action_name)s", "%(action_type)s", "%(featured)d")
+"""
+
+INSERT_ACTION_PATTERNS = """
+INSERT INTO action_patterns (action_id, url_pattern)
+VALUES (%(action_id)s, "%(url_pattern)s")
+"""
+
+UPDATE_ACTION = """
+UPDATE action SET %(fields)s
+WHERE action_id = %(action_id)s
+"""
+
+SQL_PATTERN_QUERY = "select url_pattern from action_patterns where action_id = '{}'"
+
+SQL_NAME_QUERY= "select pixel_source_name from action where action_id = '{}'"
+
+SQL_ACTION_QUERY = "select a.action_id, a.pixel_source_name from action a join action_patterns b on a.action_id=b.action_id where b.url_pattern = '{}' and a.pixel_source_name = '{}'"
+
+INSERT_SUBFILTER = "insert into action_filters (action_id, filter_pattern) values {}"
+
 class ActionDatabaseHelper(object):
 
     def get_patterns(self,ids):
@@ -18,7 +63,7 @@ class ActionDatabaseHelper(object):
         patterns = self.db.select_dataframe(HAS_FILTER % {"where":where}).set_index("action_id")
         return patterns
 
-    def construct_action(self,advertiser, vendor,action_id):
+    def construct_where(self,advertiser, vendor,action_id):
         if vendor:
             where = "active = 1 and deleted = 0 and pixel_source_name = '%s' and action_type = '%s'" % (format(advertiser), format(vendor))
             return where
@@ -29,24 +74,24 @@ class ActionDatabaseHelper(object):
         return where
 
     def query_action(self, advertiser, vendor=None, action_id=None):
-        where = self.construct_where(advertiser,venodr, action_id) 
+        where = self.construct_where(advertiser,vendor, action_id) 
         result = self.db.select_dataframe(GET % {"where":where})
         patterns = self.get_patterns(result.action_id.tolist())
         return result, patterns
 
-    def has_filter(self,ids):
-        where = "action_id in (%s)" % ",".join(map(str,ids))
-        patterns = self.db.select_dataframe(HAS_FILTER % {"where":where}).set_index("action_id")
-        return patterns
-
     def get_subfilters(self, result):
         subfilters = self.db.select_dataframe(GETFILTERS % ",".join(result.action_id.apply(lambda x : str(x)).tolist()))
-        subfilters = subfilters.groupby('action_id')['filter_pattern'].apply(list)
+        if len(subfilters) ==0:
+            subfilters = pandas.DataFrame({"action_id":[], "filter_pattern":[]})
+        else:
+            subfilters = subfilters.groupby('action_id')['filter_pattern'].apply(list)
         return subfilters
 
     def get_parameters(self,advertiser, action_id=None):
         where_parameters = "advertiser = '{}'".format(advertiser)
         parameters = self.crushercache.select_dataframe(GET_PARAMETERS % {"where":where_parameters})
+        if len(parameters)==0:
+            parameters = pandas.DataFrame({"action_id":[], "parameters":[]})
         return parameters
 
     def _insert_zookeeper_tree(self, zk, action):
@@ -106,9 +151,10 @@ class ActionDatabaseHelper(object):
             advertiser = advertiser.ix[0][0]
             advertiser_ids = self.db.select_dataframe(SQL_ACTION_QUERY.format(urls, advertiser))
         else:
-            advertiser_ids = 0
+            advertiser_ids = pandas.DataFrame()
+        advertiser_ids_bool = True if len(advertiser_ids)==1 else False
 
-        return advertiser_ids==1, advertiser, urls
+        return advertiser_ids_bool, advertiser, urls
 
     def update_subfilters(self, action_id, subfilters):
         #Update subfilters
