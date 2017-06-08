@@ -60,7 +60,7 @@ if __name__ == '__main__':
         (r'/segments/timeseries', SegmentTimeseriesHandler, connectors),
         (r'/line_item', LineItemHandler, connectors),
 
-        (r'/yoshi/mediaplans', AdwordsHandler, connectors),
+        (r'/cached/mediaplans', AdwordsHandler, connectors),
 
         (r'/account/permissions', AccountPermissionsHandler, connectors),
         (r'/crusher/funnel/action', ActionHandler, connectors),
