@@ -86,8 +86,6 @@ class ActionTest(AsyncHTTPTestCase):
         self.db = lnk.dbs.test
 
         
-        self.db.execute("TRUNCATE table action_filters")
-
         self.db.execute(CREATE_ACTION_TABLE) 
         self.db.execute(CREATE_PATTERN_TABLE)  
 
@@ -122,18 +120,24 @@ class ActionTest(AsyncHTTPTestCase):
 
     def tearDown(self):
         #"TRUNCATE TABLES"
+        self.db.execute("TRUNCATE table action_filters")
+        self.db.execute("TRUNCATE table action")
+        self.db.execute("TRUNCATE table action_patterns")
+        self.db.execute("TRUNCATE table advertiser")
+
         self.db.execute("DROP TABLE action")
         self.db.execute("DROP TABLE action_patterns")
         
     def test_get(self):        
         _a = ujson.loads(self.fetch("/?format=json&advertiser=alan",method="GET").body)
-        #_b = ujson.loads(self.fetch("/?format=json&advertiser=will",method="GET").body)
         self.assertEqual(len(_a["response"]),1)
-        #self.assertEqual(len(_b["response"]),1)
+
+    def test_get_id(self):
+        _a = ujson.loads(self.fetch("/?format=json&id=1&advertiser=alan",method="GET").body)
+        self.assertEqual(len(_a["response"]),1)
 
     def test_get_subfilter(self):
         _a = ujson.loads(self.fetch("/?format=json&advertiser=alan",method="GET").body)
-        print _a
         self.assertEqual(len(_a["response"][0]["filter_pattern"]),2)
 
     def test_post(self):
@@ -168,7 +172,7 @@ class ActionTest(AsyncHTTPTestCase):
                 "pixel_source_name":"baublebar",
                 "action_name":"0",
                 "operator":"and",
-                "url_pattern":["http://www.baublebar.com/necklaces.html","http://www.baublebar.com/checkout/cart"],
+                "url_pattern":["http://www.baublebar.com/necklaces.html"],
                 "advertiser":"baublebar",
                 "deleted":"0",
                 "action_type":"segment"
@@ -176,10 +180,7 @@ class ActionTest(AsyncHTTPTestCase):
         """
 
         action_posted = self.fetch("/?format=json",method="POST",body=action_string).body
-        import ipdb; ipdb.set_trace()
         action_get_json = ujson.loads(self.fetch("/?format=json&advertiser=baublebar",method="GET").body)['response']
-        print action_posted
-        print action_get_json
         self.assertEqual(ujson.loads(action_string)['action_name'],action_get_json[0]['action_name'])
         self.assertEqual(ujson.loads(action_string)['url_pattern'],action_get_json[0]['url_pattern']) 
         
@@ -196,7 +197,7 @@ class ActionTest(AsyncHTTPTestCase):
 
         Q = "select * from action_patterns where action_id = %s"
         df = self.db.select_dataframe(Q % action_get_json[0]['action_id'])
-        self.assertEqual(len(df),2)
+        self.assertEqual(len(df),1)
 
         action_json['url_pattern'] = ["only_one"]
         action_put = self.fetch("/?format=json&id=%s" % action_json['action_id'],method="PUT",body=ujson.dumps(action_json)).body
@@ -204,7 +205,7 @@ class ActionTest(AsyncHTTPTestCase):
 
         self.assertEqual(action_put_json['url_pattern'],["only_one"]) 
 
-        df = self.db.select_dataframe(Q % action_get_json[0]['action_id']) 
+        df = self.db.select_dataframe(Q % action_get_json[0]['action_id'])
         self.assertEqual(len(df),1)
 
     def test_delete(self):

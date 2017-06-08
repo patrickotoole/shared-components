@@ -63,18 +63,16 @@ class ActionDatabaseHelper(object):
         patterns = self.db.select_dataframe(HAS_FILTER % {"where":where}).set_index("action_id")
         return patterns
 
-    def construct_where(self,advertiser, vendor,action_id):
-        if vendor:
-            where = "active = 1 and deleted = 0 and pixel_source_name = '%s' and action_type = '%s'" % (format(advertiser), format(vendor))
-            return where
+    def construct_where(self,advertiser, action_id):
         if action_id:
-            where = ""
+            where = "active = 1 and deleted=0 and pixel_source_name = '{}' and action_id={}".format(advertiser,action_id)
             return where
         where = "active = 1 and deleted=0 and pixel_source_name = '{}'".format(advertiser)
         return where
 
-    def query_action(self, advertiser, vendor=None, action_id=None):
-        where = self.construct_where(advertiser,vendor, action_id) 
+    def query_action(self, advertiser, action_id=None):
+        where = self.construct_where(advertiser,action_id)
+        print GET % {"where":where} 
         result = self.db.select_dataframe(GET % {"where":where})
         patterns = self.get_patterns(result.action_id.tolist())
         return result, patterns

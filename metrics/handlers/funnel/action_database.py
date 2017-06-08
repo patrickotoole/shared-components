@@ -21,6 +21,11 @@ INSERT INTO action_patterns (action_id, url_pattern)
 VALUES (%(action_id)s, "%(url_pattern)s")
 """
 
+UPDATE_ACTION_PATTERN = """
+UPDATE action_patterns set url_pattern='%s' 
+where action_id='%s'
+"""
+
 UPDATE_ACTION = """
 UPDATE action SET %(fields)s
 WHERE action_id = %(action_id)s
@@ -42,14 +47,6 @@ RESET_AUTO_INCR_ACTION = "alter table action auto_increment = %s"
 from action_database_helpers import ActionDatabaseHelper
 
 class ActionDatabase(ActionDatabaseHelper):
-
-    def get_vendor_actions(self, advertiser, vendor):
-        try:
-            result, patterns = self.query_action(advertiser, vendor=vendor)
-            joined = result.set_index("action_id").join(patterns)
-            return joined.reset_index()
-        except:
-            return pandas.DataFrame()
 
     def get_advertiser_actions(self, advertiser):
         try:
@@ -74,15 +71,16 @@ class ActionDatabase(ActionDatabaseHelper):
         try:
             result, patterns = self.query_action(advertiser, action_id=action_id)
             joined = result.set_index("action_id").join(patterns)
-
+            
             filters = self.has_filter(result.action_id.tolist())
             joined = joined.join(filters)
 
-            #parameters = self.get_parameters(advertiser)
-            #joined = joined.reset_index().merge(parameters, on="action_id", how='left').set_index("action_id")
+            parameters = self.get_parameters(advertiser)
+            joined = joined.reset_index().merge(parameters, on="action_id", how='left').set_index("action_id")
 
             subfilters = self.get_subfilters(result)
             joined = joined.reset_index().merge(subfilters.reset_index(), on='action_id', how='left').set_index('action_id')
+
             return joined.reset_index()
         except:
             return pandas.DataFrame()
@@ -99,19 +97,6 @@ class ActionDatabase(ActionDatabaseHelper):
             "action_id": action_id,
             "url_pattern": url
         }
-
-    def get_pattern_diff(self,action):
-        # calculates how the action patterns differ from the database patterns for action
-        where = "action_id = %s" % action['action_id']
-        existing_df = self.db.select_dataframe(GET_PATTERNS % {"where":where})
-        existing_patterns = existing_df.url_pattern.tolist()
-
-        to_remove_df = existing_df[~existing_df.url_pattern.isin(action["url_pattern"])]
-        to_remove = to_remove_df.url_pattern.tolist()
-
-        to_add = [url for url in action["url_pattern"] if str(url) not in existing_patterns]
-
-        return (to_add,to_remove)
 
 
     @decorators.multi_commit_cursor
@@ -145,19 +130,9 @@ class ActionDatabase(ActionDatabaseHelper):
         action['fields'] = self.make_set_fields(action)
         logging.info(action['fields'])
         cursor.execute(UPDATE_ACTION % action)
+        cursor.execute(UPDATE_ACTION_PATTERN % (action['url_pattern'][0], action_id))
         
-        to_add, to_remove = self.get_pattern_diff(action)
-
-        for url in to_add:
-            pattern = self.make_pattern_object(action_id, url)
-            cursor.execute(INSERT_ACTION_PATTERNS % pattern)
-
-        for url in to_remove:
-            pattern = self.make_pattern_object(action_id, url)
-            cursor.execute(DELETE_ACTION_PATTERNS % pattern)
-
-        if len(to_add) == 1:
-            self.update_subfilters(action_id, subfilters)
+        self.update_subfilters(action_id, subfilters)
 
         return action
 
