@@ -1,0 +1,8 @@
+*.pyc
+*.pyo
+*.swp
+*.swo
+*.csv
+*.tags
+.DS_Store
+node_modules/
