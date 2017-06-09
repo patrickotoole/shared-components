@@ -38,6 +38,10 @@ class JobsHandler(tornado.web.RequestHandler, RPCQueue):
             if data.get('name', False) and 'udf' not in data.keys():
                 data['udf'] = data['name']
             entry, job_id = self.add_to_work_queue(ujson.dumps(data))
+            logging.info(entry)
+            assert("entry" in entry)
+            self.zk_wrapper.assert_in_queue(entry)
+            assert(job_id)
             result = {"Status":"Success", "Job ID":job_id}
         except Exception, e:
             self.set_status(400)

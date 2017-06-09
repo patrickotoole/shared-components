@@ -123,7 +123,10 @@ class WorkQueue(object):
         self.log_before_job(job_id, entry_id, False, fn, kwargs)
         kwargs['log_object'] = self.logging
         valid = self.set_api_wrapper(kwargs)
-        fn(**kwargs)
+        completion_success = fn(**kwargs)
+        if completion_success is not None:
+            message_completion = "job finish succesful" if completion_success else "Job failed, did not complete without error"
+            logging.info(message_completion)
         self.log_job_success(job_id, fn, kwargs)
         if kwargs.get('filter_id',False):
             self.remove_old_item(**kwargs)

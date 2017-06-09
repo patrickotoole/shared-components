@@ -20,7 +20,9 @@ def custom_script(**kwargs):
     try:
         env.run(udf,kwargs.get("params",{}))
         return True
-    except: return False
+    except Exception as e:
+        logging.info(str(e))
+        return False
 
 class RPCQueue():
 
@@ -131,6 +133,7 @@ class RPCQueue():
             priority = 1
 
         entry_id = self.zk_wrapper.write(work,priority,debug_bool)
+        logging.info(entry_id)
         logging.info("added to Cassandra work queue %s for %s" %(segment,advertiser))
         job_id = hashlib.md5(work).hexdigest()
         function_name = kwargs.get('func_name', False) or kwargs.get('udf', 'NA')

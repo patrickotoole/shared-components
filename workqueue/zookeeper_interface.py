@@ -28,4 +28,9 @@ class ZKApi():
         #self.CustomQueue.client.set(self.CustomQueue.secondary_path_base + "/%s/%s" % (job_id.split(entry_id)[1][1:], entry_id), '' ) # running
 
     def reset_queue(self):
-        self.CustomQueue = CustomQueue.CustomQueue(self.zk,self.zk_path, "log", "v01", self.cutoff) 
+        self.CustomQueue = CustomQueue.CustomQueue(self.zk,self.zk_path, "log", "v01", self.cutoff)
+
+    def assert_in_queue(self, entry_id):
+        jobs = self.zk.get_children(self.zk_path)
+        entry_job = entry_id.split("/")[2]
+        assert(entry_job in jobs) 
