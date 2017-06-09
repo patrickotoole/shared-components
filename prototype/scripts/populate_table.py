@@ -23,14 +23,14 @@ class PopulatePrototype:
         df = pandas.DataFrame()
         for x in range(1,100):
             data = self.pull_cass_u2(x, date)
-            df = self.aggregate_u2(df,data)
-            #self.batch_insert(df)
-        return df
+            df = pandas.DataFrame(data)
+            self.batch_insert(df)
 
 
     def batch_insert(self,df):
         values_list = []
         values_base = "('%s','%s', '%s', '%s', %s)"
+        df['advertiser'] = 'vimeo'
         for i,row in df.iterrows():
             temp_value = values_base % (row['uid'], row['url'].replace("'","").replace('"',""), row['advertiser'], row['date'], row['occurrence'])
             values_list.append(temp_value)
@@ -45,7 +45,6 @@ if __name__ == "__main__":
     cass = lnk.dbs.cassandra
     proto = lnk.dbs.prototype
     pp = PopulatePrototype(cass,proto)
-    df = pp.run_u2('2017-05-15 00:00:00')
-    print len(df.uid.unique())
+    df = pp.run_u2('2017-06-07 00:00:00')
     df['advertiser'] = 'vimeo'
-    pp.batch_insert(df)
+    #pp.batch_insert(df)

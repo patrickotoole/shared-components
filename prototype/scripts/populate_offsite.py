@@ -4,7 +4,7 @@ from cassandra.query import SimpleStatement
 
 SELECTQUERY = "select distinct uid from uid_test"
 
-INSERTBATCH = "insert into test (uid, full_url, domain, time) value "
+INSERTBATCH = "insert into offsite (uid, full_url, domain, time) value "
 BASE = "('%s', '%s', '%s', '%s')"
 Q = "SELECT * from rockerbox.visitor_domains_full where uid = '%s'"
 
