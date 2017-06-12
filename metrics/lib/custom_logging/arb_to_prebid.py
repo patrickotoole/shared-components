@@ -14,8 +14,7 @@ if __name__ == '__main__':
     from lib.report.utils.options import options
     from lib.report.utils.options import parse_command_line
 
-    define("ip",  default="")
-    define("port", default="")
+    define("endpoint",  default="")
 
     basicConfig(options={})
 
@@ -57,7 +56,7 @@ if __name__ == '__main__':
                     "seed":auction_id,
                     "segment":"buy"
                 }
-                rq_url = "http://localhost:9001/run?" + urlencode(rq)
+                rq_url = str(options.endpoint) + urlencode(rq)
 
                 try:
                     resp = json.loads(urllib2.urlopen(rq_url).read())
