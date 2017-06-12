@@ -36,7 +36,7 @@ def clear_old_cache(**kwargs):
         date = kwargs['connectors']['crushercache'].select_dataframe(DATEQUERY % query_args)['date'][0] 
         query_args['date'] = date.strftime('%Y-%m-%d')
         kwargs['connectors']['crushercache'].execute(CLEARQUERY, query_args)
-        #logging.info("removed old item in cache")
+        logging.info("removed old item in cache")
 
 def get_crusher_obj(advertiser, base_url, crusher):
     crusher.user = "a_{}".format(advertiser)
