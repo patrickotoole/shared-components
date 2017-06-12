@@ -7,11 +7,9 @@ import pickle
 import datetime        
 
 def test_func(**kwargs):
-    print "case one"
     return False
 
 def test_func_s(**kwargs):
-    print "case two"
     return True
 
 tfone = pickle.dumps((test_func, {'connectors':{}}))
@@ -20,68 +18,106 @@ tftwo = pickle.dumps((test_func_s,{'conectors':{}}))
 def overwrite_logging_pass(msg):
     assert(msg in ["job finish succesful"])
 
-def overwrite_logging_fail(msg):
-    assert(msg in ["Job failed, did not complete without error"])
-
 def overwrite_logging_finish(msg):
     assert(msg in ["finished item in queue"])
 
 def overwrite_logging_failure(msg):
-    assert(msg in ["data not inserted", "random error", "ERROR: queue random error"])
+    expected_message = msg in ["data not inserted", "random error", "ERROR: queue cause an error ", 'None\n', "finished item in queue"] or "Exception" in msg
+    #assert(msg in ["data not inserted", "random error", "ERROR: queue cause an error ", 'None\n', "finished item in queue"])
+    assert expected_message
+
+def overwrite_logging_success(msg):
+    expected_message = msg in ["crusher object is valid: False"] or "finished item in queue" in msg or "starting queue" in msg
+    assert expected_message
 
 def overwrite_logging_clear(msg):
     assert(msg in ["removed old item in cache"])
 
-#class MockRespValidate():
-#    def __init__(self):
-#        self.json = {"results":{"advertisers":[{"pixel_source_name":"rockerbox_advertiser"}]}}
+def overwrite_logging_before(msg):
+    expected_message = msg in ["crusher object is valid: True"] or "starting queue functionA {'connectors'" in msg
+    assert expected_message
 
-#class MockWrapper():
-#    def get(self,x):
-#        mock_resp = MockRespValidate()
-#        return mock_resp
+def overwrite_logging_wrapper(msg):
+    expected_message = msg in ["crusher object not set to current user, setting now current user is rockerbox"]
 
+class MockResp():
+    def __init__(self):
+        self.json = {"results":{"advertisers":[{"pixel_source_name":"rockerbox_advertiser"}]}}
 
-class WQTest(unittest.TestCase):
+class MockWrapper():
+    def __init__(self):
+        self.base_url=""
+        self.user = "notrockerbox"
+        self._token={"advertiser":"123142342"}
+    def authenticate(self):
+        return True
+    def get(self,x):
+        mock_resp = MockResp()
+        return mock_resp
+    def logout_user(self):
+        return True
+
+class MockLogHandlers():
+   def __init__(self):
+       self.job_id=0
+
+class LoggingOverwrite():
+   def __init__(self,func):
+       self.override = func
+       mock_log_handlers = MockLogHandlers()
+       self.handlers = [mock_log_handlers]
+
+   def info(self,x):
+       self.override(x)
+
+class Test(unittest.TestCase):
 
     def setUp(self):
         cr = mock.MagicMock()
-        cr.execute.side_effect = "ex"
         self.wq = workqueue.WorkQueue(True, {}, {},{},{},{"crushercache":cr},{})
-        self.wq.log_before_job = mock.MagicMock()
-        self.wq.log_before_job.side_effect = lambda v,w,x,y,z : ""
-        self.wq.set_api_wrapper = mock.MagicMock()
-        self.wq.set_api_wrapper.side_effect = lambda x : ""
-        self.wq.log_job_success = mock.MagicMock()
-        self.wq.log_job_success.side_effect = lambda x,y,z: ""
+        
+        self.wq.mcounter = mock.MagicMock()
+        self.wq.mcounter.side_effect = lambda x : True
+        self.wq.timer = mock.MagicMock()        
+
         self.wq.log_process = mock.MagicMock()
         self.wq.log_process.side_effect = lambda x : ""
     
     def test_wq_job_run(self):
-        workqueue.logging.info = overwrite_logging_pass
-        self.wq.run_job(tftwo, 12345,'entry_001_12345576')
-        #pass job
+        self.wq.set_api_wrapper = mock.MagicMock()
+        self.wq.set_api_wrapper.side_effect = lambda x : ""
 
-    def test_wq_job_fail(self):
-        workqueue.logging.info = overwrite_logging_fail
-        self.wq.run_job(tfone, 54321,'entry_001_1234567')
-        #fail job
+        self.wq.logging = LoggingOverwrite(overwrite_logging_success)
+        workqueue.logging.info = overwrite_logging_pass
+        cr = mock.MagicMock()
+        cr.execute.side_effect = lambda x,y : True
+        self.wq.connectors = {"crushercache":cr}
+        self.wq.run_job(tftwo, 'entry_001_1234567', "1234567")
+
+    def test_set_wrapper(self):
+        self.wq.connectors={}
+        self.wq.connectors['crusher_wrapper'] = MockWrapper()
+        self.wq.logging = LoggingOverwrite(overwrite_logging_wrapper)
+        valid = self.wq.set_api_wrapper({"advertiser":"rockerbox_advertiser"})
+        assert valid
 
     def test_proces_job(self):
-        class MockLogHandlers():
-            def __init__(self):
-                self.job_id=0
-        class LoggingOverwrite():
-            def __init__(self):
-                mock_log_handlers = MockLogHandlers()
-                self.handlers = [mock_log_handlers]
-            def info(self,x):
-                overwrite_logging_finish(x)
         self.wq.run_job = mock.MagicMock()
         self.wq.run_job.side_effect = lambda x,y,z : True     
-        self.wq.logging = LoggingOverwrite()
-        workqueue.logging.info = overwrite_logging_finish
-        self.wq.process_job("entry_id",tfone)
+        self.wq.logging = LoggingOverwrite(overwrite_logging_finish)
+        self.wq.process_job("entry_001_7654321",tfone)
+
+    def test_process_fail(self):
+        self.wq.run_job = mock.MagicMock()
+        def raise_error(x,y,z):
+            raise Exception("cause an error")
+        self.wq.connectors['crusher_wrapper'] = MockWrapper()
+        cr = mock.MagicMock()
+        cr.execute.side_effect = lambda x,y : True
+        self.wq.connectors['crushercache'] = cr
+        self.wq.run_job.side_effect = lambda x,y,z : raise_error(x,y,z)
+        self.wq.logging = LoggingOverwrite(overwrite_logging_failure)
+        self.wq.process_job("entry_001_12345",tftwo)
 
     def test_remove_oldjob(self):
         cr = mock.MagicMock()
@@ -102,35 +138,29 @@ class WQTest(unittest.TestCase):
 
     def test_log_job_success(self):
         cr = mock.MagicMock()
+        cr.execute.side_effect = lambda x,y : True
         kwargs = {"connectors":{"crushercache":cr}}
-        self.wq.mcounter = mock.MagicMock()
-        self.wq.log_job_success(0123,"functionA",kwargs)
+        connectors = {"crushercache":cr}
+        self.wq.connectors = connectors
+        self.wq.logging = LoggingOverwrite(overwrite_logging_success)
+        self.wq.log_job_success("entry_001_0123","randomfunction",kwargs)
 
     def test_log_before_job(self):
         cr = mock.MagicMock()
         kwargs = {"connectors":{"crushercache":cr}}
-        self.wq.log_before_job(0123,"ebtry_0123", True, "functionA", kwargs)
+        self.wq.logging = LoggingOverwrite(overwrite_logging_before)
+        self.wq.log_before_job("entry_001_0123","_0123", True, "functionA", kwargs)
 
     def test_log_error(self):
-        class LoggingOverwrite():
-            def info(self,x):
-                overwrite_logging_failure(x)
         cr = mock.MagicMock()
         cr.execute.side_effect = lambda x,y : True
-        kwargs = {"connectors":{"crushercache":cr}}
+        connectors = {"crushercache":cr}
         self.wq.mcounter = mock.MagicMock()
-        self.wq.logging = LoggingOverwrite()
-        self.wq.log_error(Exception("random error"), 01234, {})
-
+        self.wq.connectors = connectors
+        self.wq.logging = LoggingOverwrite(overwrite_logging_failure)
+        self.wq.log_error(Exception("cause an error"), "entry_01234_A1", {})
 
     def test_validate_crusher(self):
-        class MockResp():
-            def __init__(self):
-                self.json = {"results":{"advertisers":[{"pixel_source_name":"rockerbox_advertiser"}]}}
-        class MockWrapper():
-            def get(self,x):
-                mock_resp = MockResp()
-                return mock_resp
         wrapper = MockWrapper()
         valid = workqueue.validate_crusher(wrapper,"rockerbox_advertiser")
         assert valid
