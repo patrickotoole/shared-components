@@ -5,7 +5,7 @@ import urlparse
 import ujson
 import logging
 
-BASE_QUERY = "insert into pmp.fills (biddable_auction_id, json_object) values "
+BASE_QUERY = "insert into pmp.fills (uid, biddable_auction_id, json_object) values "
 
 if __name__ == '__main__':
 
