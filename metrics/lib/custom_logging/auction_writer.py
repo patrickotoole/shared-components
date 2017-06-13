@@ -5,7 +5,7 @@ import urlparse
 import ujson
 import logging
 
-BASE_QUERY = "insert into pmp.auction (seed_auction_id, auction_key, json_object) values "
+BASE_QUERY = "insert into pmp.auction (uid, seed_auction_id, auction_key, json_object) values "
 
 if __name__ == '__main__':
 
@@ -13,7 +13,7 @@ if __name__ == '__main__':
     db = lnk.dbs.rockerboxidf
 
     def insert(values):
-        values_string = "('%(auction_id)s', '%(key)s', '%(json_body)s')" % values
+        values_string = "('%(uid)s', '%(auction_id)s', '%(key)s', '%(json_body)s')" % values
         query = BASE_QUERY + values_string
         db.execute(query)
 
@@ -26,7 +26,8 @@ if __name__ == '__main__':
                 msg = ujson.loads(message.value)
                 auction_id = msg.get('external_auction_id', False)
                 key = msg.get('key',0)
-                insert({"auction_id":auction_id, "key": key, "json_body":ujson.dumps(msg).replace("'","")})
+                user_id = msg.get('uid',False)
+                insert({"uid":user_id, "auction_id":auction_id, "key": key, "json_body":ujson.dumps(msg).replace("'","")})
             except:
                 logging.info("error")
                 logging.info(message.value)

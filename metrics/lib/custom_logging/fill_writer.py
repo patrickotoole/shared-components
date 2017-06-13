@@ -23,7 +23,7 @@ if __name__ == '__main__':
     db = lnk.dbs.rockerboxidf
 
     def insert(values):
-        values_string = "('%(auction_id)s', '%(json_body)s')" % values
+        values_string = "('%(uid)s','%(auction_id)s', '%(json_body)s')" % values
         query = BASE_QUERY + values_string
         db.execute(query)
 
@@ -36,8 +36,9 @@ if __name__ == '__main__':
                 msg = ujson.loads(message.value)
                 auction_id = msg.get('auction_id', False)
                 campaign_id = msg.get('campaign_id',False)
+                user_id = msg.get("uid", False)
                 if str(campaign_id) == str(options.campaign_id):
-                    insert({"auction_id":auction_id, "json_body":ujson.dumps(msg).replace("'","")})
+                    insert({"uid":user_id,"auction_id":auction_id, "json_body":ujson.dumps(msg).replace("'","")})
             except:
                 logging.info("error")
                 logging.info(message.value)
