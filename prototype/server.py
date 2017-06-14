@@ -36,8 +36,9 @@ if __name__ == '__main__':
     }
 
 
+    static_dir = dirname + "/static"
     template_dir = "/".join(dirname.split("/")[:-1]) + "/metrics/templates"
-    static_dir ="/".join(dirname.split("/")[:-1]) + "/metrics/static"
+    #static_dir ="/".join(dirname.split("/")[:-1]) + "/metrics/static"
     shared_dir = "/".join(dirname.split("/")[:-1]) + "/shared/js"
     
 
