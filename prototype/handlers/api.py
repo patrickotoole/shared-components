@@ -14,7 +14,7 @@ class ApiHandler(BaseHandler, ApiHelper):
 
     @custom_defer.inlineCallbacksErrors
     def pull_and_result(self, domain_filter, filter_id):
-        data = yield self.database_query(domain_filter, filter_id)
+        data = yield self.domain_query(domain_filter, filter_id)
         self.write(ujson.dumps(data))
         self.finish()
 
