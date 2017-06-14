@@ -42,10 +42,15 @@ if __name__ == '__main__':
     
 
     routes = [
+
         (r'/', LoginHandler, connectors),
         (r'/login', LoginHandler, connectors),
         (r'/logout', LoginHandler, connectors),
         (r'/account/permissions', AccountPermissionsHandler, connectors),
+        (r'/static/(.*)', tornado.web.StaticFileHandler, {'path': static_dir}),
+        (r'/js/(.*)', tornado.web.StaticFileHandler, {'path': shared_dir}),
+
+
         (r'/prototype/(.*?)', ApiHandler, connectors),
     ]
 
