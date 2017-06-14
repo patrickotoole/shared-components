@@ -23,6 +23,7 @@ from link import lnk
 
 from handlers.api import *
 from handlers.login import *
+from handlers.permissions import *
 
 if __name__ == '__main__':
 
@@ -44,6 +45,7 @@ if __name__ == '__main__':
         (r'/', LoginHandler, connectors),
         (r'/login', LoginHandler, connectors),
         (r'/logout', LoginHandler, connectors),
+        (r'/account/permissions', AccountPermissionsHandler, connectors),
         (r'/prototype/(.*?)', ApiHandler, connectors),
     ]
 
