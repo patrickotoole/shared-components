@@ -22,6 +22,7 @@ define("port", default=8888, help="run on the given port", type=int)
 from link import lnk
 
 from handlers.api import *
+from handlers.login import *
 
 if __name__ == '__main__':
 
@@ -40,8 +41,10 @@ if __name__ == '__main__':
     
 
     routes = [
+        (r'/', LoginHandler, connectors),
+        (r'/login', LoginHandler, connectors),
+        (r'/logout', LoginHandler, connectors),
         (r'/prototype/(.*?)', ApiHandler, connectors),
-        (r'/(.*?)', ApiHandler, connectors),
     ]
 
     app = tornado.web.Application(
