@@ -40,8 +40,8 @@ if __name__ == '__main__':
     
 
     routes = [
-        (r'/prototype', ApiHandler, connectors),
-        (r'/', ApiHandler, connectors),
+        (r'/prototype/(.*?)', ApiHandler, connectors),
+        (r'/(.*?)', ApiHandler, connectors),
     ]
 
     app = tornado.web.Application(
