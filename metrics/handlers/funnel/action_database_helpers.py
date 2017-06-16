@@ -104,7 +104,7 @@ class ActionDatabaseHelper(object):
         if parent_node_id.empty:
             #insert parent node
             data= [{"id":3, "data": '{"pattern":"\"source\": \"%s", "label":""}' % advertiser}]
-            resp = requests.post('http://slave31:31736/tree/visit_events_tree', data=ujson.dumps(data), headers={"Content-Type":"application/json"})
+            resp = requests.post('http://tree-synchronizer.marathon.mesos:31499/tree/visit_events_tree', data=ujson.dumps(data), headers={"Content-Type":"application/json"})
             parent_node_id = self.db.select_dataframe(GETPARENTNODE % advertiser_string)['id'][0]
         else:
             parent_node_id = parent_node_id['id'][0]
@@ -112,7 +112,7 @@ class ActionDatabaseHelper(object):
         node_does_not_exists = self.db.select_dataframe(CHECKTREE.format(parent_node_id, action)).empty
         if node_does_not_exists:
             data = [{"id":parent_node_id,"data":{"pattern":"{}".format(action),"label":"","query":"UPDATE rockerbox.pattern_occurrence_urls_counter set count= count + 1 where source = '${source}' and date = '${date}' and url = '${referrer}' and action = '%s';" % action}}]
-            requests.post('http://slave63:31427/tree/visit_events_tree', data=ujson.dumps(data),headers={"Content-Type":"application/json"})
+            requests.post('http://tree-synchronizer.marathon.mesos:31499/tree/visit_events_tree', data=ujson.dumps(data),headers={"Content-Type":"application/json"})
         
     def _delete_from_tee(self, action_id):
         existing_segment = self.db.select_dataframe(GETADVERTISERPATTERN.format(action_id))
@@ -127,7 +127,7 @@ class ActionDatabaseHelper(object):
         if parent_node_id.empty:
             #insert parent node
             data= [{"id":3, "data": '{"pattern":"\"source\": \"%s", "label":""}' % advertiser}]
-            resp = requests.post('http://slave63:31736/tree/visit_events_tree', data=ujson.dumps(data), headers={"Content-Type":"application/json"})
+            resp = requests.post('http://tree-synchronizer.marathon.mesos:31499/tree/visit_events_tree', data=ujson.dumps(data), headers={"Content-Type":"application/json"})
             parent_node_id = self.db.select_dataframe(GETPARENTNODE % advertiser_string)['id'][0]
         else:
             parent_node_id = parent_node_id['id'][0]
@@ -137,7 +137,7 @@ class ActionDatabaseHelper(object):
             raise Exception("pattern does not exist in tree")
 
         action_id = action_id['id'][0]
-        resp = requests.delete('http://slave63:31736/tree/visit_events_tree?id={}'.format(action_id))
+        resp = requests.delete('http://tree-synchronizer.marathon.mesos:31499/tree/visit_events_tree?id={}'.format(action_id))
         logging.info(resp)
 
     def _insert_database(self, action, cursor):
