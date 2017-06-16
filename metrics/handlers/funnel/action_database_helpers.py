@@ -50,6 +50,10 @@ SQL_ACTION_QUERY = "select a.action_id, a.pixel_source_name from action a join a
 
 INSERT_SUBFILTER = "insert into action_filters (action_id, filter_pattern) values {}"
 
+GETPARENTNODE = """SELECT id FROM visit_events_tree_nodes WHERE node like '{"pattern":%s"label":""}'"""
+
+CHECKTREE = "SELECT * FROM visit_events_tree_nodes WHERE parent = {} AND node LIKE '%pattern\":\"{}%'"
+
 class ActionDatabaseHelper(object):
 
     def get_patterns(self,ids):
@@ -92,10 +96,18 @@ class ActionDatabaseHelper(object):
             parameters = pandas.DataFrame({"action_id":[], "parameters":[]})
         return parameters
 
-    def _insert_zookeeper_tree(self, zk, action):
-        for url in action["url_pattern"]:
-            updated_tree = zk.add_advertiser_pattern(action["advertiser"],url,zk.tree)
-        zk.set_tree()
+    def _insert_into_tree(self, action, advertiser):
+        advertiser_string = "%" + advertiser + "%"
+        parent_node_id = self.rockerbox.select_dataframe(GETPARENTNODE % advertiser_string)
+        if parent_node_id.empty:
+            #insert parent node
+            data= [{"id":3, "data": '{"pattern":"\"source\": \"%s", "label":""}' % advertiser}]
+            requests.post('http://slave31:31736/tree/visit_events_tree', data=ujson.dumps(data))
+        node_exists = self.rockerbox.select_dataframe(CHECKTREE.format(parent_node_id, action)).empty
+        if not node_exists:
+            data = [{"id":123,"data":{"pattern":"{}".format(action),"label":"","query":"UPDATE rockerbox.pattern_occurrence_urls_counter set count= count + 1 where source = '${source}' and date = '${date}' and url = '${referrer}' and action = '%s';" % action}}]
+            requests.post('http://slave31:31736/tree/visit_events_tree', data=ujson.dumps(data))
+        
 
     def _insert_database(self, action, cursor):
         cursor.execute(INSERT_ACTION % action)

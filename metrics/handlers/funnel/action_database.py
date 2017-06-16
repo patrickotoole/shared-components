@@ -117,7 +117,8 @@ class ActionDatabase(ActionDatabaseHelper):
 
         #insert
         try:
-            self._insert_zookeeper_tree(self, zk, action)
+            #self._insert_zookeeper_tree(self, zk, action)
+            self._insert_into_tree (action, advertiser)
         except:
             logging.error("could not add updated pattern to zookeeper try on put %s" % action)
 
@@ -176,9 +177,10 @@ class ActionDatabase(ActionDatabaseHelper):
         zk = zke.ZKEndpoint(zookeeper,tree_name=action["zookeeper_tree"])
 
         try:
-            self._insert_zookeeper_tree(zk, action)
+            #self._insert_zookeeper_tree(zk, action)
+            self._insert_into_tree(action, advertiser)
             self._insert_database(action, cursor)
-
+            
             if zookeeper:
                 self._insert_work_queue(action,zookeeper)
 
