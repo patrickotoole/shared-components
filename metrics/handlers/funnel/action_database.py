@@ -105,20 +105,11 @@ class ActionDatabase(ActionDatabaseHelper):
         self.assert_required_params(["id"])
         action_id = self.get_argument("id")
 
-        #treeName = self.get_argument("zookeeper_tree","for_play")
-        treeName = self.get_argument("zookeeper_tree","/kafka-filter/tree/visit_events_tree")
-        zk = zke.ZKEndpoint(zookeeper, treeName)
 
-        remove_from_zk, advertiser, urls = self.zk_remove_check(action_id)
-
-        if remove_from_zk:
-            zk.remove_advertiser_children_pattern(advertiser, urls, zk.tree)
-            zk.set_tree()
-
+        self._delete_from_tee(action['action_id'])
         #insert
         try:
-            #self._insert_zookeeper_tree(self, zk, action)
-            self._insert_into_tree (action, advertiser)
+            self._insert_into_tree (action['url_pattern'][0], action['advertiser'])
         except:
             logging.error("could not add updated pattern to zookeeper try on put %s" % action)
 
@@ -147,11 +138,8 @@ class ActionDatabase(ActionDatabaseHelper):
 
         zk = zke.ZKEndpoint(zookeeper,tree_name=action["zookeeper_tree"])
 
-        remove_from_zk, advertiser, urls = self.zk_remove_check(action_id)
-        
-        if remove_from_zk:
-            zk.remove_advertiser_children_pattern(advertiser, urls, zk.tree)
-            zk.set_tree()
+        import ipdb; ipdb.set_trace()        
+        self._delete_from_tee(action['action_id'])
 
         cursor.execute(DELETE_ACTION % action)
 
@@ -172,18 +160,16 @@ class ActionDatabase(ActionDatabaseHelper):
 
         self.assert_required(action,self.required_cols)
 
-        action["zookeeper_tree"] = self.get_argument("zookeeper_tree","/kafka-filter/tree/visit_events_tree")
+        #action["zookeeper_tree"] = self.get_argument("zookeeper_tree","/kafka-filter/tree/visit_events_tree")
         #action["zookeeper_tree"] = self.get_argument("zookeeper_tree","for_play")
-        zk = zke.ZKEndpoint(zookeeper,tree_name=action["zookeeper_tree"])
-
+        #zk = zke.ZKEndpoint(zookeeper,tree_name=action["zookeeper_tree"])
+        
+        advertiser = action['advertiser']
         try:
             #self._insert_zookeeper_tree(zk, action)
-            self._insert_into_tree(action, advertiser)
+            self._insert_into_tree(action['url_pattern'][0], advertiser)
             self._insert_database(action, cursor)
             
-            if zookeeper:
-                self._insert_work_queue(action,zookeeper)
-
             return action
         except Exception as e:
             next_auto = cursor.execute(GET_MAX_ACTION_PLUS_1)

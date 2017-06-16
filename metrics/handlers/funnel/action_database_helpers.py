@@ -3,7 +3,7 @@ import ujson
 from lib.helpers import decorators
 import lib.zookeeper.zk_endpoint as zke
 import logging
-
+import requests
 
 GET = """
 SELECT pixel_source_name as advertiser, action_name, action_id, action_type, featured from action where %(where)s
@@ -54,6 +54,8 @@ GETPARENTNODE = """SELECT id FROM visit_events_tree_nodes WHERE node like '{"pat
 
 CHECKTREE = "SELECT * FROM visit_events_tree_nodes WHERE parent = {} AND node LIKE '%pattern\":\"{}%'"
 
+GETADVERTISERPATTERN = "SELECT pixel_source_name, url_pattern from action_with_patterns where action_id={}"
+
 class ActionDatabaseHelper(object):
 
     def get_patterns(self,ids):
@@ -98,16 +100,45 @@ class ActionDatabaseHelper(object):
 
     def _insert_into_tree(self, action, advertiser):
         advertiser_string = "%" + advertiser + "%"
-        parent_node_id = self.rockerbox.select_dataframe(GETPARENTNODE % advertiser_string)
+        parent_node_id = self.db.select_dataframe(GETPARENTNODE % advertiser_string)
         if parent_node_id.empty:
             #insert parent node
             data= [{"id":3, "data": '{"pattern":"\"source\": \"%s", "label":""}' % advertiser}]
-            requests.post('http://slave31:31736/tree/visit_events_tree', data=ujson.dumps(data))
-        node_exists = self.rockerbox.select_dataframe(CHECKTREE.format(parent_node_id, action)).empty
-        if not node_exists:
-            data = [{"id":123,"data":{"pattern":"{}".format(action),"label":"","query":"UPDATE rockerbox.pattern_occurrence_urls_counter set count= count + 1 where source = '${source}' and date = '${date}' and url = '${referrer}' and action = '%s';" % action}}]
-            requests.post('http://slave31:31736/tree/visit_events_tree', data=ujson.dumps(data))
+            resp = requests.post('http://slave31:31736/tree/visit_events_tree', data=ujson.dumps(data), headers={"Content-Type":"application/json"})
+            parent_node_id = self.db.select_dataframe(GETPARENTNODE % advertiser_string)['id'][0]
+        else:
+            parent_node_id = parent_node_id['id'][0]
+
+        node_does_not_exists = self.db.select_dataframe(CHECKTREE.format(parent_node_id, action)).empty
+        if node_does_not_exists:
+            data = [{"id":parent_node_id,"data":{"pattern":"{}".format(action),"label":"","query":"UPDATE rockerbox.pattern_occurrence_urls_counter set count= count + 1 where source = '${source}' and date = '${date}' and url = '${referrer}' and action = '%s';" % action}}]
+            requests.post('http://slave63:31427/tree/visit_events_tree', data=ujson.dumps(data),headers={"Content-Type":"application/json"})
         
+    def _delete_from_tee(self, action_id):
+        existing_segment = self.db.select_dataframe(GETADVERTISERPATTERN.format(action_id))
+        if existing_segment.empty:
+            raise Exception("pattern does not exist in tree")
+        advertiser = existing_segment['pixel_source_name'][0]
+        pattern = existing_segment['url_pattern'][0]
+
+
+        advertiser_string = "%" + advertiser + "%"
+        parent_node_id = self.db.select_dataframe(GETPARENTNODE % advertiser_string)
+        if parent_node_id.empty:
+            #insert parent node
+            data= [{"id":3, "data": '{"pattern":"\"source\": \"%s", "label":""}' % advertiser}]
+            resp = requests.post('http://slave63:31736/tree/visit_events_tree', data=ujson.dumps(data), headers={"Content-Type":"application/json"})
+            parent_node_id = self.db.select_dataframe(GETPARENTNODE % advertiser_string)['id'][0]
+        else:
+            parent_node_id = parent_node_id['id'][0]
+
+        action_id = self.db.select_dataframe(CHECKTREE.format(parent_node_id, pattern))
+        if action_id.empty:
+            raise Exception("pattern does not exist in tree")
+
+        action_id = action_id['id'][0]
+        resp = requests.delete('http://slave63:31736/tree/visit_events_tree?id={}'.format(action_id))
+        logging.info(resp)
 
     def _insert_database(self, action, cursor):
         cursor.execute(INSERT_ACTION % action)
