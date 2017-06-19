@@ -110,7 +110,6 @@ def run(opt_name=False, advertiser=False):
 
         except Exception as e:
             logging.info("opt - encountered error %s" %e)
-            return (e)
 
 
 
