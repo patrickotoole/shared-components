@@ -38,13 +38,13 @@ var buckets = d3.range(0,24).reduce((p,c) => {
 
 DomainExpanded.prototype = {
     data: function(val) {
-      return accessor.bind(this)("data",val) 
+      return accessor.bind(this)("data",val)
     }
   , raw: function(val) {
-      return accessor.bind(this)("raw",val) 
+      return accessor.bind(this)("raw",val)
     }
   , urls: function(val) {
-      return accessor.bind(this)("urls",val) 
+      return accessor.bind(this)("urls",val)
     }
   , draw: function() {
 
@@ -126,7 +126,7 @@ DomainExpanded.prototype = {
         .style("line-height","36px")
         .style("display","inline-block")
         .style("vertical-align","top")
- 
+
       d3_class(euh,"title")
         .style("width","265px")
         .style("font-weight","bold")
@@ -315,13 +315,14 @@ d3_updateable(svg_legend,"line.three","line")
           self.on("stage-filter")(x)
         })
 
-      d3_class(url_name,"url")
+      d3_class(url_name,"url","a")
         .style("display","inline-block")
         .style("text-overflow","ellipsis")
         .style("width","205px")
         .text(x => {
-          return x.url.split(d.domain)[1] || x.url 
+          return x.url.split(d.domain)[1] || x.url
         })
+        .attr("href", x => x.url )
 
       d3_updateable(url_row,".number","div").classed("number",true)
         .style("width","40px")
