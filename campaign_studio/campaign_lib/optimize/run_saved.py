@@ -80,33 +80,34 @@ def run(opt_name=False, advertiser=False):
             raw_data = get_data(_json, api, reporting)
             _json['data'] = raw_data.to_dict('records')
 
-            
-            if 'transforms' not in _json.keys():
-                _json['transforms'] = [{'name':"null", 'eval':"1"}]
-            else:
-                _json['transforms'] = [x for x in _json['transforms'] if x['eval']!=""] + [{'name':"null", 'eval':"1"}]
+            if len(_json['data'] ) > 0:
 
-            logging.info("opt - transforming: " + json.dumps(_json['transforms']) )
-            data = run_transform(_json)
+                if 'transforms' not in _json.keys():
+                    _json['transforms'] = [{'name':"null", 'eval':"1"}]
+                else:
+                    _json['transforms'] = [x for x in _json['transforms'] if x['eval']!=""] + [{'name':"null", 'eval':"1"}]
 
-            if 'filters' in _json.keys():
-                logging.info("opt - filtering: " + json.dumps(_json['filters']) )
-                filter_data = run_filter(data, _json)
-            else:
-                filter_data = data
+                logging.info("opt - transforming: " + json.dumps(_json['transforms']) )
+                data = run_transform(_json)
 
-            logging.info("opt - filtered data: %s to %s" % (len(data) , len(filter_data)) )
+                if 'filters' in _json.keys():
+                    logging.info("opt - filtering: " + json.dumps(_json['filters']) )
+                    filter_data = run_filter(data, _json)
+                else:
+                    filter_data = data
 
-            import runner
-            import parse
+                logging.info("opt - filtered data: %s to %s" % (len(data) , len(filter_data)) )
 
-            dparams = parse.parse({"params":_json['settings']})
+                import runner
+                import parse
 
-            logging.info("opt - starting updates.")
-            runner.runner(dparams,filter_data,api,row['name'])
+                dparams = parse.parse({"params":_json['settings']})
 
-            logging.info("opt - finished updates.")
-            logging.info("opt - finished job: %s" % i)
+                logging.info("opt - starting updates.")
+                runner.runner(dparams,filter_data,api,row['name'])
+
+                logging.info("opt - finished updates.")
+                logging.info("opt - finished job: %s" % i)
 
         except Exception as e:
             logging.info("opt - encountered error %s" %e)
