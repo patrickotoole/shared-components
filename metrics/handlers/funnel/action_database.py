@@ -105,14 +105,14 @@ class ActionDatabase(ActionDatabaseHelper):
         self.assert_required_params(["id"])
         action_id = self.get_argument("id")
 
-
-        self._delete_from_tee(action['action_id'])
+        logging.info("before delete")
+        self._delete_from_tree(action['action_id'])
         #insert
         try:
+            logging.info("pre insert")
             self._insert_into_tree (action['url_pattern'][0], action['advertiser'])
         except:
-            logging.error("could not add updated pattern to zookeeper try on put %s" % action)
-
+            logging.error("could not add updated pattern to tree try on put %s" % action)
         subfilters = action.get('subfilters',False)
         if subfilters:
             action.pop('subfilters')
@@ -123,8 +123,8 @@ class ActionDatabase(ActionDatabaseHelper):
         logging.info(action['fields'])
         cursor.execute(UPDATE_ACTION % action)
         cursor.execute(UPDATE_ACTION_PATTERN % (action['url_pattern'][0], action_id))
-        
-        self.update_subfilters(action_id, subfilters)
+        if subfilters:    
+            self.update_subfilters(action_id, subfilters)
 
         return action
 
@@ -138,8 +138,7 @@ class ActionDatabase(ActionDatabaseHelper):
 
         zk = zke.ZKEndpoint(zookeeper,tree_name=action["zookeeper_tree"])
 
-        import ipdb; ipdb.set_trace()        
-        self._delete_from_tee(action['action_id'])
+        self._delete_from_tree(action['action_id'])
 
         cursor.execute(DELETE_ACTION % action)
 
@@ -147,7 +146,6 @@ class ActionDatabase(ActionDatabaseHelper):
 
     @decorators.multi_commit_cursor
     def perform_insert(self, body, zookeeper,cursor=None):
-
         action = ujson.loads(body)
         action = dict(action.items() + [("start_date","0"),("end_date","0")])
         if action.get("operator") is None:
@@ -160,10 +158,6 @@ class ActionDatabase(ActionDatabaseHelper):
 
         self.assert_required(action,self.required_cols)
 
-        #action["zookeeper_tree"] = self.get_argument("zookeeper_tree","/kafka-filter/tree/visit_events_tree")
-        #action["zookeeper_tree"] = self.get_argument("zookeeper_tree","for_play")
-        #zk = zke.ZKEndpoint(zookeeper,tree_name=action["zookeeper_tree"])
-        
         advertiser = action['advertiser']
         try:
             #self._insert_zookeeper_tree(zk, action)

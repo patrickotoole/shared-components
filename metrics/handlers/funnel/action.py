@@ -1,6 +1,7 @@
 import tornado.web
 import ujson
 import pandas
+import requests
 
 from handlers.base import BaseHandler
 from lib.helpers import Convert
@@ -17,6 +18,7 @@ class ActionHandler(BaseHandler,ActionAuth,APIHelpers,ActionDatabase):
         self.zookeeper = zookeeper
         self.crushercache = kwargs.get('crushercache',None)
         self.required_cols = ["advertiser", "action_name"]
+        self.requests = requests
 
 
     @tornado.web.authenticated
