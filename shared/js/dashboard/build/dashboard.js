@@ -3055,7 +3055,7 @@
             self.on("stage-filter")(x)
           })
 
-        d3_class$3(url_name,"url", "a")
+        d3_class$3(url_name,"url")
           .style("display","inline-block")
           .style("text-overflow","ellipsis")
           .style("width","205px")
