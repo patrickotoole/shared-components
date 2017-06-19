@@ -58,6 +58,7 @@ class ActionDatabase(ActionDatabaseHelper):
             
             parameters = self.get_parameters(advertiser)
             joined = joined.reset_index().merge(parameters, on="action_id", how='left').set_index("action_id")
+            joined['parameters'] = joined.parameters.fillna('{}')
             
             subfilters = self.get_subfilters(result)
             joined = joined.reset_index().merge(subfilters.reset_index(), on='action_id', how='left').set_index('action_id')
@@ -77,6 +78,7 @@ class ActionDatabase(ActionDatabaseHelper):
 
             parameters = self.get_parameters(advertiser)
             joined = joined.reset_index().merge(parameters, on="action_id", how='left').set_index("action_id")
+            joined['parameters'] = joined.parameters.fillna('{}')
 
             subfilters = self.get_subfilters(result)
             joined = joined.reset_index().merge(subfilters.reset_index(), on='action_id', how='left').set_index('action_id')
@@ -162,7 +164,9 @@ class ActionDatabase(ActionDatabaseHelper):
         try:
             #self._insert_zookeeper_tree(zk, action)
             self._insert_into_tree(action['url_pattern'][0], advertiser)
-            self._insert_database(action, cursor)
+            
+            parameters = action.get('parameters',{})
+            self._insert_database(action, cursor, parameters)
             
             return action
         except Exception as e:

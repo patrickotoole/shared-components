@@ -55,6 +55,8 @@ CHECKTREE = "SELECT * FROM visit_events_tree_nodes WHERE parent = {} AND node LI
 
 GETADVERTISERPATTERN = "SELECT pixel_source_name, url_pattern from action_with_patterns where action_id={}"
 
+INSERT_PARAMETERS = "insert into advertiser_udf_parameter (advertiser, filter_id, udf, parameters) values ('%s', %s, 'domains_full_time_minute', '%s')"
+
 class ActionDatabaseHelper(object):
 
     def get_patterns(self,ids):
@@ -140,7 +142,7 @@ class ActionDatabaseHelper(object):
         resp = self.tree_sync.delete('/tree/visit_events_tree?id={}'.format(action_id))
         logging.info(resp)
 
-    def _insert_database(self, action, cursor):
+    def _insert_database(self, action, cursor, parameters):
         cursor.execute(INSERT_ACTION % action)
         action_id = cursor.lastrowid
         if "subfilters" in action:
@@ -153,6 +155,8 @@ class ActionDatabaseHelper(object):
         for url in action["url_pattern"]:
             pattern = self.make_pattern_object(action_id,url)
             cursor.execute(INSERT_ACTION_PATTERNS % pattern)
+        if parameters:
+            self.crushercache.execute(INSERT_PARAMETERS % (action['advertiser'], action_id, ujson.dumps(parameters)))
         action['action_id'] = action_id
 
     def _insert_work_queue(self, action, zookeeper):

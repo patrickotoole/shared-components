@@ -21,8 +21,14 @@ define("port", default=8888, help="run on the given port", type=int)
 
 from link import lnk
 
+import sys 
+sys.path.append('..')
+
 from handlers.line_item import *
-from handlers.action import *
+from metrics.handlers.funnel.action import ActionHandler
+from handlers.action import ActionIndexHandler
+from handlers.action import SegmentCheckHandler
+from handlers.action import SegmentTimeseriesHandler
 from handlers.dashboard import *
 from handlers.cache import * 
 from handlers.advertiser import *
