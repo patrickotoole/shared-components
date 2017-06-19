@@ -53,8 +53,6 @@ export default function(vendor_data_columns) {
 
     var target = d3.select(this);
 
-    console.log(target.selectAll("svg").size())
-
     if(!!y.parentCategoryData && target.selectAll("svg").size() == 0 ) {
       y.parentCategoryData.map(function(x){ x.label = x.label || x.key; x.value = x.value || x.values }) // HACK
       y.parentCategoryData = y.parentCategoryData.filter(function(x){ return x.label != 'NA'; })

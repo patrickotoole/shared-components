@@ -414,7 +414,29 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
     } else {
       deferred_cb(null, cb.bind(false, cache.dashboard_cached));
     }
-  })
+  });
+
+  endpoints.google_analytics_data = api.helpers.genericQueuedAPIWithData(function(data, cb, deferred_cb) {
+    if (!cache.google_analytics_data) {
+      d3.json("/integrations/googleanalytics/data?date=" + data['period'] + "&view_id=" + data['view_id'], function(json_output) {
+        cache.google_analytics_data = json_output;
+        deferred_cb(null, cb.bind(false, cache.google_analytics_data));
+      })
+    } else {
+      deferred_cb(null, cb.bind(false, cache.google_analytics_data));
+    }
+  });
+
+  endpoints.google_analytics_sites = api.helpers.genericQueuedAPIWithData(function(data, cb, deferred_cb) {
+    if (!cache.google_analytics_sites) {
+      d3.json("/integrations/googleanalytics/properties", function(json_output) {
+        cache.google_analytics_sites = json_output;
+        deferred_cb(null, cb.bind(false, cache.google_analytics_sites));
+      })
+    } else {
+      deferred_cb(null, cb.bind(false, cache.google_analytics_sites));
+    }
+  });
 
   // endpoints.cached_visitor_domains_only = new api.helpers.genericQueuedAPIWithData(function(vendor, cb, deferred_cb) {
   //   if (!vendor.domains_raw) {
@@ -946,7 +968,6 @@ RB.crusher.api.endpoints = (function(endpoints, api, crusher, cache) {
   })
 
   endpoints.actionTimeseriesOnly = api.helpers.genericQueuedAPIWithData(function(action, cb, deferred_cb) {
-    console.log('list_items_data', action);
     var endpoint_url = '/crusher/pattern_search/timeseries_only?'
     // debugger;
     if (action.has_filter) endpoint_url += "filter_id=" + action.action_id + "&"

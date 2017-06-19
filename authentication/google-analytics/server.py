@@ -14,24 +14,22 @@ secrets_path = os.path.abspath('../authentication/google-analytics/secrets.json'
 flow = client.flow_from_clientsecrets(
     secrets_path,
     scope='https://www.googleapis.com/auth/analytics.readonly',
-    redirect_uri='http://ga-dev.rockerbox.com:8888/callback')
+    redirect_uri='http://hindsight.getrockerbox.com/integrations/googleanalytics/callback')
 flow.params['access_type'] = 'offline'
 
 class DBQuery:
     def saveAdvertiser(self, credentials_json):
-        advertiser_id = self.get_secure_cookie('advertiser')
-
-        sql = "INSERT INTO `advertiser_ga` (`advertiser_id`, `view_id`, `token`, `ts_created`) VALUES (%(advertiser_id)d, %(view_id)d, '%(token)s', NOW())" % {
-            'advertiser_id': int(advertiser_id),
+        sql = "INSERT INTO `advertiser_ga` (`user_id`, `view_id`, `token`, `ts_created`) VALUES (NULL, %(view_id)d, '%(token)s', NOW());" % {
             'view_id': int(0),
             'token': json.dumps(credentials_json)
         }
 
         try:
-            df = self.db.execute(sql)
+            user_id = self.db.execute(sql)
             response = {
                 'status': 'success',
-                'message': 'User is saved in database.'
+                'message': 'User is saved in database.',
+                'user_id': user_id
             }
         except:
             response = {
@@ -41,8 +39,8 @@ class DBQuery:
 
         return response
 
-    def getAdvertiser(self, advertiser_id):
-        sql = "SELECT * FROM `advertiser_ga` WHERE `advertiser_id` = %s LIMIT 0,1" % (advertiser_id)
+    def getAdvertiser(self, user_id):
+        sql = "SELECT * FROM `advertiser_ga` WHERE `user_id` = %s LIMIT 0,1" % (user_id)
 
         try:
             df = self.db.select_dataframe(sql)
@@ -58,9 +56,8 @@ class DBQuery:
 
         return response
 
-    def getAnalytics(self, advertiser, date, url):
+    def getAnalytics(self, advertiser, date, url, view_id):
         credentials = advertiser['token']
-        view_id = advertiser['view_id']
 
         credentials = client.OAuth2Credentials.new_from_json(credentials)
 
@@ -82,38 +79,34 @@ class DBQuery:
                 'reportRequests': [
                     {
                         'viewId': str(view_id),
-                        'dateRanges': [
-                            {
-                                'startDate': start_date,
-                                'endDate': end_date
-                            }
-                        ],
-                        'dimensions': [{'name': 'ga:segment'}, {'name': 'ga:pagePath'}],
-                        'metrics': [{'expression': 'ga:users'}, {'expression': 'ga:sessions'}, {'expression': 'ga:hits'}],
+                        'dateRanges': [{
+                            'startDate': start_date,
+                            'endDate': end_date
+                        }],
+                        'dimensions': [{'name': 'ga:segment'}, {'name': 'ga:pagePath'}, {'name': 'ga:date'}],
+                        'metrics': [{'expression': 'ga:users'}, {'expression': 'ga:sessions'}, {'expression': 'ga:hits'}, {'expression': 'ga:goalCompletionsAll'}],
+                        'includeEmptyRows': 'true',
                         'orderBys': [{'fieldName': 'ga:users', 'sortOrder': 'DESCENDING'}],
-                        'segments': [
-                            {
-                            'dynamicSegment':
-                                {
-                                    'name': 'Users / Sessions / Hits',
-                                    'userSegment': {
-                                        'segmentFilters': [{
-                                            'simpleSegment': {
-                                                'orFiltersForSegment': [{
-                                                    'segmentFilterClauses': [{
-                                                        'dimensionFilter': {
-                                                            'dimensionName': 'ga:pagePath',
-                                                            'operator': 'EXACT',
-                                                            'expressions': [url]
-                                                        }
-                                                    }]
+                        'segments': [{
+                            'dynamicSegment': {
+                                'name': 'Users / Sessions / Hits / Goal completions',
+                                'userSegment': {
+                                    'segmentFilters': [{
+                                        'simpleSegment': {
+                                            'orFiltersForSegment': [{
+                                                'segmentFilterClauses': [{
+                                                    'dimensionFilter': {
+                                                        'dimensionName': 'ga:pagePath',
+                                                        'operator': 'PARTIAL',
+                                                        'expressions': [url]
+                                                    }
                                                 }]
-                                            }
-                                        }]
-                                    }
+                                            }]
+                                        }
+                                    }]
                                 }
                             }
-                        ]
+                        }]
                     }
                 ]
             }
@@ -127,8 +120,30 @@ class IndexHandler(web.RequestHandler, DBQuery):
         self.db = db
 
     def get(self):
+        user_id = self.get_secure_cookie('user_id', None)
+
+        if user_id == None:
+            self.write('<a href="/authorize">Authorize</a>')
+        else:
+            self.render('report.html')
+
+
+class AuthorizeHandler(web.RequestHandler, DBQuery):
+    def initialize(self, db):
+        self.db = db
+
+    def get(self):
         auth_uri = flow.step1_get_authorize_url()
         self.redirect(auth_uri)
+
+
+class SignoutHandler(web.RequestHandler, DBQuery):
+    def initialize(self, db):
+        self.db = db
+
+    def get(self):
+        self.clear_cookie('user_id')
+        self.redirect('/')
 
 
 class PropertiesHandler(web.RequestHandler, DBQuery):
@@ -136,8 +151,8 @@ class PropertiesHandler(web.RequestHandler, DBQuery):
         self.db = db
 
     def get(self):
-        advertiser_id = self.get_secure_cookie('advertiser')
-        advertiser = DBQuery.getAdvertiser(self, advertiser_id)
+        user_id = self.get_secure_cookie('user_id')
+        advertiser = DBQuery.getAdvertiser(self, user_id)
 
         credentials = advertiser['token']
         credentials = client.OAuth2Credentials.new_from_json(credentials)
@@ -149,12 +164,13 @@ class PropertiesHandler(web.RequestHandler, DBQuery):
         summary = json.loads(res)
 
         properties = []
-        for property in summary['items'][0]['webProperties']:
-            for profile in property['profiles']:
-                properties.append({
-                    'id': profile['id'],
-                    'name': '%s - %s' % (property['name'], profile['name'])
-                })
+        for item in summary['items']:
+            for property in item['webProperties']:
+                for profile in property['profiles']:
+                    properties.append({
+                        'id': profile['id'],
+                        'name': '%s - %s' % (property['name'], profile['name'])
+                    })
         self.write(json.dumps(properties))
         self.finish()
 
@@ -162,9 +178,9 @@ class PropertiesHandler(web.RequestHandler, DBQuery):
         post_data = json.loads(self.request.body)
 
         view_id = post_data['view_id']
-        advertiser_id = post_data['advertiser_id']
+        user_id = post_data['user_id']
 
-        sql = "UPDATE `advertiser_ga` SET `view_id` = '%d' WHERE `advertiser_id` = '%d'" % (view_id, advertiser_id)
+        sql = "UPDATE `advertiser_ga` SET `view_id` = '%d' WHERE `user_id` = '%d'" % (view_id, user_id)
 
         try:
             df = self.db.execute(sql)
@@ -195,8 +211,13 @@ class CallbackHandler(web.RequestHandler, DBQuery):
         credentials = flow.step2_exchange(code)
         credentials_json = credentials.to_json()
 
-        DBQuery.saveAdvertiser(self, credentials_json)
-        self.write(credentials_json)
+        user = DBQuery.saveAdvertiser(self, credentials_json)
+        if(user['status'] == 'success'):
+            user_id = json.dumps(user['user_id'])
+            self.set_secure_cookie('user_id', user_id)
+            self.redirect('/')
+        else:
+            self.redirect('/?error=1')
 
         self.finish()
 
@@ -206,11 +227,12 @@ class DataHandler(web.RequestHandler, DBQuery):
         self.db = db
 
     def get(self):
-        advertiser_id = self.get_secure_cookie('advertiser')
-        advertiser = DBQuery.getAdvertiser(self, advertiser_id)
+        user_id = self.get_secure_cookie('user_id')
+        advertiser = DBQuery.getAdvertiser(self, user_id)
 
         date = self.get_argument('date', False)
         url = self.get_argument('url', False)
+        view_id = self.get_argument('view_id', False)
 
         if url == False:
             url = '/'
@@ -224,7 +246,7 @@ class DataHandler(web.RequestHandler, DBQuery):
             return
 
         try:
-            response = DBQuery.getAnalytics(self, advertiser, date, url)
+            response = DBQuery.getAnalytics(self, advertiser, date, url, view_id)
         except:
             response = {
                 'status': 'error',
@@ -243,7 +265,9 @@ class WebApp(web.Application):
 
         handlers = [
             (r'/', IndexHandler, connectors),
+            (r'/authorize', AuthorizeHandler, connectors),
             (r'/callback', CallbackHandler, connectors),
+            (r'/signout', SignoutHandler, connectors),
             (r'/properties', PropertiesHandler, connectors),
             (r'/data', DataHandler, connectors)
         ]

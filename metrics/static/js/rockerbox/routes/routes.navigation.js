@@ -68,7 +68,6 @@ RB.routes.navigation = (function(navigation) {
 
     if (navigation.callbacks.forward) navigation.callbacks.forward(x)
 
-    console.log("FORWARD",x)
     var path = window.location.pathname
     var shouldPush = (!!x.push_state) && (path != x.push_state)
     var emptyQueue = __back__.length == 0
@@ -118,7 +117,6 @@ RB.routes.navigation = (function(navigation) {
             if (transform) transform(x)
             if (now == current) navigation.subscribed(x,selectbar_render)
 
-            console.log(typeof(callback))
             if (callback && (typeof(callback) == "function")) {
               setTimeout(callback.bind(this,data,x),1)
             }

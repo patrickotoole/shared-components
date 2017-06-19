@@ -831,7 +831,6 @@ RB.crusher.controller = (function(controller) {
   Object.keys(controller.routes.apis).map(function(k) {
     if (controller.routes.apis[k].length > 0 && typeof(controller.routes.apis[k][0]) == "object") {
       controller.routes.apis[k].map(function(state) {
-        console.log('STATE', state);
         controller.states[state.push_state] = state
       })
     }

@@ -751,8 +751,6 @@
 
       var target = d3.select(this);
 
-      console.log(target.selectAll("svg").size())
-
       if(!!y.parentCategoryData && target.selectAll("svg").size() == 0 ) {
         y.parentCategoryData.map(function(x){ x.label = x.label || x.key; x.value = x.value || x.values }) // HACK
         y.parentCategoryData = y.parentCategoryData.filter(function(x){ return x.label != 'NA'; })
@@ -1004,7 +1002,6 @@
 
     var data = this.datum() // bind the new, filtered data...
 
-    console.log("DRAWING", skip_missing, data)
     //debugger
 
     //if ( (this._wrapper.datum().length ) && (this._data !== this._wrapper.datum()) ) return this

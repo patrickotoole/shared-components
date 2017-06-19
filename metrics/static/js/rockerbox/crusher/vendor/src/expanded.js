@@ -54,7 +54,6 @@ function draw(_d1, _d2, _d3, skip_missing) {
 
   var data = this.datum() // bind the new, filtered data...
 
-  console.log("DRAWING", skip_missing, data)
   //debugger
 
   //if ( (this._wrapper.datum().length ) && (this._data !== this._wrapper.datum()) ) return this
