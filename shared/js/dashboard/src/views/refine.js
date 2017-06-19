@@ -39,11 +39,11 @@ class Refine {
     this._on = {}
   }
 
-  data(val) { return accessor.bind(this)("data",val) } 
-  stages(val) { return accessor.bind(this)("stages",val) } 
+  data(val) { return accessor.bind(this)("data",val) }
+  stages(val) { return accessor.bind(this)("stages",val) }
 
-  before_urls(val) { return accessor.bind(this)("before_urls",val) } 
-  after_urls(val) { return accessor.bind(this)("after_urls",val) } 
+  before_urls(val) { return accessor.bind(this)("before_urls",val) }
+  after_urls(val) { return accessor.bind(this)("after_urls",val) }
 
 
 
@@ -77,10 +77,10 @@ class Refine {
             return p
           },url_volume)
 
-    
-          
-          var sorted_urls = d3.entries(url_volume).sort((p,c) => { 
-            return d3.descending(p.value,c.value) 
+
+
+          var sorted_urls = d3.entries(url_volume).sort((p,c) => {
+            return d3.descending(p.value,c.value)
           })
 
 
@@ -142,7 +142,7 @@ kw_to_draw = Object.keys(kw_to_draw).map(function(k) { return kw_to_draw[k] }).m
 
           var expansion_row = d3_class(td,"expansion-row")
           var footer_row = d3_class(td,"footer-row").style("min-height","10px").style("margin-top","15px")
-          
+
           function buildFilterInput(x) {
               this.on("something")(x)
               //select_value.value += (select_value.value ? "," : "") + x.key
@@ -171,13 +171,13 @@ kw_to_draw = Object.keys(kw_to_draw).map(function(k) { return kw_to_draw[k] }).m
             .attr("width",tsw + "px")
             .attr("height","70px")
 
- 
+
 
           var before_rollup = d3.nest()
             .key(function(x) { return x.time_diff_bucket})
             .rollup(function(x) { return d3.sum(x,y => y.visits) })
             .map(before_urls)
-          
+
           var after_rollup = d3.nest()
             .key(function(x) { return "-" + x.time_diff_bucket})
             .rollup(function(x) { return d3.sum(x,y => y.visits) })
@@ -203,7 +203,7 @@ kw_to_draw = Object.keys(kw_to_draw).map(function(k) { return kw_to_draw[k] }).m
             .style("text-anchor","middle")
             .text("On-site")
 
-          
+
           var before_pos, after_pos;
 
           buckets.map(function(x,i) {
@@ -271,7 +271,7 @@ kw_to_draw = Object.keys(kw_to_draw).map(function(k) { return kw_to_draw[k] }).m
             subset.attr("fill","grey")
           }
 
-          
+
 
           selectOptionRect(options)
 
@@ -284,7 +284,7 @@ kw_to_draw = Object.keys(kw_to_draw).map(function(k) { return kw_to_draw[k] }).m
 
 
           function buildOptions(options) {
-            
+
 
             d3_splat(opts,".show-button","a",options,x => x.key)
               .classed("show-button",true)
@@ -338,7 +338,7 @@ kw_to_draw = Object.keys(kw_to_draw).map(function(k) { return kw_to_draw[k] }).m
             .style("width","50%")
             .style("vertical-align","top")
 
-            
+
 
           d3_class(urls_summary,"title")
             .style("font-weight","bold")
@@ -424,7 +424,7 @@ kw_to_draw = Object.keys(kw_to_draw).map(function(k) { return kw_to_draw[k] }).m
             .style("line-height","36px")
             .style("display","inline-block")
             .style("vertical-align","top")
- 
+
           d3_class(euh,"title")
             .style("width","265px")
             .style("font-weight","bold")
@@ -562,11 +562,12 @@ kw_to_draw = Object.keys(kw_to_draw).map(function(k) { return kw_to_draw[k] }).m
                 self.on("stage-filter")(x)
               })
 
-            d3_class(url_name,"url")
+            d3_class(url_name,"url", "a")
               .style("display","inline-block")
               .style("text-overflow","ellipsis")
               .style("width","235px")
               .text(x => x.url.split(d.domain)[1] || x.url )
+              .attr("href", x => x.url)
 
             d3_updateable(url_row,".number","div").classed("number",true)
               .style("width","50px")
@@ -675,7 +676,7 @@ kw_to_draw = Object.keys(kw_to_draw).map(function(k) { return kw_to_draw[k] }).m
 
               })
           }
-          
+
           buildUrlSelection(to_draw)
           buildKeywordSelection(kw_to_draw)
 

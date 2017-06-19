@@ -3055,7 +3055,7 @@
             self.on("stage-filter")(x)
           })
 
-        d3_class$3(url_name,"url")
+        d3_class$3(url_name,"url", "a")
           .style("display","inline-block")
           .style("text-overflow","ellipsis")
           .style("width","205px")
@@ -3740,11 +3740,11 @@
       this._on = {}
     }
 
-    data(val) { return accessor.bind(this)("data",val) } 
-    stages(val) { return accessor.bind(this)("stages",val) } 
+    data(val) { return accessor.bind(this)("data",val) }
+    stages(val) { return accessor.bind(this)("stages",val) }
 
-    before_urls(val) { return accessor.bind(this)("before_urls",val) } 
-    after_urls(val) { return accessor.bind(this)("after_urls",val) } 
+    before_urls(val) { return accessor.bind(this)("before_urls",val) }
+    after_urls(val) { return accessor.bind(this)("after_urls",val) }
 
 
 
@@ -3778,10 +3778,10 @@
               return p
             },url_volume)
 
-      
-            
-            var sorted_urls = d3.entries(url_volume).sort((p,c) => { 
-              return d3.descending(p.value,c.value) 
+
+
+            var sorted_urls = d3.entries(url_volume).sort((p,c) => {
+              return d3.descending(p.value,c.value)
             })
 
 
@@ -3843,7 +3843,7 @@
 
             var expansion_row = d3_class$4(td,"expansion-row")
             var footer_row = d3_class$4(td,"footer-row").style("min-height","10px").style("margin-top","15px")
-            
+
             function buildFilterInput(x) {
                 this.on("something")(x)
                 //select_value.value += (select_value.value ? "," : "") + x.key
@@ -3872,13 +3872,13 @@
               .attr("width",tsw + "px")
               .attr("height","70px")
 
-   
+
 
             var before_rollup = d3.nest()
               .key(function(x) { return x.time_diff_bucket})
               .rollup(function(x) { return d3.sum(x,y => y.visits) })
               .map(before_urls)
-            
+
             var after_rollup = d3.nest()
               .key(function(x) { return "-" + x.time_diff_bucket})
               .rollup(function(x) { return d3.sum(x,y => y.visits) })
@@ -3904,7 +3904,7 @@
               .style("text-anchor","middle")
               .text("On-site")
 
-            
+
             var before_pos, after_pos;
 
             buckets$1.map(function(x,i) {
@@ -3972,7 +3972,7 @@
               subset.attr("fill","grey")
             }
 
-            
+
 
             selectOptionRect(options)
 
@@ -3985,7 +3985,7 @@
 
 
             function buildOptions(options) {
-              
+
 
               d3_splat(opts,".show-button","a",options,x => x.key)
                 .classed("show-button",true)
@@ -4039,7 +4039,7 @@
               .style("width","50%")
               .style("vertical-align","top")
 
-              
+
 
             d3_class$4(urls_summary,"title")
               .style("font-weight","bold")
@@ -4125,7 +4125,7 @@
               .style("line-height","36px")
               .style("display","inline-block")
               .style("vertical-align","top")
-   
+
             d3_class$4(euh,"title")
               .style("width","265px")
               .style("font-weight","bold")
@@ -4263,11 +4263,12 @@
                   self.on("stage-filter")(x)
                 })
 
-              d3_class$4(url_name,"url")
+              d3_class$4(url_name,"url", "a")
                 .style("display","inline-block")
                 .style("text-overflow","ellipsis")
                 .style("width","235px")
                 .text(x => x.url.split(d.domain)[1] || x.url )
+                .attr("href", x => x.url)
 
               d3_updateable(url_row,".number","div").classed("number",true)
                 .style("width","50px")
@@ -4376,7 +4377,7 @@
 
                 })
             }
-            
+
             buildUrlSelection(to_draw)
             buildKeywordSelection(kw_to_draw)
 
