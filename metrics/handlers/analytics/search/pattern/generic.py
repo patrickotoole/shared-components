@@ -16,8 +16,10 @@ from helpers import PatternSearchHelpers
 from lib.aho import AhoCorasick
 from ..search_helpers import SearchHelpers
 from handlers.analytics.user_meta_base import UserMetaBaseHandler
+from served_uid_base import ServedUidBase 
+from onsite_uid_base import OnsiteUidBase
 
-class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,PatternSearchHelpers, SearchHelpers, UserMetaBaseHandler):
+class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,PatternSearchHelpers, SearchHelpers, UserMetaBaseHandler, ServedUidBase, OnsiteUidBase):
     
     LEVELS = {
                 "l1":
@@ -297,7 +299,7 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
         defer.returnValue(shared_dict)
 
     @defer.inlineCallbacks
-    def build_arguments(self,advertiser,term,dates,num_days,response,allow_sample=None,filter_id=False,num_users=20000, datasets=['domains']):
+    def build_arguments(self,advertiser,term,dates,num_days,response,allow_sample=None,filter_id=False,num_users=20000, datasets=['domains'], l1_flag=False, campaign_id=False):
         shared_dict={
                         "ds": "SELECT * FROM rockerbox.visitor_domains_full where uid = ?",
                         "advertiser" : advertiser,
@@ -313,23 +315,16 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
             raise Exception("Not a valid dataset")
 
 
-        num_users = int(num_users)
         #LEVEL 0
-        args = [advertiser,term,dates,num_days,allow_sample,filter_id]
-        #args = [advertiser,term,build_datelist(num_days),num_days,allow_sample,False]
-        full_df, _, _, _ = yield self.get_sampled(*args)
-        uids = list(set(full_df.uid.values))[:num_users]
-        
+        if l1_flag:
+            if not campaign_id:
+                raise Exception("campaign id required when using served ids")
+            uids = yield self.served_uids(advertiser, campaign_id, 'rockerbox', dates)
+        else:
+            uids = yield self.onsite_uids(advertiser, term, dates, num_days, allow_sample, filter_id)
 
-        MIN_UIDS = 300
-        if len(uids) < MIN_UIDS:
-            ALLOWSAMPLEOVERRIDE = False
-            NUM_DAYS = 7
-            args[4] = ALLOWSAMPLEOVERRIDE
-            args[3] = NUM_DAYS
-            full_df, _, _, _ = yield self.get_sampled(*args)
-            uids = list(set(full_df.uid.values))[:num_users]
-
+        num_users = int(num_users)
+        uids = uids[:num_users]
         shared_dict['uids'] = uids
         returnDFs = {}
         if len(uids) > 0:

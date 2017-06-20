@@ -63,6 +63,9 @@ class VisitorTransformHandler(VisitorBase):
         filter_date = self.get_argument("date", False)
         num_users = self.get_argument("num_users",20000)
         skip_datasets = self.get_argument("skip_datasets","").split(",")
+        use_served = self.get_argument("served",False)
+        campaign_id = self.get_argument("campaign_id",False)
+
         include_datasets = [x for x in self.get_argument("include_datasets","").split(",") if len(x)>1]
 
         process = yield self.get_process(advertiser, terms, api_type)
@@ -71,14 +74,14 @@ class VisitorTransformHandler(VisitorBase):
 
         datasets = [d for d in all_datasets if d not in skip_datasets]
 
-
         url_arg = self.request.arguments
-
+        if use_served: 
+            use_served = True
 
         if preventsample is not None:
             preventsample = preventsample == 'true'
         logging.info(preventsample)
-        self.get_uids(advertiser,[[terms]],int(num_days),process=process, prevent_sample=preventsample, num_users=num_users, datasets=datasets, filter_id=filter_id, date=filter_date, url_args=url_arg)
+        self.get_uids(advertiser,[[terms]],int(num_days),process=process, prevent_sample=preventsample, num_users=num_users, datasets=datasets, filter_id=filter_id, date=filter_date, url_args=url_arg, l1_flag=use_served, campaign_id=campaign_id)
 
     @tornado.web.authenticated
     @tornado.web.asynchronous

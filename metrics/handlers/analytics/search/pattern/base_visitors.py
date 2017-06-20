@@ -83,7 +83,7 @@ class VisitorBase(GenericSearchBase, BaseDomainHandler):
             datelist = build_datelist(NUM_DAYS, offset)
         else:
             datelist = build_datelist(NUM_DAYS)
-        args = [advertiser,pattern_terms[0][0],datelist,NUM_DAYS,response,ALLOW_SAMPLE,filter_id,NUM_USERS,datasets]
+        args = [advertiser,pattern_terms[0][0],datelist,NUM_DAYS,response,ALLOW_SAMPLE,filter_id,NUM_USERS,datasets, kwargs['l1_flag'], kwargs['campaign_id']]
 
         now = time.time()
         try:
