@@ -75,10 +75,10 @@ var radialTree = function(root, wrapper, colorScale, nodeSizeScale, nodeSize, no
 
         nodeUpdate.select("circle")
             .attr("r", function(d){
-                return nodeSizeScale( d['metrics'][nodeSize] )
+                return nodeSizeScale( d['campaign_metrics'][nodeSize] )
             })
             .style("fill", function(d) { 
-                return d['metrics'][nodeColor] == 0 ? 0: colorScale(d['metrics'][nodeColor])
+                return d['campaign_metrics'][nodeColor] == 0 ? 0: colorScale(d['campaign_metrics'][nodeColor])
             })
 
         nodeUpdate.select("text")
@@ -174,7 +174,7 @@ var radialTree = function(root, wrapper, colorScale, nodeSizeScale, nodeSize, no
                 function(x){
                     var tooltipColumns = ["imps_30d", "attr_conv_7d","cpa_attr_7d", "media_cost_yest","imps_yest"]
                     var tooltipString = tooltipColumns.map(function(t){
-                        return t + ": "  + (formatter(t) ? formatter(t)(d.metrics[t]) : d.metrics[t]) + "<br>" 
+                        return t + ": "  + (formatter(t) ? formatter(t)(d['campaign_metrics'][t]) : d['campaign_metrics'][t]) + "<br>" 
                     })
                     .join("")
                     tooltipString = d.name + "<br>" + tooltipString
@@ -191,7 +191,7 @@ var radialTree = function(root, wrapper, colorScale, nodeSizeScale, nodeSize, no
                 function(x){
                     var tooltipColumns = ["imps_30d", "attr_conv_7d","cpa_attr_7d", "media_cost_yest","imps_yest"]
                     var tooltipString = tooltipColumns.map(function(t){
-                        return t + ": "  + (formatter(t) ? formatter(t)(d.metrics[t]) : d.metrics[t]) + "<br>" 
+                        return t + ": "  + (formatter(t) ? formatter(t)(d['campaign_metrics'][t]) : d['campaign_metrics'][t]) + "<br>" 
                     })
                     .join("")
                     tooltipString = d.name + "<br>" + tooltipString

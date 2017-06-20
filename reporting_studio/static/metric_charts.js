@@ -1,4 +1,5 @@
 var drawMetrics = function(wrapper, data, group, name, metrics){
+    wrapper.selectAll("svg").remove()
 
     function getSummedDates(data, startDate, endDate){
 

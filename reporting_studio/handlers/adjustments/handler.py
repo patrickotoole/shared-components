@@ -4,6 +4,8 @@ import json
 import logging
 import time
 from database import *
+import warnings
+warnings.filterwarnings("ignore")
 
 class SlackWriter():
     

@@ -94,7 +94,7 @@
 
 
 var line_metrics = {{line_item_metrics}}
-var line_columns = [ 'line_item_name','imps_30d','cpa_attr_7d','attr_conv_7d','imps_yest','media_cost_yest', 'imps_today','media_cost_today']
+var line_columns = [ 'line_item_name','imps_30d','cpa_attr_7d','attr_conv_7d','imps_yest','media_cost_yest']
     .map(function(x){
         var obj =  {
             'name': x,
@@ -113,8 +113,7 @@ line_table.selectAll("input").classed("input-small",true)
 var campaign_metrics = {{campaign_metrics}};
 
 var nodeSize = "media_cost_yest";
-var nodeColor = "cpa_attr_7d";
-
+var nodeColor = "cpa_attr_total";
 
 var cc = d3.extent(campaign_metrics, function(d){ return d[nodeColor] } )
 cc.reverse()
@@ -140,15 +139,16 @@ var tooltip = d3.select("#optTree").append("div")
 .attr("class", "tooltip")               
 .style("opacity", 0);
 
+var tooltipColumns = ["media_cost_yest","cpa_attr_total"]
 
 svg.selectAll("text")
     .on("mouseover", function(d) {      
         tooltip.style("opacity", 2);      
         tooltip.html(
             function(x){
-                var tooltipColumns = ["imps_30d", "attr_conv_7d","cpa_attr_7d", "media_cost_yest","imps_yest"]
+                
                 var tooltipString = tooltipColumns.map(function(t){
-                    return t + ": "  + (formatter(t) ? formatter(t)(d.metrics[t]) : d.metrics[t]) + "<br>" 
+                    return t + ": "  + (formatter(t) ? formatter(t)(d['campaign_metrics'][t]) : d['campaign_metrics'][t]) + "<br>" 
                 })
                 .join("")
                 tooltipString = d.name + "<br>" + tooltipString
@@ -163,9 +163,8 @@ svg.selectAll("text")
         tooltip.style("opacity", 2);      
         tooltip.html(
             function(x){
-                var tooltipColumns = ["imps_30d", "attr_conv_7d","cpa_attr_7d", "media_cost_yest","imps_yest"]
                 var tooltipString = tooltipColumns.map(function(t){
-                    return t + ": "  + (formatter(t) ? formatter(t)(d.metrics[t]) : d.metrics[t]) + "<br>" 
+                    return t + ": "  + (formatter(t) ? formatter(t)(d['campaign_metrics'][t]) : d['campaign_metrics'][t]) + "<br>" 
                 })
                 .join("")
                 tooltipString = d.name + "<br>" + tooltipString
@@ -193,10 +192,9 @@ svg.selectAll("text").on("click", function(d){
         .style("margin","5px")
 
 
-    var columns = [ 'campaign_id','campaign_name','imps_30d', "conv_30d",
-                 "media_cost_7d","imps_7d", 'cpa_attr_7d','attr_conv_7d',
-                'imps_yest','media_cost_yest', 
-                'imps_today','media_cost_today', 'cpm','bid','budget', 'enable_pacing']
+    var columns = [ 'campaign_id','campaign_name','cpa_attr_total','imps_30d', 'conv_30d','cpa_attr_30d','cpa_attr_30d',
+                     'cpa_attr_7d','attr_conv_7d', 'imps_yest','media_cost_yest', 'cpm','bid','budget', 
+                     'enable_pacing', 'state']
 
     var campaigns = d3.select("#adjustments").data()[0].filter(function(x){
         return d.campaigns.indexOf(x.campaign_id) > - 1
@@ -208,13 +206,12 @@ svg.selectAll("text").on("click", function(d){
             'type': 'text',
             'formatter': formatter(x)
         }
-        if (x == "budget" || x == "bid"  || x == "enable_pacing"){
-            obj['class']=x
-            obj['type']="input"
+        if (x == "budget" || x == "bid"  || x == "enable_pacing" || x=="state"){
+            obj['class'] = x
+            obj['type'] = "input"
         }
         return obj
     })
-
     var table = make_table(d3.select("#adjustments"), columns, campaigns)
     table.classed("tablesorter table-striped table-hover table-bordered",true).attr("id","optTable")
     table.attr("border", "1px solid gray").attr("rules","rows")
@@ -237,7 +234,7 @@ svg.selectAll("text").on("click", function(d){
             }
 
             if( d3.select(x).property("value") != "" ){
-                return {'field':field, 'new':value, "campaign_id": campaign_id, "old":old}
+                return {'field':field, 'new':value, "campaign_id": campaign_id, "old":old ? old : "NA"}
             }
         }) 
         adjustments = adjustments.filter(function(n){ return n != undefined })

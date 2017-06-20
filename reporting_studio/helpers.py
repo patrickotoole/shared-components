@@ -26,7 +26,7 @@ def build_metrics(df, groups, end_date = datetime.today().strftime("%Y%m%d")):
     metrics['cpa_7d'] = metrics['media_cost_7d']/ metrics['conv_7d']
     metrics['cpa_attr_7d'] = metrics['media_cost_7d']/ metrics['attr_conv_7d']
     metrics['cpc_7d'] = metrics['media_cost_7d']/ metrics['clicks_7d']
-    metrics['ctr_7'] = metrics['clicks_7d']/ metrics['imps_7d']
+    metrics['ctr_7d'] = metrics['clicks_7d']/ metrics['imps_7d']
 
     metrics['cpa_yest'] = metrics['media_cost_yest']/ metrics['conv_yest']
     metrics['cpa_attr_yest'] = metrics['media_cost_yest']/ metrics['attr_conv_yest']

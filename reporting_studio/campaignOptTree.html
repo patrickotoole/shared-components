@@ -151,7 +151,7 @@
 
         nodeUpdate.select("circle")
             .attr("r", function(d){
-                return Math.log(d['metrics']['imps_yest'])
+                return Math.log(d['campaign_metrics']['imps_yest'])
             })
             .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
 

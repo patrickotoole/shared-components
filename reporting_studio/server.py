@@ -41,9 +41,11 @@ if __name__ == '__main__':
         (r'/', IndexHandler, connectors),
         (r'/metrics', MetricsHandler, connectors),
         (r'/opt', OptimizationHandler, connectors),
-        (r'/campaign', CampaignHandler, connectors),
-        (r'/lineitems', LineItemHandler, connectors),
+        (r'/campaigntree', CampaignTreeHandler, connectors),
+        (r'/line-item-metrics', LineItemHandler, connectors),
+        (r'/lineitems', LineItemDashboardHandler, connectors),
         (r'/adjustments', AdjustmentHandler, connectors),
+        (r'/funnel', OptFunnelHandler, connectors),
         (r'/static/(.*)', tornado.web.StaticFileHandler, {"path":"static"}),
 
     ]
