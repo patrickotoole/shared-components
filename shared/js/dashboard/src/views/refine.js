@@ -568,6 +568,7 @@ kw_to_draw = Object.keys(kw_to_draw).map(function(k) { return kw_to_draw[k] }).m
               .style("width","235px")
               .text(x => x.url.split(d.domain)[1] || x.url )
               .attr("href", x => x.url)
+              .attr("target", "_blank")
 
             d3_updateable(url_row,".number","div").classed("number",true)
               .style("width","50px")

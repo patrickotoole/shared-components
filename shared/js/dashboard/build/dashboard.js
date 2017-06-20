@@ -2995,6 +2995,7 @@
             return x.url.split(d.domain)[1] || x.url
           })
           .attr("href", x => x.url )
+          .attr("target", "_blank")
 
         d3_updateable(url_row,".number","div").classed("number",true)
           .style("width","40px")
@@ -4269,6 +4270,7 @@
                 .style("width","235px")
                 .text(x => x.url.split(d.domain)[1] || x.url )
                 .attr("href", x => x.url)
+                .attr("target", "_blank")
 
               d3_updateable(url_row,".number","div").classed("number",true)
                 .style("width","50px")

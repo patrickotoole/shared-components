@@ -323,6 +323,7 @@ d3_updateable(svg_legend,"line.three","line")
           return x.url.split(d.domain)[1] || x.url
         })
         .attr("href", x => x.url )
+        .attr("target", "_blank")
 
       d3_updateable(url_row,".number","div").classed("number",true)
         .style("width","40px")
