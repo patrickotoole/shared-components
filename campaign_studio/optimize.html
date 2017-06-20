@@ -143,6 +143,7 @@ var formatAsPercent = function(x) {var dthis = d3.select(this);var t = this.pare
           .on("sql",function(values) {
             
             if (!values.sql) return false;
+            _state.publish("sql",values.sql)
     
             d3.xhr("/run-sql")
               .post( JSON.stringify(values), function(err, data){
@@ -272,7 +273,6 @@ var formatAsPercent = function(x) {var dthis = d3.select(this);var t = this.pare
             return 
           })
           .on("save",function(){ 
-
             var data = {
               "name": _state._state.name,
               "advertiser": _state._state.advertiser,
@@ -314,7 +314,6 @@ var formatAsPercent = function(x) {var dthis = d3.select(this);var t = this.pare
       })
       .subscribe("data.filtered_data", function(err,data,values) {
 
-        debugger;
         var headers = values.headers
           , all_data = values.data
           , ff = values.filters || []
