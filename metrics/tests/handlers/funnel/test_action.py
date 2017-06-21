@@ -6,7 +6,8 @@ import mocks.yoshi as mocks
 import ujson
 from link import lnk
 import sys
-sys.path.append("../../../../hindsight/handlers/action") 
+sys.path.append("hindsight/handlers/action")
+
 import action as action
 import lib.zookeeper.zk_endpoint as zke
 import action_database_helpers as adh
@@ -46,13 +47,13 @@ CREATE TABLE IF NOT EXISTS action_filters (  `action_id` int(11) NOT NULL,
 """
 
 ACTION_FIXTURE_1 = """
-INSERT INTO action (`action_id`,`start_date`,`end_date`, `operator`, `pixel_source_name`, `action_name`, `action_type`, `active`, `featured`) 
-VALUES (1,0,0,"and","alan","alans_action","segment",1,1)
+INSERT INTO action (`action_id`,`start_date`,`end_date`, `operator`, `pixel_source_name`, `action_name`, `active`, `featured`) 
+VALUES (1,0,0,"and","alan","alans_action",1,1)
 """
 
 ACTION_FIXTURE_2 = """
-INSERT INTO action (`action_id`,`start_date`,`end_date`, `operator`, `pixel_source_name`, `action_name`, `action_type`, `active`, `featured`) 
-VALUES (2,0,0,"and","will","wills_action", "segment",1,1) 
+INSERT INTO action (`action_id`,`start_date`,`end_date`, `operator`, `pixel_source_name`, `action_name`,`active`, `featured`) 
+VALUES (2,0,0,"and","will","wills_action",1,1) 
 """
 
 ACTION_FIXTURE_3 = """
