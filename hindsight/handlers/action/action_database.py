@@ -43,6 +43,7 @@ GET_MAX_ACTION_PLUS_1 = "select max(action_id)+1 from action"
 
 RESET_AUTO_INCR_ACTION = "alter table action auto_increment = %s"
 
+SELECT_CAMPAIGN_ACTION = "select action_id, campaign_id, action_name from hindsight_campaign_action where advertiser='{}'"
 
 from action_database_helpers import ActionDatabaseHelper
 
