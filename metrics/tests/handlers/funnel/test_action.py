@@ -4,10 +4,12 @@ import unittest
 import mock
 import mocks.yoshi as mocks
 import ujson
-from link import lnk 
-import handlers.funnel.action as action
+from link import lnk
+import sys
+sys.path.append("../../../../hindsight/handlers/action") 
+import action as action
 import lib.zookeeper.zk_endpoint as zke
-import handlers.funnel.action_database_helpers as adh
+import action_database_helpers as adh
 import logging
 CREATE_ACTION_TABLE = """
 CREATE TABLE IF NOT EXISTS `action` (
@@ -228,7 +230,6 @@ class ActionTest(AsyncHTTPTestCase):
 
         action_posted = self.fetch("/?format=json",method="POST",body=action_string).body
         action_get_json = ujson.loads(self.fetch("/?format=json&advertiser=bauble",method="GET").body)['response']
-        print action_get_json
         self.assertEqual(ujson.loads(action_string)['action_name'],action_get_json[0]['action_name'])
         self.assertEqual(ujson.loads(action_string)['url_pattern'],action_get_json[0]['url_pattern']) 
         
@@ -237,7 +238,6 @@ class ActionTest(AsyncHTTPTestCase):
 
         action_post = self.fetch("/?format=json&",method="POST",body=ujson.dumps(action_json)).body
 
-        print action_post
         action_post = ujson.loads(action_post)
         action_json['action_id'] = action_post['response']['action_id']
         action_put = self.fetch("/?format=json&id=%s" % action_json['action_id'],method="PUT",body=ujson.dumps(action_json)).body
