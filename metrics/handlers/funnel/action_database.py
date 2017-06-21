@@ -134,9 +134,9 @@ class ActionDatabase(ActionDatabaseHelper):
         action_id = self.get_argument("id")
         action = {"action_id":action_id}
         #action["zookeeper_tree"] = self.get_argument("zookeeper_tree","for_play")
-        action["zookeeper_tree"] = self.get_argument("zookeeper_tree","/kafka-filter/tree/visit_events_tree")
+        #action["zookeeper_tree"] = self.get_argument("zookeeper_tree","/kafka-filter/tree/visit_events_tree")
 
-        zk = zke.ZKEndpoint(zookeeper,tree_name=action["zookeeper_tree"])
+        #zk = zke.ZKEndpoint(zookeeper,tree_name=action["zookeeper_tree"])
 
         self._delete_from_tree(action['action_id'])
 

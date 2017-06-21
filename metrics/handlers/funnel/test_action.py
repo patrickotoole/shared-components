@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS action_with_patterns (
 """
 
 CREATE_NODE_DB = """
-CREATE TABLE IF NOT EXISTS visit_events_tree_nodes_test (
+CREATE TABLE IF NOT EXISTS visit_events_tree_nodes (
   `id` int(10) NOT NULL AUTO_INCREMENT,
   `node` varchar(700) NOT NULL,
   `parent` int(10) DEFAULT NULL,
@@ -97,7 +97,7 @@ CREATE TABLE IF NOT EXISTS visit_events_tree_nodes_test (
 """
 
 CREATE_NODE = """
-insert into visit_events_tree_nodes_test (parent, node) values (3, '{"pattern":"\"source\": \"bauble","label":""}')
+insert into visit_events_tree_nodes (parent, node) values (3, '{"pattern":"\"source\": \"bauble","label":""}')
 """
 
 INSERT_ACTION_PATTERN ="""
@@ -109,11 +109,11 @@ insert into action_with_patterns (pixel_source_name, url_pattern, action_id) val
 """
 
 INSERT_NODE = """
-insert into visit_events_tree_nodes_test (parent,node) values (1,'{"pattern":"/","label":"","query":"INSERT INTO rockerbox.pattern_occurrence_users_u2 (2) VALUES ()"}')
+insert into visit_events_tree_nodes (parent,node) values (1,'{"pattern":"/","label":"","query":"INSERT INTO rockerbox.pattern_occurrence_users_u2 (2) VALUES ()"}')
 """
 
 INSERT_NODE2 = """
-insert into visit_events_tree_nodes_test (parent,node) values (1,'{"pattern":"http://www.bauble.com/necklaces","label":"","query":"INSERT INTO rockerbox.pattern_occurrence_users_u2 (2) VALUES ()"}')
+insert into visit_events_tree_nodes (parent,node) values (1,'{"pattern":"http://www.bauble.com/necklaces","label":"","query":"INSERT INTO rockerbox.pattern_occurrence_users_u2 (2) VALUES ()"}')
 """
 
 class ActionTest(AsyncHTTPTestCase):
@@ -170,11 +170,8 @@ class ActionTest(AsyncHTTPTestCase):
         self.db.execute("TRUNCATE table action_patterns")
         self.db.execute("TRUNCATE table advertiser")
         self.db.execute("TRUNCATE table action_with_patterns")
-        self.db.execute("TRUNCATE table visit_events_tree_nodes_test")
+        self.db.execute("TRUNCATE table visit_events_tree_nodes")
 
-        self.db.execute("DROP TABLE action")
-        self.db.execute("DROP TABLE action_patterns")
-        
     def test_get(self):        
         _a = ujson.loads(self.fetch("/?format=json&advertiser=alan",method="GET").body)
         self.assertEqual(len(_a["response"]),1)
