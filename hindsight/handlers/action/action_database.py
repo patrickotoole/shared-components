@@ -65,11 +65,10 @@ class ActionDatabase(ActionDatabaseHelper):
             
             subfilters = self.get_subfilters(result)
             joined = joined.reset_index().merge(subfilters.reset_index(), on='action_id', how='left').set_index('action_id')
-
+            
             campaign_action = self.db.select_dataframe(SELECT_CAMPAIGN_ACTION.format(advertiser))
-            joined = joined.append(campaign_action).reset_index()
 
-            return joined.reset_index()
+            return joined.reset_index(), campaign_action
         except Exception as e:
             logging.info(str(e))
             return pandas.DataFrame()
@@ -89,7 +88,7 @@ class ActionDatabase(ActionDatabaseHelper):
             subfilters = self.get_subfilters(result)
             joined = joined.reset_index().merge(subfilters.reset_index(), on='action_id', how='left').set_index('action_id')
 
-            return joined.reset_index()
+            return joined.reset_index(), pandas.DataFrame()
         except:
             return pandas.DataFrame()
 

@@ -63,9 +63,18 @@ class ActionHandler(BaseHandler,ActionAuth,APIHelpers,ActionDatabase):
 
         try:
             if action_id:
-                results = self.get_advertiser_action(advertiser,action_id)
+                action_results, campaign_results = self.get_advertiser_action(advertiser,action_id)
+                action_results = action_results.fillna(0)
+                result = action_results.to_dict('records')
             else:
-                results = self.get_advertiser_actions(advertiser)
-            self.write_response(Convert.df_to_values(results))
+                action_results, campaign_results = self.get_advertiser_actions(advertiser)
+                action_results = action_results.fillna(0)
+                action_results = action_results.to_dict('records') 
+                campaign_results = campaign_results.to_dict('records')
+                response = {"result":[], "status":"ok"}
+                response['result'] = [x for x in action_results]
+                [response['result'].append(x) for x in campaign_results]
+            self.write(ujson.dumps(response))
+            self.finish()
         except Exception, e:
             self.write_response(str(e),e)

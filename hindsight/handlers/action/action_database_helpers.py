@@ -57,6 +57,8 @@ GETADVERTISERPATTERN = "SELECT pixel_source_name, url_pattern from action_with_p
 
 INSERT_PARAMETERS = "insert into advertiser_udf_parameter (advertiser, filter_id, udf, parameters) values ('%s', %s, 'domains_full_time_minute', '%s')"
 
+GET_CAMPAIGN_ACTION = "select advertiser, action_id, campaign_id, action_name from hindsight_campaign_action where %s"
+
 class ActionDatabaseHelper(object):
 
     def get_patterns(self,ids):
@@ -80,7 +82,11 @@ class ActionDatabaseHelper(object):
     def query_action(self, advertiser, action_id=None):
         where = self.construct_where(advertiser,action_id)
         result = self.db.select_dataframe(GET % {"where":where})
-        patterns = self.get_patterns(result.action_id.tolist())
+        if result.empty:
+            result = self.db.select_dataframe(GET_CAMPAIGN_ACTION % where)
+            patterns = None
+        else:
+            patterns = self.get_patterns(result.action_id.tolist())
         return result, patterns
 
     def get_subfilters(self, result):
