@@ -45,6 +45,8 @@ RESET_AUTO_INCR_ACTION = "alter table action auto_increment = %s"
 
 SELECT_CAMPAIGN_ACTION = "select action_id, campaign_id, action_name from hindsight_campaign_action where advertiser='{}'"
 
+GET_CAMPAIGN_ACTION = "select action_id, campaign_id, action_name, advertiser from hindsight_campaign_action where action_id='{}'"
+
 from action_database_helpers import ActionDatabaseHelper
 
 class ActionDatabase(ActionDatabaseHelper):
@@ -63,6 +65,9 @@ class ActionDatabase(ActionDatabaseHelper):
             
             subfilters = self.get_subfilters(result)
             joined = joined.reset_index().merge(subfilters.reset_index(), on='action_id', how='left').set_index('action_id')
+
+            campaign_action = self.db.select_dataframe(SELECT_CAMPAIGN_ACTION.format(advertiser))
+            joined = joined.append(campaign_action).reset_index()
 
             return joined.reset_index()
         except Exception as e:
