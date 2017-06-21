@@ -179,6 +179,7 @@ class AdvertiserRoutes(Routes):
         import handlers.analytics.domains.user as user
         import handlers.analytics.domains.visitor as visitor
         import handlers.mediaplans.adwords_mediaplan as adwords
+        import action as hindsight_action
 
         return [
             (r'/adwords_mediaplan', adwords.AdwordsHandler, self.connectors),
@@ -202,8 +203,8 @@ class AdvertiserRoutes(Routes):
             (r'/funnel/action/recommended', funnel.RecommendedActionHandler, self.connectors),
             (r'/funnel/campaign', funnel.FunnelCampaignHandler, self.connectors),
             (r'/funnel/lookalike_campaign', funnel.LookalikeCampaignHandler, self.connectors),
-            (r'/funnel/action', funnel.ActionHandler, self.connectors),
-            (r'/funnel/action/(.*?)', funnel.ActionHandler, self.connectors),
+            (r'/funnel/action', hindsight_action.ActionHandler, self.connectors),
+            (r'/funnel/action/(.*?)', hindsight_action.ActionHandler, self.connectors),
             (r'/funnel/lookalike', funnel.FunnelLookalikeHandler, self.connectors),
             (r'/funnel/lookalike/(.*?)', funnel.FunnelLookalikeHandler, self.connectors),
             (r'/funnel/search/(.*?)', funnel.FunnelSearchHandler, self.connectors),

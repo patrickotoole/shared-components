@@ -1,13 +1,14 @@
 import tornado.web
 import ujson
 import pandas
+import requests
 
 from handlers.base import BaseHandler
-from handlers.helpers import Convert
+from lib.helpers import Convert
 
 from action_auth import ActionAuth
 from action_database import ActionDatabase
-from handlers.helpers import APIHelpers
+from lib.helpers import APIHelpers
 
 
 class ActionHandler(BaseHandler,ActionAuth,APIHelpers,ActionDatabase):
@@ -15,7 +16,9 @@ class ActionHandler(BaseHandler,ActionAuth,APIHelpers,ActionDatabase):
     def initialize(self, db=None, zookeeper=None, **kwargs):
         self.db = db
         self.zookeeper = zookeeper
+        self.crushercache = kwargs.get('crushercache',None)
         self.required_cols = ["advertiser", "action_name"]
+        self.requests = requests
 
 
     @tornado.web.authenticated
@@ -56,13 +59,10 @@ class ActionHandler(BaseHandler,ActionAuth,APIHelpers,ActionDatabase):
     def get(self):
         advertiser = self.get_argument("advertiser", self.current_advertiser_name)
         action_id = self.get_argument("id",False)
-        action_type = self.get_argument("action_type",False)
 
         try:
             if action_id:
                 results = self.get_advertiser_action(advertiser,action_id)
-            if action_type:
-                results = self.get_vendor_actions(advertiser, action_type)
             else:
                 results = self.get_advertiser_actions(advertiser)
             self.write_response(Convert.df_to_values(results))

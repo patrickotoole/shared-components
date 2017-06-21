@@ -23,6 +23,8 @@ import signal
 import logging
 import os
 
+sys.path.append("../hindsight/handlers/action")
+
 requests_log = logging.getLogger("requests")
 requests_log.setLevel(logging.WARNING)
 
