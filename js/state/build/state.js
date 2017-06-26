@@ -420,10 +420,14 @@
 
     
   }
+  debugger
+  const s = window.__state__ || state()
+  window.__state__ = s
 
-  var version = "0.0.1";
+  var version = "0.0.2";
 
   exports.version = version;
+  exports.s = s;
   exports.state = state;
   exports.qs = qs;
   exports.comp_eval = comparison_eval;
