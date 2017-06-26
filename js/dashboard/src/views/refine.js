@@ -375,7 +375,7 @@ kw_to_draw = Object.keys(kw_to_draw).map(function(k) { return kw_to_draw[k] }).m
           var uwrap = d3_class(urls_summary,"wrap").style("width","90%")
 
 
-          table.table(uwrap)
+          table(uwrap)
             .data({"values":url_summary_data})
             .skip_option(true)
             .headers([
@@ -401,7 +401,7 @@ kw_to_draw = Object.keys(kw_to_draw).map(function(k) { return kw_to_draw[k] }).m
 
           var kwrap = d3_class(kws_summary,"wrap").style("width","90%")
 
-          table.table(kwrap)
+          table(kwrap)
             .data({"values":kws_summary_data})
             .skip_option(true)
             .headers([

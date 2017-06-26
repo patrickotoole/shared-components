@@ -2,7 +2,7 @@ import accessor from '../helpers'
 import header from '../generic/header'
 import select from '../generic/select'
 
-import table from 'table'
+import * as table from 'table'
 
 function d3_class(target,cls,type) {
   return d3_updateable(target,"." + cls, type || "div")

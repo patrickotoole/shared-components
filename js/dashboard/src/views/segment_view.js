@@ -3,7 +3,7 @@ import header from '../generic/header'
 import button_radio from '../generic/button_radio'
 import select from '../generic/select'
 
-import table from 'table'
+import * as table from 'table'
 
 function noop() {}
 function identity(x) { return x }

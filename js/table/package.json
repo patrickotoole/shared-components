@@ -1,24 +1,24 @@
 {
   "name": "table",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "table",
   "main": "build/table.js",
+  "module": "build/table.es.js",
+
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "rickotoole <rick@rockerbox.com> (http://rockerbox.com)",
   "license": "ISC",
   "scripts": {
-    "pretest": "mkdir -p build && node -e 'process.stdout.write(\"var version = \\\"\" + require(\"./package.json\").version + \"\\\"; export * from \\\"../index\\\"; export {version};\");' > build/bundle.js && rollup -f umd -u table -n table -o build/table.js -- build/bundle.js",
+    "pretest": "rollup -c",
+    "build": "rollup -c",
     "test": "faucet `find test -name '*-test.js'`",
     "prepublish": "npm run test && uglifyjs build/table.js -c -m -o build/table.min.js && rm -f build/table.zip && zip -j build/table.zip -- LICENSE README.md build/table.js build/table.min.js"
   },
-  "dependencies" :{
-    "d3": "^4.9.1"
-  },
   "devDependencies": {
     "faucet": "0.0",
-    "rollup": "0.20.5",
+    "rollup": "^0.41.4",
     "jsdom": "7",
     "tape": "4",
     "uglify-js": "2"

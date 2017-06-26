@@ -110,7 +110,7 @@ class Timing {
     var oscale = d3.scale.linear().range([0,.8]).domain([0,Math.log(max)])
 
 
-    var table_obj = table.table(timingwrap)
+    var table_obj = table(timingwrap)
       .headers(headers)
       .data({"key":"", "values":d.map(x => x.tabular) })
       .sort("total")

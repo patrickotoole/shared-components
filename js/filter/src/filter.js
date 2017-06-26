@@ -1,6 +1,6 @@
 //import d3 from 'd3'
 
-export default function d3_updateable(target,selector,type,data,joiner) {
+export function d3_updateable(target,selector,type,data,joiner) {
   var type = type || "div"
   var updateable = target.selectAll(selector).data(
     function(x){return data ? [data] : [x]},
@@ -13,7 +13,7 @@ export default function d3_updateable(target,selector,type,data,joiner) {
   return updateable
 }
 
-export default function d3_splat(target,selector,type,data,joiner) {
+export function d3_splat(target,selector,type,data,joiner) {
   var type = type || "div"
   var updateable = target.selectAll(selector).data(
     data || function(x){return x},
@@ -35,7 +35,7 @@ var typewatch = (function(){
   };
 })();
 
-export default function accessor(attr, val) {
+export function accessor(attr, val) {
   if (val === undefined) return this["_" + attr]
   this["_" + attr] = val
   return this

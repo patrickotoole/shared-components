@@ -13,6 +13,7 @@ class Dashboard {
 
   constructor(target) {
     this._target = target
+    return this.call.bind(this)
   }
 
   call() {
