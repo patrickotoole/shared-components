@@ -52,7 +52,7 @@ DomainView.prototype = {
       _explore.selectAll(".vendor-domains-bar-desc").remove()
       _explore.datum(data)
 
-      var t = table.table(_explore)
+      var t = table(_explore)
         .data(selected)
 
 
@@ -126,4 +126,3 @@ DomainView.prototype = {
       return this
     }
 }
-export default domain_view;

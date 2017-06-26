@@ -629,7 +629,7 @@ SummaryView.prototype = {
 
 
 
-      table.table(piewrap)
+      table(piewrap)
         .data({"key":"T","values":[this.data()]})
         .skip_option(true)
         .render("domains",function(x) {

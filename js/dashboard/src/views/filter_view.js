@@ -2,8 +2,8 @@ import accessor from '../helpers'
 import header from '../generic/header'
 import select from '../generic/select'
 
-import table from 'table'
-import filter from 'filter'
+import * as table from 'table'
+import {filter} from 'filter'
 
 function noop() {}
 function identity(x) { return x }
@@ -171,7 +171,7 @@ FilterView.prototype = {
     
       }
     
-      this._logic_filter = filter.filter(wrapper)
+      this._logic_filter = filter(wrapper)
         .fields(Object.keys(this._filter_options))
         .ops([
             [{"key": "is in.category"},{"key": "is not in.category"}]

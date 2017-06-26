@@ -1,12 +1,24 @@
+import { rollup } from 'rollup';
+
 import resolve from 'rollup-plugin-node-resolve';
+import commonjs from 'rollup-plugin-commonjs';
+
 
 export default {
   moduleId: 'dashboard',
   moduleName: 'dashboard',
   entry: 'build/bundle.js',
   dest: 'build/dashboard.js',
+  sourceMap: 'inline',
   format: 'umd',
-  plugins: [ resolve({
-        jsnext: true
-      }) ]
+  external: ['d3'],
+  globals: {d3: 'd3'},
+  plugins: [ 
+    resolve({
+      jsnext: true,
+      main: true,
+      browser: true,
+    }),
+    commonjs()
+  ]
 };

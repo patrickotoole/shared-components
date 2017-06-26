@@ -113,7 +113,7 @@ class RelativeTiming {
 
     bawrap.selectAll(".table-wrapper").html("")
 
-    var table_obj = table.table(bawrap)
+    var table_obj = table(bawrap)
       .top(140)
       .headers(
         [{"key":"domain", "value":"Domain"}].concat(

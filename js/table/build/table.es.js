@@ -1,10 +1,4 @@
-(function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('d3')) :
-	typeof define === 'function' && define.amd ? define('table', ['exports', 'd3'], factory) :
-	(factory((global.table = global.table || {}),global.d3));
-}(this, (function (exports,d3) { 'use strict';
-
-d3 = 'default' in d3 ? d3['default'] : d3;
+import d3 from 'd3';
 
 function accessor(attr, val) {
   if (val === undefined) return this["_" + attr]
@@ -511,10 +505,4 @@ Table.prototype = {
   , d3: d3
 };
 
-exports.table = table;
-exports['default'] = table;
-exports.t = table;
-
-Object.defineProperty(exports, '__esModule', { value: true });
-
-})));
+export { table, table as t };export default table;

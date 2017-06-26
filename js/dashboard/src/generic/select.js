@@ -42,4 +42,3 @@ Select.prototype = {
       return this
     }
 }
-export default select;

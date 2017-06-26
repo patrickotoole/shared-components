@@ -1,9 +1,3 @@
-(function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
-	typeof define === 'function' && define.amd ? define('filter', ['exports'], factory) :
-	(factory((global.filter = global.filter || {})));
-}(this, (function (exports) { 'use strict';
-
 //import d3 from 'd3'
 
 function d3_updateable(target,selector,type,data,joiner) {
@@ -399,10 +393,4 @@ FilterData.prototype = {
 
 var version = "0.0.1";
 
-exports.version = version;
-exports.filter = filter$2;
-exports.filter_data = filter_data;
-
-Object.defineProperty(exports, '__esModule', { value: true });
-
-})));
+export { version, filter$2 as filter, filter_data };

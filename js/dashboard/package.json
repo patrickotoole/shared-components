@@ -14,16 +14,21 @@
     "prepublish": "npm run test && uglifyjs build/dashboard.js -c -m -o build/dashboard.min.js && rm -f build/dashboard.zip && zip -j build/dashboard.zip -- LICENSE README.md build/dashboard.js build/dashboard.min.js"
   },
   "dependencies": {
-    "state": "file:../state"
+    "state": "file:../state",
+    "table": "file:../table",
+    "filter": "file:../filter"
+
+
   },
   "devDependencies": {
     "d3": "3.5.12",
     "faucet": "0.0",
-    "rollup": "0.20.5",
+    "rollup": "^0.41.4",
     "jsdom": "7",
     "tape": "4",
     "uglify-js": "2",
 "rollup-plugin-node-resolve": ""
+
   }
 
 }

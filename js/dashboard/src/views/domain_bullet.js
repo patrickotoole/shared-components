@@ -64,4 +64,3 @@ DomainBullet.prototype = {
       return this
     }
 }
-export default domain_bullet;

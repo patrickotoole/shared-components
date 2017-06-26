@@ -6,7 +6,7 @@ function accessor(attr, val) {
   return this
 }
 
-export default function d3_updateable(target,selector,type,data,joiner) {
+function d3_updateable(target,selector,type,data,joiner) {
   var type = type || "div"
   var updateable = target.selectAll(selector).data(
     function(x){return data ? [data] : [x]},
@@ -19,7 +19,7 @@ export default function d3_updateable(target,selector,type,data,joiner) {
   return updateable
 }
 
-export default function d3_splat(target,selector,type,data,joiner) {
+function d3_splat(target,selector,type,data,joiner) {
   var type = type || "div"
   var updateable = target.selectAll(selector).data(
     data || function(x){return x},
@@ -46,7 +46,7 @@ var EXAMPLE_DATA = {
   ] 
 }
 
-export function Table(target) {
+function Table(target) {
   var CSS_STRING = String(function() {/*
 .table-wrapper tr { height:33px}
 .table-wrapper tr th { border-right:1px dotted #ccc } 
@@ -151,7 +151,7 @@ export function Table(target) {
   }
 }
 
-export default function table(target) {
+export function table(target) {
   return new Table(target)
 }
 
