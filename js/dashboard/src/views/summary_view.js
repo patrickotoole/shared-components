@@ -30,10 +30,10 @@ export function SummaryView(target) {
 }
 
 function buildStreamData(data,buckets) {
-  
+
   var units_in_bucket = buckets.map(function(x,i) { return x - (x[i-1]|| 0) })
 
-  var stackable = data.map(function(d) { 
+  var stackable = data.map(function(d) {
     var valuemap = d.values.reduce(function(p,c) { p[c.key] = c.values; return p },{})
     var percmap = d.values.reduce(function(p,c) { p[c.key] = c.percent; return p },{})
 
@@ -96,7 +96,7 @@ export function simpleTimeseries(target,data,w,h) {
     .attr("height", z => z ? y(z) : 0)
 
   return wrap
-  
+
 }
 
 
@@ -143,11 +143,11 @@ function extractData(b,a,buckets,accessor) {
   var inner = d3_updateable(before,".inner","div")
     .classed("inner",true)
 
-  
+
 
   var stream = stream_plot(inner)
     .data(data)
-    .on("category.hover",function(x,time) { 
+    .on("category.hover",function(x,time) {
       console.log(time)
       var b = data.before_stacked.filter(y => y[0].key == x)
       var a = data.after_stacked.filter(y => y[0].key == x)
@@ -189,7 +189,7 @@ function extractData(b,a,buckets,accessor) {
         .attr("transform","translate(0,2)")
 
 
-      return 
+      return
     })
     .draw()
 
@@ -197,21 +197,21 @@ function extractData(b,a,buckets,accessor) {
     , after_agg = after_stacked.reduce((o,x) => { return x.reduce((p,c) => { p[c.x] = (p[c.x] || 0) + c.y; return p},o) },{})
 
 
-  var local_before = Object.keys(before_agg).reduce((minarr,c) => { 
+  var local_before = Object.keys(before_agg).reduce((minarr,c) => {
       if (minarr[0] >= before_agg[c]) return [before_agg[c],c];
       if (minarr.length > 1) minarr[0] = -1;
-      return minarr 
+      return minarr
     },[Infinity]
   )[1]
 
-  var local_after = Object.keys(after_agg).reduce((minarr,c) => { 
+  var local_after = Object.keys(after_agg).reduce((minarr,c) => {
       if (minarr[0] >= after_agg[c]) return [after_agg[c],c];
       if (minarr.length > 1) minarr[0] = -1;
-      return minarr 
+      return minarr
     },[Infinity]
   )[1]
 
-  
+
   var before_line = buckets[buckets.indexOf(parseInt(local_before))]
     , after_line = buckets[buckets.indexOf(parseInt(local_after))]
 
@@ -255,8 +255,8 @@ function extractData(b,a,buckets,accessor) {
     .attr("x", stream._after_scale(after_line) - 10)
     .style("text-anchor","end")
     .text("Validation / Research")
-   
-    
+
+
 
   return {
     "consideration": "" + before_line,
@@ -349,11 +349,11 @@ function drawBeforeAndAfter(target,data) {
     .style("display","inline-block")
     .style("width","140px")
 
-  
+
 
   inner.selectAll("select")
     .style("min-width","140px")
-  
+
 
   var cb = comp_bubble(before)
     .rows(data.before_categories)
@@ -433,7 +433,7 @@ function drawTimeseries(target,data,radius_scale) {
     .style("background-color", "#e3ebf0")
     .style("height","127px")
 
-    
+
 
 
 
@@ -455,7 +455,7 @@ function drawTimeseries(target,data,radius_scale) {
     .text("all")
 
 
-  
+
   var samp = d3_updateable(q,".samp","div")
     .classed("samp",true)
 
@@ -477,7 +477,7 @@ function drawTimeseries(target,data,radius_scale) {
 
   var details = d3_updateable(q,".deets","div")
     .classed("deets",true)
-  
+
 
 
 
@@ -527,9 +527,9 @@ function drawTimeseries(target,data,radius_scale) {
         .classed("pie",true)
         .style("display","inline-block")
         .style("padding-top","15px")
-        .each(function(x) { 
+        .each(function(x) {
           var data = Object.keys(x).map(function(k) { return x[k] })[0]
-          buildSummaryBlock(data,this,radius_scale,x) 
+          buildSummaryBlock(data,this,radius_scale,x)
         })
     })
     .draw()
@@ -546,22 +546,22 @@ export default function summary_view(target) {
 
 SummaryView.prototype = {
     data: function(val) {
-      return accessor.bind(this)("data",val) 
+      return accessor.bind(this)("data",val)
     }
   , timing: function(val) {
-      return accessor.bind(this)("timing",val) 
+      return accessor.bind(this)("timing",val)
     }
   , category: function(val) {
-      return accessor.bind(this)("category",val) 
+      return accessor.bind(this)("category",val)
     }
   , keywords: function(val) {
-      return accessor.bind(this)("keywords",val) 
+      return accessor.bind(this)("keywords",val)
     }
   , before: function(val) {
-      return accessor.bind(this)("before",val) 
+      return accessor.bind(this)("before",val)
     }
   , after: function(val) {
-      return accessor.bind(this)("after",val) 
+      return accessor.bind(this)("after",val)
     }
 
 
@@ -573,8 +573,8 @@ SummaryView.prototype = {
 .summary-wrap .table-wrapper tr { border-bottom:none }
 .summary-wrap .table-wrapper thead tr { background:none }
 .summary-wrap .table-wrapper tbody tr:hover { background:none }
-.summary-wrap .table-wrapper tr td { border-right:1px dotted #ccc;text-align:center } 
-.summary-wrap .table-wrapper tr td:last-of-type { border-right:none } 
+.summary-wrap .table-wrapper tr td { border-right:1px dotted #ccc;text-align:center }
+.summary-wrap .table-wrapper tr td:last-of-type { border-right:none }
   */})
 
   d3_updateable(d3.select("head"),"style#custom-table-css","style")
@@ -615,7 +615,7 @@ SummaryView.prototype = {
       var streamwrap = d3_updateable(wrap,".stream-ba-row","div",false,function() { return 1})
         .classed("stream-ba-row",true)
         .style("padding-bottom","10px")
-       
+
 
 
 
@@ -627,41 +627,41 @@ SummaryView.prototype = {
         .domain([this._data.domains.population,this._data.views.population])
         .range([20,35])
 
-      
+
 
       table.table(piewrap)
         .data({"key":"T","values":[this.data()]})
         .skip_option(true)
-        .render("domains",function(x) { 
-          var data = d3.select(this.parentNode).datum()[x.key]; 
-          buildSummaryBlock(data,this,radius_scale,x) 
+        .render("domains",function(x) {
+          var data = d3.select(this.parentNode).datum()[x.key];
+          buildSummaryBlock(data,this,radius_scale,x)
         })
-        .render("articles",function(x) { 
-          var data = d3.select(this.parentNode).datum()[x.key]; 
-          buildSummaryBlock(data,this,radius_scale,x) 
+        .render("articles",function(x) {
+          var data = d3.select(this.parentNode).datum()[x.key];
+          buildSummaryBlock(data,this,radius_scale,x)
         })
 
-        .render("sessions",function(x) { 
-          var data = d3.select(this.parentNode).datum()[x.key]; 
-          buildSummaryBlock(data,this,radius_scale,x) 
+        .render("sessions",function(x) {
+          var data = d3.select(this.parentNode).datum()[x.key];
+          buildSummaryBlock(data,this,radius_scale,x)
         })
-        .render("views",function(x) { 
-          var data = d3.select(this.parentNode).datum()[x.key]; 
-          buildSummaryBlock(data,this,radius_scale,x) 
+        .render("views",function(x) {
+          var data = d3.select(this.parentNode).datum()[x.key];
+          buildSummaryBlock(data,this,radius_scale,x)
         })
         .draw()
 
-      
-      drawTimeseries(tswrap,this._timing,radius_scale)     
+
+      drawTimeseries(tswrap,this._timing,radius_scale)
 
 
       try {
-      drawCategory(catwrap,this._category)     
-      drawCategoryDiff(catwrap,this._category)     
+      drawCategory(catwrap,this._category)
+      drawCategoryDiff(catwrap,this._category)
       } catch(e) {}
 
-      //drawKeywords(keywrap,this._keywords)     
-      //drawKeywordDiff(keywrap,this._keywords)     
+      //drawKeywords(keywrap,this._keywords)
+      //drawKeywordDiff(keywrap,this._keywords)
 
       var inner = drawBeforeAndAfter(bawrap,this._before)
 
@@ -677,7 +677,7 @@ SummaryView.prototype = {
 
 
       drawStream(streamwrap,this._before.before_categories,this._before.after_categories)
-        
+
 
       return this
     }
@@ -687,4 +687,3 @@ SummaryView.prototype = {
       return this
     }
 }
-

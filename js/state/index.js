@@ -4,6 +4,8 @@ export {default as comp_eval} from "./src/comp_eval";
 
 import state from "./src/state";
 
-const s = state()
+debugger
+export const s = window.__state__ || state()
+window.__state__ = s
 
 export default s;

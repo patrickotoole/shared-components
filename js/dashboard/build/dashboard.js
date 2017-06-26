@@ -1,11 +1,431 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('state'), require('table'), require('filter')) :
-  typeof define === 'function' && define.amd ? define('dashboard', ['exports', 'state', 'table', 'filter'], factory) :
-  factory((global.dashboard = {}),global.state,global.table,global.filter);
-}(this, function (exports,state,table,filter) { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('table'), require('filter')) :
+  typeof define === 'function' && define.amd ? define('dashboard', ['exports', 'table', 'filter'], factory) :
+  factory((global.dashboard = {}),global.table,global.filter);
+}(this, function (exports,table,filter) { 'use strict';
 
   table = 'default' in table ? table['default'] : table;
   filter = 'default' in filter ? filter['default'] : filter;
+
+  function State(_current, _static) {
+
+    this._noop = function() {}
+
+    this._on = {
+        "change": this._noop
+      , "build": this._noop
+      , "forward": this._noop
+      , "back": this._noop
+    }
+
+    this._static = _static || {}
+
+    this._current = _current || {}
+    this._past = []
+    this._future = []
+
+    this._subscription = {}
+    this._state = this._buildState()
+
+
+  }
+
+  State.prototype = {
+      state: function() {
+        return Object.assign({},this._state)
+      }
+    , publish: function(name,cb) {
+
+         var push_cb = function(error,value) {
+           if (error) return subscriber(error,null)
+           
+           this.update(name, value)
+           this.trigger(name, this.state()[name], this.state())
+
+         }.bind(this)
+
+         if (typeof cb === "function") cb(push_cb)
+         else push_cb(false,cb)
+
+         return this
+      }
+    , publishBatch: function(obj) {
+        Object.keys(obj).map(function(x) {
+          this.update(x,obj[x])
+        }.bind(this))
+
+        this.triggerBatch(obj,this.state())
+      }
+    , push: function(state) {
+        this.publish(false,state)
+        return this
+      }
+    , subscribe: function() {
+
+        // three options for the arguments:
+        // (fn) 
+        // (id,fn)
+        // (id.target,fn)
+
+
+        if (typeof arguments[0] === "function") return this._global_subscribe(arguments[0])
+        if (arguments[0].indexOf(".") == -1) return this._named_subscribe(arguments[0], arguments[1])
+        if (arguments[0].indexOf(".") > -1) return this._targetted_subscribe(arguments[0].split(".")[0], arguments[0].split(".")[1], arguments[1])
+
+      }
+    , unsubscribe: function(id) {
+        this.subscribe(id,undefined)
+        return this
+      }
+
+    , _global_subscribe: function(fn) {
+        var id = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+            return v.toString(16);
+          })
+        , to = "*";
+       
+        this._targetted_subscribe(id,to,fn)
+
+        return this
+      }
+    , _named_subscribe: function(id,fn) {
+        var to = "*"
+        this._targetted_subscribe(id,to,fn)
+
+        return this
+      }
+    , _targetted_subscribe: function(id,to,fn) {
+
+        var subscriptions = this.get_subscribers_obj(to)
+          , to_state = this._state[to]
+          , state = this._state;
+
+        if (arguments.length < 2 && fn === undefined) return subscriptions[id] || function() {};
+        if (fn === undefined) {
+          delete subscriptions[id]
+          return this
+        }
+        subscriptions[id] = fn;
+
+        return this      
+      }
+    
+    , get_subscribers_obj: function(k) {
+        this._subscription[k] = this._subscription[k] || {}
+        return this._subscription[k]
+      }
+    , get_subscribers_fn: function(k) {
+        var fns = this.get_subscribers_obj(k)
+          , funcs = Object.keys(fns).map(function(x) { return fns[x] })
+          , fn = function(error,value,state) {
+              return funcs.map(function(g) { return g(error,value,state) })
+            }
+
+        return fn
+      }
+    , trigger: function(name, _value, _state) {
+        var subscriber = this.get_subscribers_fn(name) || function() {}
+          , all = this.get_subscribers_fn("*") || function() {};
+
+        this.on("change")(name,_value,_state)
+
+        subscriber(false,_value,_state)
+        all(false,_state)
+      }
+    , triggerBatch: function(obj, _state) {
+
+        var all = this.get_subscribers_fn("*") || function() {}
+          , fns = Object.keys(obj).map(function(k) { 
+              var fn = this.get_subscribers_fn || function() {}
+              return fn.bind(this)(k)(false,obj[k],_state)  
+            }.bind(this))
+        
+        all(false,_state)
+
+      }
+    , _buildState: function() {
+        this._state = Object.assign({},this._current)
+
+        Object.keys(this._static).map(function(k) { 
+          this._state[k] = this._static[k]
+        }.bind(this))
+
+        this.on("build")(this._state, this._current, this._static)
+
+        return this._state
+      }
+    , update: function(name, value) {
+        this._pastPush(this._current)
+        if (name) {
+          var obj = {}
+          obj[name] = value;
+        }
+        this._current = (name) ? 
+          Object.assign({}, this._current, obj) :
+          Object.assign({}, this._current, value )
+
+        this._buildState()
+
+        return this
+      }
+    , setStatic: function(k,v) {
+        if (k != undefined && v != undefined) this._static[k] = v
+        this._buildState()
+
+        return this
+      }
+    , publishStatic: function(name,cb) {
+
+        var push_cb = function(error,value) {
+          if (error) return subscriber(error,null)
+          
+          this._static[name] = value
+          this._buildState()
+          this.trigger(name, this.state()[name], this.state())
+
+        }.bind(this)
+
+        if (typeof cb === "function") cb(push_cb)
+        else push_cb(false,cb)
+
+        return this
+
+      }
+    , _pastPush: function(v) {
+        this._past.push(v)
+      }
+    , _futurePush: function(v) {
+        this._future.push(v)
+      }
+    , forward: function() {
+        this._pastPush(this._current)
+        this._current = this._future.pop()
+
+        this.on("forward")(this._current,this._past, this._future)
+
+        this._state = this._buildState()
+        this.trigger(false, this._state, this._state)
+      }
+    , back: function() {
+        this._futurePush(this._current)
+        this._current = this._past.pop()
+
+        this.on("back")(this._current,this._future, this._past)
+
+        this._state = this._buildState()
+        this.trigger(false, this._state, this._state)
+      }
+    , on: function(action,fn) {
+        if (fn === undefined) return this._on[action] || this._noop;
+        this._on[action] = fn;
+        return this
+      } 
+    
+  }
+
+  function state$1(_current, _static) {
+    return new State(_current, _static)
+  }
+
+  state$1.prototype = State.prototype
+
+  function QS(state) {
+    //this.state = state
+    var self = this;
+
+    this._encodeObject = function(o) {
+      return JSON.stringify(o)
+    }
+
+    this._encodeArray = function(o) {
+      return JSON.stringify(o)
+    }
+  }
+
+  // LZW-compress a string
+  function lzw_encode(s) {
+      var dict = {};
+      var data = (s + "").split("");
+      var out = [];
+      var currChar;
+      var phrase = data[0];
+      var code = 256;
+      for (var i=1; i<data.length; i++) {
+          currChar=data[i];
+          if (dict[phrase + currChar] != null) {
+              phrase += currChar;
+          }
+          else {
+              out.push(phrase.length > 1 ? dict[phrase] : phrase.charCodeAt(0));
+              dict[phrase + currChar] = code;
+              code++;
+              phrase=currChar;
+          }
+      }
+      out.push(phrase.length > 1 ? dict[phrase] : phrase.charCodeAt(0));
+      for (var i=0; i<out.length; i++) {
+          out[i] = String.fromCharCode(out[i]);
+      }
+      return out.join("");
+  }
+
+  // Decompress an LZW-encoded string
+  function lzw_decode(s) {
+      var dict = {};
+      var data = (s + "").split("");
+      var currChar = data[0];
+      var oldPhrase = currChar;
+      var out = [currChar];
+      var code = 256;
+      var phrase;
+      for (var i=1; i<data.length; i++) {
+          var currCode = data[i].charCodeAt(0);
+          if (currCode < 256) {
+              phrase = data[i];
+          }
+          else {
+             phrase = dict[currCode] ? dict[currCode] : (oldPhrase + currChar);
+          }
+          out.push(phrase);
+          currChar = phrase.charAt(0);
+          dict[code] = oldPhrase + currChar;
+          code++;
+          oldPhrase = phrase;
+      }
+      return out.join("");
+  }
+
+  QS.prototype = {
+      to: function(state,encode) {
+        var self = this
+
+        var params = Object.keys(state).map(function(k) {
+
+          var value = state[k]
+            , o = value;
+
+          if (value && (typeof(value) == "object") && (value.length > 0)) {
+            o = self._encodeArray(value)
+          } else if (typeof(value) == "object") {
+            o = self._encodeObject(value)
+          } 
+
+          return k + "=" + encodeURIComponent(o) 
+
+        })
+
+        if (encode) return "?" + "encoded=" + btoa(escape(lzw_encode(params.join("&"))));
+        return "?" + params.join("&")
+        
+      }
+    , from: function(qs) {
+        var query = {};
+        if (qs.indexOf("?encoded=") == 0) qs = lzw_decode(unescape(atob(qs.split("?encoded=")[1])))
+        var a = qs.substr(1).split('&');
+        for (var i = 0; i < a.length; i++) {
+            var b = a[i].split('=');
+            
+            query[decodeURIComponent(b[0])] = (decodeURIComponent(b[1] || ''));
+            var _char = query[decodeURIComponent(b[0])][0] 
+            if ((_char == "{") || (_char == "[")) query[decodeURIComponent(b[0])] = JSON.parse(query[decodeURIComponent(b[0])])
+        }
+        return query;
+      }
+  }
+
+  function qs(state) {
+    return new QS(state)
+  }
+
+  qs.prototype = QS.prototype
+
+  function comparison_eval(obj1,obj2,_final) {
+    return new ComparisonEval(obj1,obj2,_final)
+  }
+
+  var noop$16 = (x) => {};
+  var eqop = (x,y) => x == y;
+  var acc = (name,second) => {
+        return (x,y) => second ? y[name] : x[name] 
+      };
+  class ComparisonEval {
+    constructor(obj1,obj2,_final) {
+      this._obj1 = obj1
+      this._obj2 = obj2
+      this._final = _final
+      this._comparisons = {}
+    }
+
+    accessor(name,acc1,acc2) {
+      this._comparisons[name] = Object.assign({},this._comparisons[name],{
+          acc1: acc1
+        , acc2: acc2
+      })
+      return this
+    }
+
+    success(name,fn) {
+      this._comparisons[name] = Object.assign({},this._comparisons[name],{
+          success: fn
+      })
+      return this
+    }
+
+    failure(name,fn) {
+      this._comparisons[name] = Object.assign({},this._comparisons[name],{
+          failure: fn
+      })
+      return this
+    }
+
+    equal(name,fn) {
+      this._comparisons[name] = Object.assign({},this._comparisons[name],{
+          eq: fn
+      })
+      return this
+    }
+
+    evaluate() {
+      Object.keys(this._comparisons).map( k => {
+        this._eval(this._comparisons[k],k)
+      })
+      return this._final
+    }
+    
+
+    comparsion(name,acc1,acc2,eq,success,failure) {
+      this._comparisons[name] = {
+          acc1: acc1
+        , acc2: acc2
+        , eq: eq || eqop
+        , success: success || noop$16
+        , failure: failure || noop$16
+      }
+      return this
+    }
+
+    _eval(comparison,name) {
+      var acc1 = comparison.acc1 || acc(name)
+        , acc2 = comparison.acc2 || acc(name,true)
+        , val1 = acc1(this._obj1,this._obj2)
+        , val2 = acc2(this._obj1,this._obj2)
+        , eq = comparison.eq || eqop
+        , succ = comparison.success || noop$16
+        , fail = comparison.failure || noop$16
+
+      var _evald = eq(val1, val2)
+
+      _evald ? 
+        succ.bind(this)(val1,val2,this._final) : 
+        fail.bind(this)(val1,val2,this._final)
+    }
+
+    
+  }
+
+  const s$1 = window.__state__ || state$1()
+  window.__state__ = s$1
 
   function accessor(attr, val) {
     if (val === undefined) return this["_" + attr]
@@ -2043,10 +2463,10 @@
   }
 
   function buildStreamData(data,buckets) {
-    
+
     var units_in_bucket = buckets.map(function(x,i) { return x - (x[i-1]|| 0) })
 
-    var stackable = data.map(function(d) { 
+    var stackable = data.map(function(d) {
       var valuemap = d.values.reduce(function(p,c) { p[c.key] = c.values; return p },{})
       var percmap = d.values.reduce(function(p,c) { p[c.key] = c.percent; return p },{})
 
@@ -2109,7 +2529,7 @@
       .attr("height", z => z ? y(z) : 0)
 
     return wrap
-    
+
   }
 
 
@@ -2156,11 +2576,11 @@
     var inner = d3_updateable(before,".inner","div")
       .classed("inner",true)
 
-    
+
 
     var stream = stream_plot(inner)
       .data(data)
-      .on("category.hover",function(x,time) { 
+      .on("category.hover",function(x,time) {
         console.log(time)
         var b = data.before_stacked.filter(y => y[0].key == x)
         var a = data.after_stacked.filter(y => y[0].key == x)
@@ -2202,7 +2622,7 @@
           .attr("transform","translate(0,2)")
 
 
-        return 
+        return
       })
       .draw()
 
@@ -2210,21 +2630,21 @@
       , after_agg = after_stacked.reduce((o,x) => { return x.reduce((p,c) => { p[c.x] = (p[c.x] || 0) + c.y; return p},o) },{})
 
 
-    var local_before = Object.keys(before_agg).reduce((minarr,c) => { 
+    var local_before = Object.keys(before_agg).reduce((minarr,c) => {
         if (minarr[0] >= before_agg[c]) return [before_agg[c],c];
         if (minarr.length > 1) minarr[0] = -1;
-        return minarr 
+        return minarr
       },[Infinity]
     )[1]
 
-    var local_after = Object.keys(after_agg).reduce((minarr,c) => { 
+    var local_after = Object.keys(after_agg).reduce((minarr,c) => {
         if (minarr[0] >= after_agg[c]) return [after_agg[c],c];
         if (minarr.length > 1) minarr[0] = -1;
-        return minarr 
+        return minarr
       },[Infinity]
     )[1]
 
-    
+
     var before_line = buckets[buckets.indexOf(parseInt(local_before))]
       , after_line = buckets[buckets.indexOf(parseInt(local_after))]
 
@@ -2268,8 +2688,8 @@
       .attr("x", stream._after_scale(after_line) - 10)
       .style("text-anchor","end")
       .text("Validation / Research")
-     
-      
+
+
 
     return {
       "consideration": "" + before_line,
@@ -2362,11 +2782,11 @@
       .style("display","inline-block")
       .style("width","140px")
 
-    
+
 
     inner.selectAll("select")
       .style("min-width","140px")
-    
+
 
     var cb = comp_bubble(before)
       .rows(data.before_categories)
@@ -2424,7 +2844,7 @@
       .style("background-color", "#e3ebf0")
       .style("height","127px")
 
-      
+
 
 
 
@@ -2446,7 +2866,7 @@
       .text("all")
 
 
-    
+
     var samp = d3_updateable(q,".samp","div")
       .classed("samp",true)
 
@@ -2468,7 +2888,7 @@
 
     var details = d3_updateable(q,".deets","div")
       .classed("deets",true)
-    
+
 
 
 
@@ -2518,9 +2938,9 @@
           .classed("pie",true)
           .style("display","inline-block")
           .style("padding-top","15px")
-          .each(function(x) { 
+          .each(function(x) {
             var data = Object.keys(x).map(function(k) { return x[k] })[0]
-            buildSummaryBlock(data,this,radius_scale,x) 
+            buildSummaryBlock(data,this,radius_scale,x)
           })
       })
       .draw()
@@ -2537,22 +2957,22 @@
 
   SummaryView.prototype = {
       data: function(val) {
-        return accessor.bind(this)("data",val) 
+        return accessor.bind(this)("data",val)
       }
     , timing: function(val) {
-        return accessor.bind(this)("timing",val) 
+        return accessor.bind(this)("timing",val)
       }
     , category: function(val) {
-        return accessor.bind(this)("category",val) 
+        return accessor.bind(this)("category",val)
       }
     , keywords: function(val) {
-        return accessor.bind(this)("keywords",val) 
+        return accessor.bind(this)("keywords",val)
       }
     , before: function(val) {
-        return accessor.bind(this)("before",val) 
+        return accessor.bind(this)("before",val)
       }
     , after: function(val) {
-        return accessor.bind(this)("after",val) 
+        return accessor.bind(this)("after",val)
       }
 
 
@@ -2564,8 +2984,8 @@
   .summary-wrap .table-wrapper tr { border-bottom:none }
   .summary-wrap .table-wrapper thead tr { background:none }
   .summary-wrap .table-wrapper tbody tr:hover { background:none }
-  .summary-wrap .table-wrapper tr td { border-right:1px dotted #ccc;text-align:center } 
-  .summary-wrap .table-wrapper tr td:last-of-type { border-right:none } 
+  .summary-wrap .table-wrapper tr td { border-right:1px dotted #ccc;text-align:center }
+  .summary-wrap .table-wrapper tr td:last-of-type { border-right:none }
     */})
 
     d3_updateable(d3.select("head"),"style#custom-table-css","style")
@@ -2606,7 +3026,7 @@
         var streamwrap = d3_updateable(wrap,".stream-ba-row","div",false,function() { return 1})
           .classed("stream-ba-row",true)
           .style("padding-bottom","10px")
-         
+
 
 
 
@@ -2618,41 +3038,41 @@
           .domain([this._data.domains.population,this._data.views.population])
           .range([20,35])
 
-        
+
 
         table.table(piewrap)
           .data({"key":"T","values":[this.data()]})
           .skip_option(true)
-          .render("domains",function(x) { 
-            var data = d3.select(this.parentNode).datum()[x.key]; 
-            buildSummaryBlock(data,this,radius_scale,x) 
+          .render("domains",function(x) {
+            var data = d3.select(this.parentNode).datum()[x.key];
+            buildSummaryBlock(data,this,radius_scale,x)
           })
-          .render("articles",function(x) { 
-            var data = d3.select(this.parentNode).datum()[x.key]; 
-            buildSummaryBlock(data,this,radius_scale,x) 
+          .render("articles",function(x) {
+            var data = d3.select(this.parentNode).datum()[x.key];
+            buildSummaryBlock(data,this,radius_scale,x)
           })
 
-          .render("sessions",function(x) { 
-            var data = d3.select(this.parentNode).datum()[x.key]; 
-            buildSummaryBlock(data,this,radius_scale,x) 
+          .render("sessions",function(x) {
+            var data = d3.select(this.parentNode).datum()[x.key];
+            buildSummaryBlock(data,this,radius_scale,x)
           })
-          .render("views",function(x) { 
-            var data = d3.select(this.parentNode).datum()[x.key]; 
-            buildSummaryBlock(data,this,radius_scale,x) 
+          .render("views",function(x) {
+            var data = d3.select(this.parentNode).datum()[x.key];
+            buildSummaryBlock(data,this,radius_scale,x)
           })
           .draw()
 
-        
-        drawTimeseries(tswrap,this._timing,radius_scale)     
+
+        drawTimeseries(tswrap,this._timing,radius_scale)
 
 
         try {
-        drawCategory(catwrap,this._category)     
-        drawCategoryDiff(catwrap,this._category)     
+        drawCategory(catwrap,this._category)
+        drawCategoryDiff(catwrap,this._category)
         } catch(e) {}
 
-        //drawKeywords(keywrap,this._keywords)     
-        //drawKeywordDiff(keywrap,this._keywords)     
+        //drawKeywords(keywrap,this._keywords)
+        //drawKeywordDiff(keywrap,this._keywords)
 
         var inner = drawBeforeAndAfter(bawrap,this._before)
 
@@ -2668,7 +3088,7 @@
 
 
         drawStream(streamwrap,this._before.before_categories,this._before.after_categories)
-          
+
 
         return this
       }
@@ -2710,13 +3130,13 @@
 
   DomainExpanded.prototype = {
       data: function(val) {
-        return accessor.bind(this)("data",val) 
+        return accessor.bind(this)("data",val)
       }
     , raw: function(val) {
-        return accessor.bind(this)("raw",val) 
+        return accessor.bind(this)("raw",val)
       }
     , urls: function(val) {
-        return accessor.bind(this)("urls",val) 
+        return accessor.bind(this)("urls",val)
       }
     , draw: function() {
 
@@ -2798,7 +3218,7 @@
           .style("line-height","36px")
           .style("display","inline-block")
           .style("vertical-align","top")
-   
+
         d3_class$3(euh,"title")
           .style("width","265px")
           .style("font-weight","bold")
@@ -2987,13 +3407,15 @@
             self.on("stage-filter")(x)
           })
 
-        d3_class$3(url_name,"url")
+        d3_class$3(url_name,"url","a")
           .style("display","inline-block")
           .style("text-overflow","ellipsis")
           .style("width","205px")
           .text(x => {
-            return x.url.split(d.domain)[1] || x.url 
+            return x.url.split(d.domain)[1] || x.url
           })
+          .attr("href", x => x.url )
+          .attr("target", "_blank")
 
         d3_updateable(url_row,".number","div").classed("number",true)
           .style("width","40px")
@@ -3739,11 +4161,11 @@
       this._on = {}
     }
 
-    data(val) { return accessor.bind(this)("data",val) } 
-    stages(val) { return accessor.bind(this)("stages",val) } 
+    data(val) { return accessor.bind(this)("data",val) }
+    stages(val) { return accessor.bind(this)("stages",val) }
 
-    before_urls(val) { return accessor.bind(this)("before_urls",val) } 
-    after_urls(val) { return accessor.bind(this)("after_urls",val) } 
+    before_urls(val) { return accessor.bind(this)("before_urls",val) }
+    after_urls(val) { return accessor.bind(this)("after_urls",val) }
 
 
 
@@ -3777,10 +4199,10 @@
               return p
             },url_volume)
 
-      
-            
-            var sorted_urls = d3.entries(url_volume).sort((p,c) => { 
-              return d3.descending(p.value,c.value) 
+
+
+            var sorted_urls = d3.entries(url_volume).sort((p,c) => {
+              return d3.descending(p.value,c.value)
             })
 
 
@@ -3842,7 +4264,7 @@
 
             var expansion_row = d3_class$4(td,"expansion-row")
             var footer_row = d3_class$4(td,"footer-row").style("min-height","10px").style("margin-top","15px")
-            
+
             function buildFilterInput(x) {
                 this.on("something")(x)
                 //select_value.value += (select_value.value ? "," : "") + x.key
@@ -3871,13 +4293,13 @@
               .attr("width",tsw + "px")
               .attr("height","70px")
 
-   
+
 
             var before_rollup = d3.nest()
               .key(function(x) { return x.time_diff_bucket})
               .rollup(function(x) { return d3.sum(x,y => y.visits) })
               .map(before_urls)
-            
+
             var after_rollup = d3.nest()
               .key(function(x) { return "-" + x.time_diff_bucket})
               .rollup(function(x) { return d3.sum(x,y => y.visits) })
@@ -3903,7 +4325,7 @@
               .style("text-anchor","middle")
               .text("On-site")
 
-            
+
             var before_pos, after_pos;
 
             buckets$1.map(function(x,i) {
@@ -3971,7 +4393,7 @@
               subset.attr("fill","grey")
             }
 
-            
+
 
             selectOptionRect(options)
 
@@ -3984,7 +4406,7 @@
 
 
             function buildOptions(options) {
-              
+
 
               d3_splat(opts,".show-button","a",options,x => x.key)
                 .classed("show-button",true)
@@ -4038,7 +4460,7 @@
               .style("width","50%")
               .style("vertical-align","top")
 
-              
+
 
             d3_class$4(urls_summary,"title")
               .style("font-weight","bold")
@@ -4124,7 +4546,7 @@
               .style("line-height","36px")
               .style("display","inline-block")
               .style("vertical-align","top")
-   
+
             d3_class$4(euh,"title")
               .style("width","265px")
               .style("font-weight","bold")
@@ -4262,11 +4684,13 @@
                   self.on("stage-filter")(x)
                 })
 
-              d3_class$4(url_name,"url")
+              d3_class$4(url_name,"url", "a")
                 .style("display","inline-block")
                 .style("text-overflow","ellipsis")
                 .style("width","235px")
                 .text(x => x.url.split(d.domain)[1] || x.url )
+                .attr("href", x => x.url)
+                .attr("target", "_blank")
 
               d3_updateable(url_row,".number","div").classed("number",true)
                 .style("width","50px")
@@ -4375,7 +4799,7 @@
 
                 })
             }
-            
+
             buildUrlSelection(to_draw)
             buildKeywordSelection(kw_to_draw)
 
@@ -5158,7 +5582,7 @@
                   .text(x => x.name)
                   .on("click", function(x) {
                     // HACK: THIS is hacky...
-                    var _state = state.qs({}).from("?" + x.endpoint.split("?")[1])
+                    var _state = qs({}).from("?" + x.endpoint.split("?")[1])
 
                     ss.hide()
                     window.onpopstate({state: _state})
@@ -5389,12 +5813,118 @@
 
   }
 
+  var deepcopy = function(x) {
+    return JSON.parse(JSON.stringify(x))
+  }
+
+  function build(target) {
+    return new Dashboard(target)
+  }
+
+  class Dashboard {
+
+    constructor(target) {
+      this._target = target
+    }
+
+    call() {
+     let s = s$1;
+     let value = s.state()
+
+     let db = new_dashboard(this._target)
+       .staged_filters(value.staged_filter || "")
+       .saved(value.saved || [])
+       .data(value.formatted_data || {})
+       .actions(value.actions || [])
+       .selected_action(value.selected_action || {})
+       .selected_comparison(value.selected_comparison || {})
+       .action_date(value.action_date || 0)
+       .comparison_date(value.comparison_date || 0)
+       .loading(value.loading || false)
+       .line_items(value.line_items || false)
+       .summary(value.summary || false)
+       .time_summary(value.time_summary || false)
+       .category_summary(value.category_summary || false)
+       .keyword_summary(value.keyword_summary || false)
+       .before(value.before_urls || [])
+       .after(value.after_urls || [])
+       .logic_options(value.logic_options || false)
+       .logic_categories(value.logic_categories || false)
+       .filters(value.filters || false)
+       .view_options(value.dashboard_options || false)
+       .explore_tabs(value.tabs || false)
+       .on("add-filter", function(filter) { 
+         s.publish("filters",s.state().filters.concat(filter).filter(x => x.value) ) 
+       })
+       .on("modify-filter", function(filter) { 
+         var filters = s.state().filters
+
+         var has_exisiting = filters.filter(x => (x.field + x.op) == (filter.field + filter.op) )
+         
+         if (has_exisiting.length) {
+           var new_filters = filters.reverse().map(function(x) {
+             if ((x.field == filter.field) && (x.op == filter.op)) {
+               x.value += "," + filter.value
+             }
+             return x
+           })
+           s.publish("filters",new_filters.filter(x => x.value))
+         } else {
+           s.publish("filters",s.state().filters.concat(filter).filter(x => x.value))
+         }
+
+       })
+
+       .on("staged-filter.change", function(str) { s.publish("staged_filter",str ) })
+       .on("action.change", function(action) { s.publish("selected_action",action) })
+       .on("action_date.change", function(date) { s.publish("action_date",date) })
+       .on("comparison_date.change", function(date) { s.publish("comparison_date",date) })
+       .on("comparison.change", function(action) { 
+         if (action.value == false) return s.publish("selected_comparison",false)
+         s.publish("selected_comparison",action)
+       })
+       .on("logic.change", function(logic) {
+         s.publish("logic_options",logic)
+       })
+       .on("filter.change", function(filters) {
+
+         s.publishBatch({
+             "filters":filters
+         })
+       })
+       .on("view.change", function(x) {
+         db.loading(true)
+         var CP = deepcopy(value.dashboard_options)
+         CP.map(function(d) {
+           if (x.value == d.value) return d.selected = 1
+           d.selected = 0
+         })
+         s.publish("dashboard_options",CP)
+       })
+       .on("tab.change", function(x) {
+         db.loading(true)
+         value.tabs.map(function(t) {
+           if (t.key == x.key) return t.selected = 1
+           t.selected = 0
+         })
+         s.publishStatic("tabs",value.tabs)
+       })
+       .on("ba.sort", function(x) {
+         s.publish("sortby",x.value)
+         s.publish("filters",value.filters)
+     
+       })
+       .draw()
+     
+    }
+  }
+
   function compare(qs_state,_state) {
 
     var updates = {}
 
 
-    state.comp_eval(qs_state,_state,updates)
+    comparison_eval(qs_state,_state,updates)
       .accessor(
           "selected_action"
         , (x,y) => y.actions.filter(z => z.action_id == x.selected_action)[0]
@@ -5448,8 +5978,8 @@
 
       .evaluate()
 
-    var current = state.qs({}).to(_state.qs_state || {})
-      , pop = state.qs({}).to(qs_state)
+    var current = qs({}).to(_state.qs_state || {})
+      , pop = qs({}).to(qs_state)
 
     if (Object.keys(updates).length && current != pop) {
       return updates
@@ -5464,13 +5994,14 @@
     compare: compare
   });
 
-  let state$1 = s;
+  let state = s;
 
   var version = "0.0.1";
 
   exports.version = version;
-  exports.state = state$1;
+  exports.state = state;
   exports.new_dashboard = new_dashboard;
+  exports.build = build;
   exports.prepData = p;
   exports.buildSummaryData = buildSummaryData;
   exports.buildSummaryAggregation = buildSummaryAggregation;
