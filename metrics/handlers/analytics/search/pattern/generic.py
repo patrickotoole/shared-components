@@ -109,8 +109,8 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
 
     @decorators.deferred
     def defer_get_artifacts(self, domains_full_df, advertiser):
-        Q1 = "select key_name, json from artifacts where advertiser = '%s' and active=1 and deleted=0"
-        Q2 = "select key_name, json from artifacts where advertiser is null and active=1 and deleted=0"
+        Q1 = "select key_name, json, sql_statement from artifacts where advertiser = '%s' and active=1 and deleted=0"
+        Q2 = "select key_name, json, sql_statement from artifacts where advertiser is null and active=1 and deleted=0"
         
         Q3 = "select url, topic from url_title WHERE url in (%(urls)s)"
         
@@ -121,10 +121,16 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
         json = self.crushercache.select_dataframe(Q1 % advertiser)
         generic_json = self.crushercache.select_dataframe(Q2)
         results = {}
-        for gjs in generic_json.iterrows():
-            results[gjs[1]['key_name']] = ujson.loads(gjs[1]['json'])
-        for js in json.iterrows():
-            results[js[1]['key_name']] = ujson.loads(js[1]['json'])
+        for index, gjs in generic_json.iterrows():
+            results[gjs['key_name']] = ujson.loads(gjs['json'])
+        for index, js in json.iterrows():
+            if js['sql_statement'] == 0:
+                results[js['key_name']] = ujson.loads(js['json'])
+            else:
+                #may need a try catch
+                table_data = self.crushercache.select_dataframe(js['json'])
+                results[js['key_name']] = table_data.to_dict('dict')
+                logging.info("data")
         #Topic Artifacts
         #url_set = domains_full_df['url']
         #url_set = [self.crushercache.escape_string(i.encode("utf-8")) for i in url_set ]
