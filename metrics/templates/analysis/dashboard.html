@@ -226,9 +226,7 @@
     .style("margin-left","auto")
     .style("margin-right","auto")
 
-  var deepcopy = function(x) {
-    return JSON.parse(JSON.stringify(x))
-  } 
+   
 
   function buildCategories(value) {
     var categories = d3.nest()
@@ -381,13 +379,13 @@
           .draw()
   }
 
-  var buildDashboard = new dashboard.build(centered)
+  var t = (new dashboard.build(centered))
+  var buildDashboard = t.call.bind(t)
 
 
   var state_module = state
-debugger
 
-  var s = state.state()
+  var s = state_module.s
     .subscribe("filter.tabs", function(error,dbo,state) {
       s.publishStatic("formatted_data",state.data)
     })
@@ -672,7 +670,7 @@ debugger
 
       value.loading = false
       s.update("loading",false)
-
+debugger
       if (value.formatted_data) buildDashboard(value)
     })
     .subscribe("raw.data",function(error,value,state) {
