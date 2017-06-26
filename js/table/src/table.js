@@ -1,4 +1,4 @@
-import * as d3 from 'd3';
+import d3 from 'd3';
 
 function accessor(attr, val) {
   if (val === undefined) return this["_" + attr]
@@ -13,13 +13,10 @@ export default function d3_updateable(target,selector,type,data,joiner) {
     joiner || function(x){return [x]}
   )
 
-  var _new = updateable.enter()
+  updateable.enter()
     .append(type)
 
-  updateable.exit().remove()
-
-
-  return _new.merge(updateable)
+  return updateable
 }
 
 export default function d3_splat(target,selector,type,data,joiner) {
@@ -29,12 +26,10 @@ export default function d3_splat(target,selector,type,data,joiner) {
     joiner || function(x){return x}
   )
 
-  var _new = updateable.enter()
+  updateable.enter()
     .append(type)
 
-  updateable.exit().remove()
-
-  return _new.merge(updateable)
+  return updateable
 }
 
 var EXAMPLE_DATA = {
@@ -98,8 +93,7 @@ export function Table(target) {
    
     return d3.select(this).text(function(x) { 
       var pd = this.parentNode.__data__
-      //return pd[x.key] > 0 ? d3.format(",.2f")(pd[x.key]).replace(".00","") : pd[x.key]
-      return pd[x.key]
+      return pd[x.key] > 0 ? d3.format(",.2f")(pd[x.key]).replace(".00","") : pd[x.key]
     })
   }
 
@@ -217,7 +211,7 @@ Table.prototype = {
   , render_wrapper: function() {
       var wrap = this._target
 
-      var wrapper = d3_updateable(wrap,".table-wrapper","div",this.data())
+      var wrapper = d3_updateable(wrap,".table-wrapper","div")
         .classed("table-wrapper",true)
         .style("position","relative")
 
@@ -308,14 +302,11 @@ Table.prototype = {
       var headers_thead = d3_updateable(thead,"tr.table-headers","tr",h,function(x){ return 1})
         .classed("table-headers",true)
 
-      var th = d3_splat(headers_thead,"th","th",false,function(x,i) {
-          return x.key + i 
-        })
+
+      var th = d3_splat(headers_thead,"th","th",false,function(x,i) {return x.key + i })
         .style("width",function(x) { return x.width })
         .style("position","relative")
         .order()
-
-      th.exit().remove()
 
 
       d3_updateable(th,"span","span")
@@ -344,31 +335,31 @@ Table.prototype = {
       var self = this;
       var can_redraw = true
 
-      //var drag = d3.behavior.drag()
-      //  .on("drag", function(d,i) {
-      //      var x = d3.event.dx
-      //      var w = parseInt(d3.select(this.parentNode).style("width").replace("px"))
-      //      this.parentNode.__data__.width = (w+x)+"px"
-      //      d3.select(this.parentNode).style("width", (w+x)+"px")
+      var drag = d3.behavior.drag()
+        .on("drag", function(d,i) {
+            var x = d3.event.dx
+            var w = parseInt(d3.select(this.parentNode).style("width").replace("px"))
+            this.parentNode.__data__.width = (w+x)+"px"
+            d3.select(this.parentNode).style("width", (w+x)+"px")
 
-      //      var index = Array.prototype.slice.call(this.parentNode.parentNode.children,0).indexOf(this.parentNode) + 1
-      //      d3.select(this.parentNode.parentNode.children[index]).style("width",undefined)
+            var index = Array.prototype.slice.call(this.parentNode.parentNode.children,0).indexOf(this.parentNode) + 1
+            d3.select(this.parentNode.parentNode.children[index]).style("width",undefined)
 
-      //      if (can_redraw) {
-      //        can_redraw = false
-      //        setTimeout(function() {
-      //          can_redraw = true
-      //          tbody.selectAll("tr").selectAll("td:nth-of-type(" + index + ")").each(function(x) {
-      //            var render = self._renderers[x.key]
-      //            if (render) render.bind(this)(x)
+            if (can_redraw) {
+              can_redraw = false
+              setTimeout(function() {
+                can_redraw = true
+                tbody.selectAll("tr").selectAll("td:nth-of-type(" + index + ")").each(function(x) {
+                  var render = self._renderers[x.key]
+                  if (render) render.bind(this)(x)
     
-      //          })
-      //          
+                })
+                
 
-      //        },1)
-      //      }
-      //      
-      //  });
+              },1)
+            }
+            
+        });
 
       var draggable = d3_updateable(th,"b","b")
         .style("cursor", "ew-resize")
@@ -387,7 +378,7 @@ Table.prototype = {
            var index = Array.prototype.slice.call(this.parentNode.parentNode.children,0).indexOf(this.parentNode) + 1
            tbody.selectAll("tr").selectAll("td:nth-of-type(" + index + ")").style("border-right",undefined)
         })
-        //.call(drag)
+        .call(drag)
 
       th.exit().remove()
 
@@ -448,6 +439,7 @@ Table.prototype = {
       var data = this._data.values
         , sortby = this._sort || {};
 
+      console.error(data)
 
       data = data.sort(function(p,c) {
         var a = p[sortby.key] || -Infinity
@@ -456,9 +448,7 @@ Table.prototype = {
         return sortby.value ? d3.ascending(a,b) : d3.descending(a,b)
       })
 
-      var rows = d3_splat(tbody,"tr","tr",data,function(x,i){ 
-          return String(sortby.key + x[sortby.key]) + i 
-        })
+      var rows = d3_splat(tbody,"tr","tr",data,function(x,i){ return String(sortby.key + x[sortby.key]) + i })
         .order()
         .on("click",function(x) {
           self.on("expand").bind(this)(x)
