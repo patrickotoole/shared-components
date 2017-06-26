@@ -95,6 +95,8 @@ if __name__ == '__main__':
         options.include_crusher_api
 
     ).connectors
+    from link import lnk
+    connectors['tree_sync'] = lnk.api.tree_sync
 
     routes = [r for r in options.routes.split(",") if len(r)]
 

@@ -171,7 +171,7 @@ class AdvertiserRoutes(Routes):
 
 
     @namespace("/crusher")
-    @connectors("db","api","cassandra", "mongo", "zookeeper", "crushercache")
+    @connectors("db","api","cassandra", "mongo", "zookeeper", "crushercache","tree_sync")
     def crusher_routes(self):
         import handlers.analytics as analytics
         import handlers.funnel as funnel

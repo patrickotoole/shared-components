@@ -9,7 +9,7 @@ from lib.helpers import Convert
 from action_auth import ActionAuth
 from action_database import ActionDatabase
 from lib.helpers import APIHelpers
-
+from link import lnk
 
 class ActionHandler(BaseHandler,ActionAuth,APIHelpers,ActionDatabase):
 
@@ -19,6 +19,7 @@ class ActionHandler(BaseHandler,ActionAuth,APIHelpers,ActionDatabase):
         self.crushercache = kwargs.get('crushercache',None)
         self.required_cols = ["advertiser", "action_name"]
         self.requests = requests
+        self.tree_sync = kwargs.get('tree_sync', None)
 
 
     @tornado.web.authenticated

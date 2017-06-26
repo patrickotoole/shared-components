@@ -38,7 +38,8 @@ if __name__ == '__main__':
     connectors = {
         "db": lnk.dbs.rockerbox,
         "crushercache": lnk.dbs.crushercache,
-        "zookeeper": KazooClient(hosts="zk1:2181")
+        "zookeeper": KazooClient(hosts="zk1:2181"),
+        "tree_sync": lnk.api.tree_sync
     }
 
     connectors['zookeeper'].start()
