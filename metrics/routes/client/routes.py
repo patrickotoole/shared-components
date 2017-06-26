@@ -206,7 +206,7 @@ class AdvertiserRoutes(Routes):
             (r'/funnel/action', hindsight_action.ActionHandler, self.connectors),
             (r'/funnel/action/(.*?)', hindsight_action.ActionHandler, self.connectors),
             (r'/funnel/lookalike', funnel.FunnelLookalikeHandler, self.connectors),
-            (r'/funnel/lookalike/(.*?)', funnel.FunnelLookalikeHandler, self.connectors),
+            #(r'/funnel/lookalike/(.*?)', funnel.FunnelLookalikeHandler, self.connectors),
             #(r'/funnel/search/(.*?)', funnel.FunnelSearchHandler, self.connectors),
             (r'/pattern/?', funnel.PatternStatusHandler, self.connectors),
             (r'/pattern/(.*?)', funnel.PatternStatusHandler, self.connectors),

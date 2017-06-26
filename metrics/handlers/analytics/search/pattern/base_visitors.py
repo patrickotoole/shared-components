@@ -57,8 +57,13 @@ class VisitorBase(GenericSearchBase, BaseDomainHandler):
         defer.returnValue(response)
         
     def get_pattern(self,filter_id, advertiser):
-        pattern = self.db.select_dataframe("select url_pattern from action_with_patterns where action_id = %s and pixel_source_name = '%s'" % (int(filter_id),advertiser))
-        url_pattern = [] if len(pattern) == 0 else [pattern['url_pattern'][0]]
+        try:
+            filter_id_as_int = int(filter_id)
+            pattern = self.db.select_dataframe("select url_pattern from action_with_patterns where action_id = %s and pixel_source_name = '%s'" % (filter_id_as_int,advertiser))
+            url_pattern = [] if len(pattern) == 0 else [pattern['url_pattern'][0]]
+        except:
+            logging.info("campaign action")
+            url_pattern=["rockerbox_campaign_action"]
         return url_pattern
 
     @defer.inlineCallbacks

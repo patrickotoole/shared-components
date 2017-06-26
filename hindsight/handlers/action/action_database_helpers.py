@@ -59,6 +59,10 @@ INSERT_PARAMETERS = "insert into advertiser_udf_parameter (advertiser, filter_id
 
 GET_CAMPAIGN_ACTION = "select advertiser, action_id, campaign_id, action_name from hindsight_campaign_action where %s"
 
+GET_PARAMETERS_CAMPAIGN = """
+SELECT filter_id as action_id, parameters from campaign_action_udf_parameter where %(where)s
+"""
+
 class ActionDatabaseHelper(object):
 
     def get_patterns(self,ids):
@@ -97,11 +101,16 @@ class ActionDatabaseHelper(object):
             subfilters = subfilters.groupby('action_id')['filter_pattern'].apply(list)
         return subfilters
 
-    def get_parameters(self,advertiser, action_id=None):
+    def get_parameters(self,advertiser, action_id=None, campaign_action=False):
         where_parameters = "advertiser = '{}'".format(advertiser)
-        parameters = self.crushercache.select_dataframe(GET_PARAMETERS % {"where":where_parameters})
-        if len(parameters)==0:
-            parameters = pandas.DataFrame({"action_id":[], "parameters":[]})
+        if not campaign_action:
+            parameters = self.crushercache.select_dataframe(GET_PARAMETERS % {"where":where_parameters})
+            if len(parameters)==0:
+                parameters = pandas.DataFrame({"action_id":[], "parameters":[]})
+        else:
+            parameters = self.crushercache.select_dataframe(GET_PARAMETERS_CAMPAIGN % {"where":where_parameters})
+            if len(parameters)==0:
+                parameters = pandas.DataFrame({"action_id":[], "parameters":[]})
         return parameters
 
     def _insert_into_tree(self, action, advertiser):

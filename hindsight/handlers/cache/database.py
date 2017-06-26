@@ -3,10 +3,9 @@ import logging
 import codecs 
 import zlib
 
-SQL_SELECT_V2 = "select zipped from generic_function_cache_v2 where udf = '%s' and advertiser='%s' and url_pattern='%s' and action_id=%s"
-SQL_SELECT = "select zipped from generic_function_cache where udf='%s' and advertiser='%s' and url_pattern='%s' and action_id=%s and date='%s'"
-ACTION_QUERY = "select action_id from action_with_patterns where pixel_source_name='{}' and url_pattern='{}'"
-DATE_FALLBACK = "select distinct date from generic_function_cache where advertiser='%(advertiser)s' and url_pattern='%(url_pattern)s' and action_id=%(action_id)s and udf='%(udf)s' order by date DESC"
+SQL_SELECT = "select zipped from generic_function_cache where udf='%s' and advertiser='%s' and filter_id='%s' and date='%s'"
+ACTION_QUERY = "select filter_id from action_with_patterns where pixel_source_name='{}' and url_pattern='{}'"
+DATE_FALLBACK = "select distinct date from generic_function_cache where advertiser='%(advertiser)s' and filter_id='%(action_id)s' and udf='%(udf)s' order by date DESC"
 
 class CacheDatabase(object):
 
@@ -32,16 +31,16 @@ class CacheDatabase(object):
         return decomp_data
 
     @decorators.deferred
-    def get_from_db(self, udf, advertiser, pattern, action_id, filter_date):
+    def get_from_db(self, udf, advertiser, pattern, filter_id, filter_date):
         now_date=filter_date
-        if not action_id:
-            action_id = self.get_action_id(advertiser, pattern)
+        if not filter_id:
+            filter_id = self.get_action_id(advertiser, pattern)
 
         if not filter_date:
-            now_date = self.get_recent_data(advertiser, pattern, action_id, udf)
+            now_date = self.get_recent_data(advertiser, pattern, filter_id, udf)
 
 
-        QUERY = SQL_SELECT % (udf, advertiser, pattern, action_id, now_date)
+        QUERY = SQL_SELECT % (udf, advertiser, filter_id, now_date)
         logging.info("Making query")
         data = self.crushercache.select_dataframe(QUERY)
 

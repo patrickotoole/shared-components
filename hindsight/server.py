@@ -25,7 +25,7 @@ import sys
 sys.path.append('..')
 
 from handlers.line_item import *
-from metrics.handlers.funnel.action import ActionHandler
+from handlers.action import ActionHandler
 from handlers.action import ActionIndexHandler
 from handlers.action import SegmentCheckHandler
 from handlers.action import SegmentTimeseriesHandler

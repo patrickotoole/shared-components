@@ -15,14 +15,11 @@ from lib.helpers import UDF_EXCLUDES
 URL ="/crusher/v1/visitor/{}?url_pattern={}&filter_id={}"
 URL2 ="/crusher/v2/visitor/{}?url_pattern={}&filter_id={}"
 
-INSERT ="insert into generic_function_cache (advertiser, url_pattern, udf, zipped, date, action_id) values (%s, %s, %s, %s, %s, %s)"
-REPLACE="replace into generic_function_cache (advertiser, url_pattern, udf, zipped, date, action_id) values (%s, %s, %s, %s, %s, %s)"
+INSERT ="insert into generic_function_cache_v (advertiser, url_pattern, udf, zipped, date, action_id, filter_id) values (%s, %s, %s, %s, %s, %s, %s)"
+REPLACE="replace into generic_function_cache_v (advertiser, url_pattern, udf, zipped, date, action_id, filter_id) values (%s, %s, %s, %s, %s, %s, %s)"
 
-INSERT2 ="insert into generic_function_cache_v2 (advertiser, url_pattern, udf, zipped, date, action_id) values (%s, %s, %s, %s, %s, %s)"
-REPLACE2="replace into generic_function_cache_v2 (advertiser, url_pattern, udf, zipped, date, action_id) values (%s, %s, %s, %s, %s, %s)"
-
-PARAMETERS_FIRST = "select parameters from advertiser_udf_parameter where advertiser = '%(advertiser)s' and filter_id=%(filter_id)s and udf='%(udf)s'"
-PARAMETERS_SECOND = "select parameters from advertiser_udf_parameter where advertiser = '%(advertiser)s' and filter_id = %(filter_id)s and udf is NULL"
+PARAMETERS_FIRST = "select parameters from advertiser_udf_parameter where advertiser = '%(advertiser)s' and filter_id='%(filter_id)s' and udf='%(udf)s'"
+PARAMETERS_SECOND = "select parameters from advertiser_udf_parameter where advertiser = '%(advertiser)s' and filter_id = '%(filter_id)s' and udf is NULL"
 PARAMETERS_THIRD = "select parameters from advertiser_udf_parameter where advertiser = '%(advertiser)s' and filter_id is NULL"
 
 
@@ -92,10 +89,10 @@ class UDFRunner(BaseRunner):
     def insert(self, pattern, func_name, compressed_data, now_date):
         try:
             Q = INSERT
-            self.connectors['crushercache'].execute(Q, (self.advertiser, pattern, func_name, compressed_data, now_date, self.action_id))
+            self.connectors['crushercache'].execute(Q, (self.advertiser, pattern, func_name, compressed_data, now_date, self.action_id, self.action_id))
         except:
             Q = REPLACE
-            self.connectors['crushercache'].execute(Q, (self.advertiser, pattern, func_name, compressed_data, now_date, self.action_id))
+            self.connectors['crushercache'].execute(Q, (self.advertiser, pattern, func_name, compressed_data, now_date, self.action_id, self.action_id))
 
 
     def exclude_domain(self, advertiser, url):

@@ -68,8 +68,9 @@ class ActionHandler(BaseHandler,ActionAuth,APIHelpers,ActionDatabase):
                 result = action_results.to_dict('records')
             else:
                 action_results, campaign_results = self.get_advertiser_actions(advertiser)
-                action_results = action_results.fillna(0)
-                action_results = action_results.to_dict('records') 
+                #action_results = action_results.fillna(0)[["advertiser", "parameters", "has_filter", "action_name","featured","type","url_pattern","action_id"]]
+                action_results = action_results.to_dict('records')
+                #campaign_results =  campaign_results[["action_name", "type", "campaign_id", "parameters", "advertiser"]]
                 campaign_results = campaign_results.to_dict('records')
                 response = {"result":[], "status":"ok"}
                 response['result'] = [x for x in action_results]
