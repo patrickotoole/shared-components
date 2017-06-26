@@ -147,9 +147,13 @@ class ActionTest(AsyncHTTPTestCase):
         self.db.execute(SUBFILTER_1)
         self.db.execute(SUBFILTER_2)
         
+        tree_mock = mock.Mock()
+        tree_mock.post.side_effect = lambda k,headers,data : {'response':{}}
+        tree_mock.delete = lambda k : {'response':{}}
+
         self.app = Application([
-            ('/',action.ActionHandler, dict(db=self.db, crushercache=self.db)),
-            ('/(.*?)',action.ActionHandler, dict(db=self.db, crushercache=self.db)) 
+            ('/',action.ActionHandler, dict(db=self.db, crushercache=self.db, tree_sync=tree_mock)),
+            ('/(.*?)',action.ActionHandler, dict(db=self.db, crushercache=self.db, tree_sync=tree_mock)) 
           ],
           template_path="../../../templates"
         )
@@ -187,7 +191,7 @@ class ActionTest(AsyncHTTPTestCase):
         _a = ujson.loads(self.fetch("/?format=json&advertiser=alan",method="GET").body)
         self.assertEqual(len(_a["response"][0]["filter_pattern"]),2)
 
-    @mock.patch('requests.post', mock.Mock(side_effect = lambda k,headers,data : {'response':{}}))
+    #@mock.patch('requests.post', mock.Mock(side_effect = lambda k,headers,data : {'response':{}}))
     def test_post(self):
         action_json = """{
           "advertiser": "bauble",
@@ -214,8 +218,6 @@ class ActionTest(AsyncHTTPTestCase):
         expected = "Missing the following parameters: id"
         self.assertEqual(action_put_json, expected)
  
-    @mock.patch('requests.post', mock.Mock(side_effect = lambda k,headers,data : {'response':{}}))
-    @mock.patch('requests.delete', mock.Mock(side_effect = lambda k : {'response':{}}))
     def test_update(self):
         action_string = """
             {
