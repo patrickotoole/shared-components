@@ -7,6 +7,7 @@ import ujson
 from link import lnk
 import sys
 sys.path.append("hindsight/handlers/action")
+sys.path.append("../../../../hindsight/handlers/action")
 
 import action as action
 import lib.zookeeper.zk_endpoint as zke
@@ -119,6 +120,27 @@ INSERT_NODE2 = """
 insert into visit_events_tree_nodes (parent,node) values (1,'{"pattern":"http://www.bauble.com/necklaces","label":"","query":"INSERT INTO rockerbox.pattern_occurrence_users_u2 (2) VALUES ()"}')
 """
 
+CREAT_CAMPAIGN_ACTION_TABLE = """
+CREATE TABLE IF NOT EXISTS `hindsight_campaign_action` (
+  `advertiser` varchar(255) DEFAULT NULL,
+  `action_id` varchar(255) DEFAULT NULL,
+  `campaign_id` bigint(20) DEFAULT NULL,
+  `active` tinyint(1) DEFAULT '1',
+  `deleted` tinyint(1) DEFAULT '0',
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `action_name` varchar(255) DEFAULT NULL
+)
+"""
+
+CREATE_CAMPAIGN_PARAMS_TABLE = """
+CREATE TABLE IF NOT EXISTS `campaign_action_udf_parameter` (
+  `advertiser` varchar(250) DEFAULT NULL,
+  `filter_id` varchar(250) DEFAULT NULL,
+  `udf` varchar(250) DEFAULT NULL,
+  `parameters` blob
+)
+"""
+
 class ActionTest(AsyncHTTPTestCase):
 
     
@@ -131,6 +153,10 @@ class ActionTest(AsyncHTTPTestCase):
         self.db.execute(CREATE_PATTERN_TABLE)  
 
         self.db.execute(CREATE_SUBFILTER_TABLE)
+
+        self.db.execute(CREAT_CAMPAIGN_ACTION_TABLE)
+        self.db.execute(CREATE_CAMPAIGN_PARAMS_TABLE)
+
         self.db.execute(CREATE_PARAMETERS )
         self.db.execute(CREATE_ACTION_PATTERN)
         self.db.execute(CREATE_NODE_DB)
