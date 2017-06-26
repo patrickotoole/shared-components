@@ -15,7 +15,7 @@ class PlacementHandler(web.RequestHandler):
     def get(self):
         advertiser_id = self.get_secure_cookie('advertiser')
         adwords_client = self.adwords.get_adwords_client(int(advertiser_id))
-        ad_group_criterion_service = adwords_client.GetService('AdGroupCriterionService', version='v201607')
+        ad_group_criterion_service = adwords_client.GetService('AdGroupCriterionService', version='v201609')
 
         adgroup_id = self.get_argument('adgroup_id','')
         adgroup_id = str(adgroup_id)
@@ -76,7 +76,7 @@ class PlacementHandler(web.RequestHandler):
             adgroup_id = post_data['adgroup_id']
 
         adwords_client = self.adwords.get_adwords_client(int(advertiser_id))
-        ad_group_criterion_service = adwords_client.GetService('AdGroupCriterionService', version='v201607')
+        ad_group_criterion_service = adwords_client.GetService('AdGroupCriterionService', version='v201609')
 
         placement = {
             'xsi_type': 'BiddableAdGroupCriterion',

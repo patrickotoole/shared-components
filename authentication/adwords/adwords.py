@@ -29,7 +29,7 @@ class AdWords(AdWordsAuth):
         budget_id = campaign['budget_id']
 
         client = self.get_adwords_client(advertiser_id)
-        campaign_service = client.GetService('CampaignService', version='v201607')
+        campaign_service = client.GetService('CampaignService', version='v201609')
 
         timestamp_start = (datetime.datetime.now()).strftime('%Y%m%d')
         timestamp_end = (datetime.datetime.now()+datetime.timedelta(1)).strftime('%Y%m%d')
@@ -52,7 +52,7 @@ class AdWords(AdWordsAuth):
 
     def read_campaign(self,advertiser_id, fields):
         client = self.get_adwords_client(advertiser_id)
-        campaign_service = client.GetService('CampaignService', version='v201607')
+        campaign_service = client.GetService('CampaignService', version='v201609')
 
         selector = adwords_helper.get_selector(fields)
         # try:
@@ -77,7 +77,7 @@ class AdWords(AdWordsAuth):
         advertiser_id = kwargs.get('advertiser_id',None)
         print('Creating ad group...')
         client = self.get_adwords_client(advertiser_id)
-        ad_group_service = client.GetService('AdGroupService', version='v201607')
+        ad_group_service = client.GetService('AdGroupService', version='v201609')
 
         operations = adwords_helper.create_adgroup(arg['campaign_id'],arg['adgroup_name'], arg['bid_amount'])
 
@@ -99,7 +99,7 @@ class AdWords(AdWordsAuth):
     def read_adgroup(self, campaign_id, advertiser_id):
 
         client = self.get_adwords_client(int(advertiser_id))
-        ad_group_service = client.GetService('AdGroupService', version='v201607')
+        ad_group_service = client.GetService('AdGroupService', version='v201609')
         
         try:
             selector = adwords_helper.get_adgroup_selector(campaign_id)
@@ -133,7 +133,7 @@ class AdWords(AdWordsAuth):
 
     def get_ads(self, advertiser_id, adgroup_id):
         client = self.get_adwords_client(int(advertiser_id))
-        ad_group_ad_service = client.GetService('AdGroupAdService', version='v201607')
+        ad_group_ad_service = client.GetService('AdGroupAdService', version='v201609')
 
 
         selector = adwords_helper.get_ads_selector(str(adgroup_id))
@@ -166,10 +166,10 @@ class AdWords(AdWordsAuth):
 
     def create_ad(self, advertiser_id, ad_type, media_id, name, ad_group_id):
         client = self.get_adwords_client(advertiser_id)
-        ad_group_ad_service = client.GetService('AdGroupAdService', version='v201607')
+        ad_group_ad_service = client.GetService('AdGroupAdService', version='v201609')
 
 
-        #media_service = self.adwords_client.GetService('MediaService', version='v201607')
+        #media_service = self.adwords_client.GetService('MediaService', version='v201609')
         #selector = adwords_helper.create_ad_selector()
         #raw_data = media_service.get(selector)
         #media = raw_data[0]
@@ -229,7 +229,7 @@ class AdWords(AdWordsAuth):
 
     def get_media(self, advertiser_id, media_input):
         client = self.get_adwords_client(int(advertiser_id))
-        media_service = client.GetService('MediaService', version='v201607')
+        media_service = client.GetService('MediaService', version='v201609')
 
         selector = adwords_helper.get_media_selector(media_input)
         raw_data = media_service.get(selector)
@@ -240,7 +240,7 @@ class AdWords(AdWordsAuth):
     #def create_media(self, image_url, name, advertiser_id, image_data):
     def create_media(self,advertiser_id, image_data):
         client = self.get_adwords_client(advertiser_id)
-        media_service = client.GetService('MediaService', version='v201607')
+        media_service = client.GetService('MediaService', version='v201609')
         media = [{
             'xsi_type': 'Image',
             'data': image_data,
@@ -281,7 +281,7 @@ class AdWords(AdWordsAuth):
         advertiser_id = kwargs.get('advertiser_id',None)
 
         client = self.get_adwords_client(advertiser_id)
-        ad_group_criterion_service = client.GetService('CampaignCriterionService', version='v201607')
+        ad_group_criterion_service = client.GetService('CampaignCriterionService', version='v201609')
 
         operations = []
 
@@ -327,7 +327,7 @@ class AdWords(AdWordsAuth):
         campaign_id = kwargs.get('campaign_id', None)
         advertiser_id = kwargs.get('advertiser_id',None)
         client = self.get_adwords_client(advertiser_id)
-        ad_group_criterion_service = client.GetService('CampaignCriterionService', version='v201607')
+        ad_group_criterion_service = client.GetService('CampaignCriterionService', version='v201609')
 
         # 'fields': ['DayOfWeek', 'StartHour', 'StartMinute', 'EndHour', 'EndMinute'],
         
@@ -364,7 +364,7 @@ class AdWords(AdWordsAuth):
         adgroup_id = str(arg['adgroup_id'])
         
         client = self.get_adwords_client(advertiser_id)
-        ad_group_criterion_service = client.GetService('AdGroupCriterionService', version='v201607')
+        ad_group_criterion_service = client.GetService('AdGroupCriterionService', version='v201609')
         
         operations = adwords_helper.process_placement(arg, adgroup_id) 
         try:
@@ -396,7 +396,7 @@ class AdWords(AdWordsAuth):
     
     def get_customer(self,advertiser_id):
         client = self.get_adwords_client(advertiser_id)
-        customer_service = client.GetService('CustomerService', version='v201607')
+        customer_service = client.GetService('CustomerService', version='v201609')
         customers = customer_service.getCustomers()
 
         return customers
@@ -428,7 +428,7 @@ class AdWords(AdWordsAuth):
     def get_account(self, advertiser_id):
         # Initialize appropriate service.
         client = self.get_adwords_client(int(advertiser_id))
-        managed_customer_service = client.GetService('ManagedCustomerService', version='v201607')
+        managed_customer_service = client.GetService('ManagedCustomerService', version='v201609')
 
         # Construct selector to get all accounts.
         selector = adwords_helper.get_account_selector()
@@ -461,7 +461,7 @@ class AdWords(AdWordsAuth):
         arg = kwargs.get("budget_input",None)
         advertiser_id = kwargs.get("advertiser_id",None)
         client = self.get_adwords_client(advertiser_id)
-        budget_service = client.GetService('BudgetService', version='v201607')
+        budget_service = client.GetService('BudgetService', version='v201609')
 
         budget_operations = adwords_helper.get_budget_object(arg)
 
@@ -481,7 +481,7 @@ class AdWords(AdWordsAuth):
 
     def read_budget(self,advertiser_id):
         client = self.get_adwords_client(int(advertiser_id))
-        budget_service = client.GetService('BudgetService', version='v201607')
+        budget_service = client.GetService('BudgetService', version='v201609')
         
         selector = adwords_helper.budget_selector()
         

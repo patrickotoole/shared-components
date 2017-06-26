@@ -11,7 +11,7 @@ class KeywordHandler(web.RequestHandler):
     def get(self, adgroup_id):
         advertiser_id = self.get_secure_cookie('advertiser')
         adwords_client = self.adwords.get_adwords_client(advertiser_id)
-        ad_group_criterion_service = adwords_client.GetService('AdGroupCriterionService', version='v201607')
+        ad_group_criterion_service = adwords_client.GetService('AdGroupCriterionService', version='v201609')
 
         adgroup_id = str(adgroup_id)
 
@@ -78,7 +78,7 @@ class KeywordHandler(web.RequestHandler):
         ad_group_id = str(post_data['ad_group_id'])
         keyword_string = str(post_data['keyword'])
 
-        ad_group_criterion_service = adwords_client.GetService('AdGroupCriterionService', version='v201607')
+        ad_group_criterion_service = adwords_client.GetService('AdGroupCriterionService', version='v201609')
 
         keyword = {
             'xsi_type': 'BiddableAdGroupCriterion',
@@ -119,7 +119,7 @@ class KeywordHandler(web.RequestHandler):
         ad_group_id = str(post_data['ad_group_id'])
         criterion_id = str(post_data['criterion_id'])
 
-        ad_group_criterion_service = adwords_client.GetService('AdGroupCriterionService', version='v201607')
+        ad_group_criterion_service = adwords_client.GetService('AdGroupCriterionService', version='v201609')
 
         operations = [{
             'operator': 'REMOVE',

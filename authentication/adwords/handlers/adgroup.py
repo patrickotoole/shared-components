@@ -59,7 +59,7 @@ class AdGroupHandler(web.RequestHandler):
         post_data = ujson.loads(self.request.body)
 
         client = self.adwords.get_adwords_client(advertiser_id)
-        ad_group_service = client.GetService('AdGroupService', version='v201607')
+        ad_group_service = client.GetService('AdGroupService', version='v201609')
         
         def alter_adgroup(adgroup_id, post_data):
             operations = [{

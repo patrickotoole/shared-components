@@ -11,7 +11,7 @@ class ReportHandler(web.RequestHandler):
     def get(self):
         advertiser_id = self.get_secure_cookie('advertiser')
         adwords_client = self.adwords.get_adwords_client(advertiser_id)
-        report_downloader = adwords_client.GetReportDownloader(version='v201607')
+        report_downloader = adwords_client.GetReportDownloader(version='v201609')
 
         # Create report definition.
         report = {

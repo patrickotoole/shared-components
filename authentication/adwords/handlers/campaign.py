@@ -84,7 +84,7 @@ class CampaignHandler(web.RequestHandler):
         advertiser_id = int(self.get_secure_cookie('advertiser'))
         adwords_client = self.adwords.get_adwords_client(advertiser_id)
 
-        campaign_service = adwords_client.GetService('CampaignService', version='v201607')
+        campaign_service = adwords_client.GetService('CampaignService', version='v201609')
 
         def alter_camp(campaign_id, post_data):
             operations = [{
@@ -145,7 +145,7 @@ class CampaignHandler(web.RequestHandler):
         advertiser_id = post_data['advertiser_id']
         adwords_client = self.adwords.get_adwords_client(advertiser_id)
 
-        campaign_service = adwords_client.GetService('CampaignService', version='v201607')
+        campaign_service = adwords_client.GetService('CampaignService', version='v201609')
         campaign_id = str(post_data['id'])
 
         operations = [{

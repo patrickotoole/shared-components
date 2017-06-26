@@ -35,7 +35,7 @@ class AdWordsAuth():
         user_agent='Rockerbox'
         oauth2_client = oauth2.GoogleRefreshTokenClient(self.RB.client_id, self.RB.client_secret, refresh_token)
         adwords_client = adwords.AdWordsClient(self.RB.developer_token, oauth2_client, user_agent)
-        customer_service = adwords_client.GetService('CustomerService', version='v201607')
+        customer_service = adwords_client.GetService('CustomerService', version='v201609')
         customers = customer_service.getCustomers()
         customer_id = customers[0].customerId
         if self.adwords_object.get(advertiser_id,None) is None:
