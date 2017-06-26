@@ -221,28 +221,6 @@
 <script>
 (function() {
 
-
-  //RB.menu.routes.roots = [
-  //    {
-  //      "name": "Filter",
-  //      "push_state": "/crusher/dashboard",
-  //      "class": "glyphicon glyphicon-filter",
-  //    }, {
-  //      "name": "Compare",
-  //      "push_state": "/crusher/comparison",
-  //      "class": "glyphicon glyphicon-th",
-  //    }, {
-  //      "name": "Create Segment",
-  //      "push_state": "/crusher/action/recommended",
-  //      "class": "glyphicon glyphicon-plus",
-  //    }, {
-  //      "name": "Settings",
-  //      "push_state": "/crusher/settings",
-  //      "class": "glyphicon glyphicon-cog"
-  //    }
-  //  ]
-  //RB.menu.render(d3.select("body"),true)
-
   var centered = d3_updateable(d3.select(".container"),"div","div")
     .style("width","1000px")
     .style("margin-left","auto")
@@ -395,116 +373,19 @@
             return values.reduce(function(p,value) { return p + String(x[field]).indexOf(String(value)) > -1 }, 0) == 0
           } 
         }
-     //, "does not contain": function(field,value) {
-     //     return function(x) {
-     //       var values = value.split(",")
-     //       return values.reduce(function(p,value) { return p + String(x[field]).indexOf(String(value)) > -1 }, 0) == 0
-     //     } 
-     //   }
-     //, "contains": function(field,value) {
-     //     return function(x) {
-     //       var values = value.split(",")
-     //       return values.reduce(function(p,value) { return p + String(x[field]).indexOf(String(value)) > -1 }, 0) > 0
-     //     } 
-     //   }
   }
 
   function buildDashboardLoading(value) {
       var db = dashboard.new_dashboard(centered)
           .loading(value.loading || false)
           .draw()
-
-
   }
 
-  function buildDashboard(value) {
-      var db = dashboard.new_dashboard(centered)
-          .staged_filters(value.staged_filter || "")
-          .saved(value.saved || [])
-          .data(value.formatted_data)
-          .actions(value.actions)
-          .selected_action(value.selected_action || {})
-          .selected_comparison(value.selected_comparison || {})
-          .action_date(value.action_date || 0)
-          .comparison_date(value.comparison_date || 0)
-          .loading(value.loading || false)
-          .line_items(value.line_items || false)
-          .summary(value.summary)
-          .time_summary(value.time_summary)
-          .category_summary(value.category_summary)
-          .keyword_summary(value.keyword_summary)
-          .before(value.before_urls || [])
-          .after(value.after_urls || [])
-          .logic_options(value.logic_options)
-          .logic_categories(value.logic_categories)
-          .filters(value.filters)
-          .view_options(value.dashboard_options)
-          .explore_tabs(value.tabs)
-          .on("add-filter", function(filter) { s.publish("filters",s.state().filters.concat(filter).filter(x => x.value) ) })
-          .on("modify-filter", function(filter) { 
-            var filters = s.state().filters
+  var buildDashboard = new dashboard.build(centered)
 
-            var has_exisiting = filters.filter(x => (x.field + x.op) == (filter.field + filter.op) )
-            
-            if (has_exisiting.length) {
-              var new_filters = filters.reverse().map(function(x) {
-                if ((x.field == filter.field) && (x.op == filter.op)) {
-                  x.value += "," + filter.value
-                }
-                return x
-              })
-              s.publish("filters",new_filters.filter(x => x.value))
-            } else {
-              s.publish("filters",s.state().filters.concat(filter).filter(x => x.value))
-            }
-
-          })
-
-          .on("staged-filter.change", function(str) { s.publish("staged_filter",str ) })
-          .on("action.change", function(action) { s.publish("selected_action",action) })
-          .on("action_date.change", function(date) { s.publish("action_date",date) })
-          .on("comparison_date.change", function(date) { s.publish("comparison_date",date) })
-          .on("comparison.change", function(action) { 
-            if (action.value == false) return s.publish("selected_comparison",false)
-            s.publish("selected_comparison",action)
-          })
-          .on("logic.change", function(logic) {
-            s.publish("logic_options",logic)
-          })
-          .on("filter.change", function(filters) {
-
-            s.publishBatch({
-                "filters":filters
-            })
-          })
-          .on("view.change", function(x) {
-            db.loading(true)
-            var CP = deepcopy(value.dashboard_options)
-            CP.map(function(d) {
-              if (x.value == d.value) return d.selected = 1
-              d.selected = 0
-            })
-            s.publish("dashboard_options",CP)
-          })
-          .on("tab.change", function(x) {
-            db.loading(true)
-            value.tabs.map(function(t) {
-              if (t.key == x.key) return t.selected = 1
-              t.selected = 0
-            })
-            s.publishStatic("tabs",value.tabs)
-          })
-          .on("ba.sort", function(x) {
-            s.publish("sortby",x.value)
-            s.publish("filters",value.filters)
-   
-          })
-          .draw()
-
-
-  }
 
   var state_module = state
+debugger
 
   var s = state.state()
     .subscribe("filter.tabs", function(error,dbo,state) {
@@ -900,8 +781,7 @@ debugger
         , {"key":"Explore data","value":"data-view","selected":0}
         , {"key":"Before & After","value":"ba-view","selected":0}
         , {"key":"Timing","value":"timing-view","selected":0}
-
-        //, {"key":"Media Plan", "value":"media-view","selected":0}
+        , {"key":"Media Plan", "value":"media-view","selected":0}
 
       ]
   }
