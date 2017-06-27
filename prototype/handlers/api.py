@@ -19,15 +19,15 @@ class ApiHandler(BaseHandler, ApiHelper):
         exec compiled_code in self._env
 
     @custom_defer.inlineCallbacksErrors
-    def pull_and_result(self, domain_filter, filter_id,api_udf, advertiser, size):
-        data = yield self.domain_query(domain_filter, filter_id, api_udf, advertiser, size)
+    def pull_and_result(self, domain_filter, filter_id,api_udf, advertiser, size, page):
+        data = yield self.domain_query(domain_filter, filter_id, api_udf, advertiser, size, page)
         if data is not None:
             self.write(ujson.dumps(data))
             self.finish()
 
     @custom_defer.inlineCallbacksErrors
-    def pull_keyword(self, keyword, filter_id, api_udf, advertiser, size):
-        data = yield self.keyword_query(keyword, filter_id, api_udf, advertiser, size)
+    def pull_keyword(self, keyword, filter_id, api_udf, advertiser, size, page):
+        data = yield self.keyword_query(keyword, filter_id, api_udf, advertiser, size, page)
         if data is not None:
             self.write(ujson.dumps(data))
             self.finish()
@@ -42,6 +42,7 @@ class ApiHandler(BaseHandler, ApiHelper):
         filter_id = self.get_argument("filter_id",False)
         keyword = self.get_argument("keyword", False)
         filter_limit = self.get_argument("size", 25000)
+        page = self.get_argument("page", False)
         try:
             filter_limit = int(filter_limit)
         except:
@@ -53,7 +54,7 @@ class ApiHandler(BaseHandler, ApiHelper):
             self.write(ujson.dumps({"error":"filter_id is a required field"}))
             self.finish()
         if keyword:
-            self.pull_keyword(keyword, filter_id, api_udf, self.current_advertiser_name, filter_limit)
+            self.pull_keyword(keyword, filter_id, api_udf, self.current_advertiser_name, filter_limit, page)
         else:
-            self.pull_and_result(domain_filter, filter_id, api_udf, self.current_advertiser_name, filter_limit)
+            self.pull_and_result(domain_filter, filter_id, api_udf, self.current_advertiser_name, filter_limit, page)
 

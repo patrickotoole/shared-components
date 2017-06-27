@@ -1,3 +1,4 @@
+import logging
 import pandas
 import json
 import ujson
@@ -17,7 +18,7 @@ inner join
 on onsite.uid = ofs.uid
 where segments like '%{}%') ons
 on offsite.uid = ons.uid
-limit 0,{}
+limit {},{}
 """
 
 KEYWORDQUERY = """
@@ -29,7 +30,7 @@ inner join
 on onsite.uid = ofs.uid
 where segments like '%{}%') ons
 on offsite.uid = ons.uid
-limit 0,{}
+limit {},{}
 """
 
 VERIFYQUERY = "select action_name from action_with_patterns where action_id={} and pixel_source_name='{}'"
@@ -41,12 +42,18 @@ class ApiHelper(UDFHandler):
         df = df[['uid','full_onsite_url', 'time']]
         return df
 
-    def offsite_domain_data(self,filter_id, domain, filter_limit):
-        df = self.prototype.select_dataframe(DOMAINQUERY.format(domain, filter_id, filter_limit))
+    def offsite_domain_data(self,filter_id, domain, filter_limit, page):
+        if not page:
+            df = self.prototype.select_dataframe(DOMAINQUERY.format(domain, filter_id, 0,filter_limit))
+        else:
+            df = self.prototype.select_dataframe(DOMAINQUERY.format(domain, filter_id, int(page),filter_limit))
         return df
 
-    def offsite_keyword_data(self,filter_id, keyword, filter_limit):
-        df = self.prototype.select_dataframe(KEYWORDQUERY.format(keyword, filter_id, filter_limit))
+    def offsite_keyword_data(self,filter_id, keyword, filter_limit, page):
+        if not page:
+            df = self.prototype.select_dataframe(KEYWORDQUERY.format(keyword, filter_id, 0, filter_limit))
+        else:
+            df = self.prototype.select_dataframe(KEYWORDQUERY.format(keyword, filter_id, int(page), filter_limit))
         return df
 
     def verify_filter_id(self, advertiser, filter_id):
@@ -61,23 +68,23 @@ class ApiHelper(UDFHandler):
         return valid
 
     @decorators.deferred
-    def domain_query(self, domain_filter, filter_id, udf, advertiser, filter_limit):
+    def domain_query(self, domain_filter, filter_id, udf, advertiser, filter_limit, page):
         valid_advertiser_filter = self.verify_filter_id(advertiser, filter_id)
         if not valid_advertiser_filter:
             return None
         onsite_df = self.onsite_data(filter_id, filter_limit)
-        offsite_df = self.offsite_domain_data(filter_id, domain_filter, filter_limit) 
+        offsite_df = self.offsite_domain_data(filter_id, domain_filter, filter_limit, page) 
         kwargs = {"onsite":onsite_df, "offsite":offsite_df}
         resp = self.run_udf(udf, kwargs)
         return resp
 
     @decorators.deferred
-    def keyword_query(self, keyword, filter_id, udf, advertiser, filter_limit):
+    def keyword_query(self, keyword, filter_id, udf, advertiser, filter_limit, page):
         valid_advertiser_filter = self.verify_filter_id(advertiser, filter_id)
         if not valid_advertiser_filter:
             return None
         onsite_df =  self.onsite_data(filter_id, filter_limit)
-        offsite_df = self.offsite_keyword_data(filter_id, keyword, filter_limit)
+        offsite_df = self.offsite_keyword_data(filter_id, keyword, filter_limit, page)
         kwargs = {"onsite":onsite_df, "offsite":offsite_df}
         resp = self.run_udf(udf, kwargs)
         return resp
