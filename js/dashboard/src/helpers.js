@@ -1,3 +1,5 @@
+import {d3_updateable, d3_splat} from 'helpers'
+
 export default function accessor(attr, val) {
   if (val === undefined) return this["_" + attr]
   this["_" + attr] = val

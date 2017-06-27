@@ -1,3 +1,4 @@
+import {d3_updateable, d3_splat} from 'helpers'
 import * as state from 'state'
 import {media_plan} from 'media_plan'
 import filter_view from './views/filter_view'

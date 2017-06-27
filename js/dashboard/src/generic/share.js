@@ -1,3 +1,4 @@
+import {d3_updateable, d3_splat} from 'helpers'
 
 export function Share(target) {
   this._target = target
