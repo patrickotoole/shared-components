@@ -9,6 +9,20 @@ const deepcopy = function(x) {
 
 export default function init() {
   filterInit()
+
+  // SEGEMENT events
+
+  state
+    .registerEvent("action.change", function(action) { s.publish("selected_action",action) })
+    .registerEvent("action_date.change", function(date) { s.publish("action_date",date) })
+    .registerEvent("comparison_date.change", function(date) { s.publish("comparison_date",date) })
+    .registerEvent("comparison.change", function(action) { 
+      if (action.value == false) return s.publish("selected_comparison",false)
+      s.publish("selected_comparison",action)
+    })
+
+  // FILTER events
+
   state
     .registerEvent("add-filter", function(filter) { 
       s.publish("filters",s.state().filters.concat(filter).filter(x => x.value) ) 
@@ -30,15 +44,12 @@ export default function init() {
       }
     })
     .registerEvent("staged-filter.change", function(str) { s.publish("staged_filter",str ) })
-    .registerEvent("action.change", function(action) { s.publish("selected_action",action) })
-    .registerEvent("action_date.change", function(date) { s.publish("action_date",date) })
-    .registerEvent("comparison_date.change", function(date) { s.publish("comparison_date",date) })
-    .registerEvent("comparison.change", function(action) { 
-      if (action.value == false) return s.publish("selected_comparison",false)
-      s.publish("selected_comparison",action)
-    })
     .registerEvent("logic.change", function(logic) { s.publish("logic_options",logic) })
     .registerEvent("filter.change", function(filters) { s.publishBatch({ "filters":filters }) })
+
+  // OTHER events
+
+  state
     .registerEvent("view.change", function(x) {
       s.update("loading",true)
       var CP = deepcopy(s.state().dashboard_options).map(function(d) { d.selected = (x.value == d.value) ? 1 : 0; return d })
@@ -51,9 +62,6 @@ export default function init() {
       s.publishStatic("tabs",value.tabs)
     })
     .registerEvent("ba.sort", function(x) {
-      s.publishBatch({
-        "sortby": x.value,
-        "filters":value.filters
-      })
+      s.publishBatch({ "sortby": x.value, "filters":value.filters })
     })
 }
