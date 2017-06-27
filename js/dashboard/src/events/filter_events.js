@@ -49,6 +49,7 @@ export default function init() {
   state
     .registerEvent("updateFilter", function(err,filters,_state) {
 
+      var filters = _state.filters
       var value = _state.data
       if (value == undefined) return
 

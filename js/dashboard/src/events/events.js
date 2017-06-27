@@ -46,6 +46,7 @@ export default function init() {
     })
     .registerEvent("tab.change", function(x) {
       s.update("loading",true)
+      const value = s.state()
       value.tabs.map(function(t) { t.selected = (t.key == x.key) ? 1 : 0 })
       s.publishStatic("tabs",value.tabs)
     })
