@@ -101,7 +101,7 @@ class ActionDatabaseHelper(object):
         parent_node_id = self.db.select_dataframe(GETPARENTNODE % advertiser_string)
         if parent_node_id.empty:
             #insert parent node
-            data= [{"id":3, "data": '{"pattern":"\"source\": \"%s", "label":""}' % advertiser}]
+            data= [{"id":3, "data": {"pattern":"\"source\": \"%s" % advertiser, "label":""}}]
             resp = self.tree_sync.post('/tree/visit_events_tree', data=ujson.dumps(data), headers={"Content-Type":"application/json"})
             parent_node_id = self.db.select_dataframe(GETPARENTNODE % advertiser_string)
         try:
