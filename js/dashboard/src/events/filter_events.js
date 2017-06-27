@@ -1,4 +1,5 @@
-import state from 'state'
+import state from 'state';
+import {filter_data} from 'filter';
 import * as data from '../data'
 
 const s = state;
@@ -51,18 +52,15 @@ export default function init() {
 
       var filters = _state.filters
       var value = _state.data
-      if (value == undefined) return
 
-      // NOT SURE WHY WE HAD THIS....
-      //if (filters.filter(x => x.field != undefined && x.value == undefined).length) return
+      if (value == undefined) return // return early if there is no data...
 
       var filters = prepareFilters(filters)
 
       var logic = _state.logic_options.filter(function(x) { return x.selected })
       logic = logic.length > 0 ? logic[0] : _state.logic_options[0]
 
-      var full_urls = filter
-        .filter_data(value.original_urls)
+      var full_urls = filter_data(value.original_urls)
         .op("is in", ops["is in"])
         .op("is not in", ops["is not in"])
         .logic(logic.value)
@@ -210,8 +208,7 @@ export default function init() {
 
 
       if (value.before) {
-        var before_urls = filter
-          .filter_data(value.before)
+        var before_urls = filter_data(value.before)
           .op("is in", ops["is in"])
           .op("is not in", ops["is not in"])
           //.op("does not contain", ops["does not contain"])
@@ -219,8 +216,7 @@ export default function init() {
           .logic(logic.value)
           .by(filters)
 
-        var after_urls = filter
-          .filter_data(value.after)
+        var after_urls = filter_data(value.after)
           .op("is in", ops["is in"])
           .op("is not in", ops["is not in"])
           //.op("does not contain", ops["does not contain"])
