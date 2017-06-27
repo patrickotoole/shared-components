@@ -16,9 +16,9 @@
   "dependencies": {
     "state": "file:../state",
     "table": "file:../table",
+    "media_plan": "file:../media_plan",
+    "api": "file:../api",
     "filter": "file:../filter"
-
-
   },
   "devDependencies": {
     "d3": "3.5.12",

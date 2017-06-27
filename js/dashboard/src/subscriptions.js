@@ -1,7 +1,5 @@
 import state from 'state'
 import {qs} from 'state'
-import * as api from 'api'
-import * as data from './data'
 import build from './build'
 import historySubscriptions from './subscriptions/history'
 import apiSubscriptions from './subscriptions/api'
