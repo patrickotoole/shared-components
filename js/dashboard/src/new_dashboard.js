@@ -1,4 +1,5 @@
 import * as state from 'state'
+import {media_plan} from 'media_plan'
 import filter_view from './views/filter_view'
 import option_view from './views/option_view'
 import domain_view from './views/domain_view'
@@ -312,7 +313,7 @@ NewDashboard.prototype = {
           }
 
           if (x.value == "media-view") {
-            media_plan.media_plan(dthis.style("margin-left","-15px").style("margin-right","-15px"))
+            media_plan(dthis.style("margin-left","-15px").style("margin-right","-15px"))
              .data(data)
              .draw()
           }
