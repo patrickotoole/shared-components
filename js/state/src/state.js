@@ -1,6 +1,7 @@
 export function State(_current, _static) {
 
   this._noop = function() {}
+  this._events = {}
 
   this._on = {
       "change": this._noop
@@ -212,7 +213,21 @@ State.prototype = {
       this._on[action] = fn;
       return this
     } 
-  
+  , registerEvent: function(name,fn) {
+      if (fn === undefined) return this._events[name] || this._noop;
+      this._events[name] = fn;
+      return this
+    }
+  , prepareEvent: function(name) {
+      var fn = this._events[name] 
+      return fn.bind(this)
+    }
+  , dispatchEvent: function(name,data) {
+      var fn = this.prepareEvent(name)
+      fn(data)
+      return this
+    }
+
 }
 
 function state(_current, _static) {
