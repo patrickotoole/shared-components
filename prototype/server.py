@@ -21,6 +21,10 @@ define("port", default=8888, help="run on the given port", type=int)
 
 from link import lnk
 
+import sys
+sys.path.append("../")
+
+from hindsight.handlers.action import *
 from handlers.api import *
 from handlers.login import *
 from handlers.permissions import *
@@ -33,6 +37,7 @@ if __name__ == '__main__':
         "db": lnk.dbs.rockerbox,
         "crushercache": lnk.dbs.crushercache,
         "prototype": lnk.dbs.crushercache,
+        "tree_sync": None
     }
 
 
@@ -51,7 +56,7 @@ if __name__ == '__main__':
         (r'/static/(.*)', tornado.web.StaticFileHandler, {'path': static_dir}),
         (r'/js/(.*)', tornado.web.StaticFileHandler, {'path': shared_dir}),
 
-
+        (r'/action', ActionHandler, connectors),
         (r'/prototype/(.*?)', ApiHandler, connectors),
     ]
 
