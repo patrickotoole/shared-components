@@ -10,7 +10,7 @@ ADVERTISER_QUERY = "select external_advertiser_id, pixel_source_name from advert
 INSERT = "insert into yoshi_cache (advertiser, action_id, name, params_hash, zipped, date) values (%s, %s, %s, %s, %s, %s)"
 REPLACE = "replace into yoshi_cache (advertiser, action_id, name, params_hash, zipped, date) values (%s, %s, %s, %s, %s, %s)"
 
-class YoshiCaching():
+class MediaplanCaching():
 
     def __init__(self, crushercache, db, hindsight):
         self.crushercache = crushercache
@@ -44,6 +44,7 @@ class YoshiCaching():
         return data
 
     def run_advertiser_endpoints(self,endpoints, advertiser):
+        endpoints["response"] = endpoints.get("response",[])
         for endpoint in endpoints["response"]:
             name = endpoint['name']
             url = endpoint["endpoint"]
@@ -79,7 +80,7 @@ def runner(**kwargs):
     db = kwargs["rockerbox"] if kwargs.get("rockerbox",False) else kwargs["connectors"]["db"]
     hindsight = kwargs["hindsight"] if kwargs.get("hindsight",False) else kwargs["connectors"]["crusher_wrapper"]
     hindsight.authenticate()
-    yc = YoshiCaching(crushercache, db, hindsight)
+    yc = MediaplanCaching(crushercache, db, hindsight)
     advertisers = yc.get_advertisers()
     for advertiser,segments in advertisers.items():
         endpoints = yc.select_endpoint(advertiser)
