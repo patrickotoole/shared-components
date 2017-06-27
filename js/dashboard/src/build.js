@@ -2,8 +2,8 @@ import {d3_updateable} from 'helpers'
 import d3 from 'd3'
 import * as api from 'api'
 import state from 'state'
-import new_dashboard from './new_dashboard'
-import initEvents from './events/events'
+import view from './view'
+import initEvents from './events'
 import initSubscriptions from './subscriptions'
 
 
@@ -68,7 +68,7 @@ class Dashboard {
    let s = state;
    let value = s.state()
 
-   let db = new_dashboard(this._target)
+   let db = view(this._target)
      .staged_filters(value.staged_filter || "")
      .saved(value.saved || [])
      .data(value.formatted_data || {})

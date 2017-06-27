@@ -28,8 +28,8 @@
     "jsdom": "7",
     "tape": "4",
     "uglify-js": "2",
-"rollup-plugin-node-resolve": ""
-
+"rollup-plugin-node-resolve": "",
+"rollup-plugin-commonjs":""
   }
 
 }

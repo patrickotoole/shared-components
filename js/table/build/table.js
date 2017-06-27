@@ -431,8 +431,6 @@ Table.prototype = {
       var data = this._data.values
         , sortby = this._sort || {};
 
-      console.error(data);
-
       data = data.sort(function(p,c) {
         var a = p[sortby.key] || -Infinity
           , b = c[sortby.key] || -Infinity;
