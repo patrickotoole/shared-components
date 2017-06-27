@@ -1,6 +1,7 @@
 import state from 'state';
 import {filter_data} from 'filter';
 import * as data from '../data'
+import {buildDomains, buildUrls, buildSummaryData, buildSummaryAggregation, prepData} from '../data_helpers'
 
 const s = state;
 
@@ -48,6 +49,29 @@ export default function init() {
   const s = state;
 
   state
+    .registerEvent("add-filter", function(filter) { 
+      s.publish("filters",s.state().filters.concat(filter).filter(x => x.value) ) 
+    })
+    .registerEvent("modify-filter", function(filter) { 
+      var filters = s.state().filters
+      var has_exisiting = filters.filter(x => (x.field + x.op) == (filter.field + filter.op) )
+      
+      if (has_exisiting.length) {
+        var new_filters = filters.reverse().map(function(x) {
+          if ((x.field == filter.field) && (x.op == filter.op)) {
+            x.value += "," + filter.value
+          }
+          return x
+        })
+        s.publish("filters",new_filters.filter(x => x.value))
+      } else {
+        s.publish("filters",s.state().filters.concat(filter).filter(x => x.value))
+      }
+    })
+    .registerEvent("staged-filter.change", function(str) { s.publish("staged_filter",str ) })
+    .registerEvent("logic.change", function(logic) { s.publish("logic_options",logic) })
+    .registerEvent("filter.change", function(filters) { s.publishBatch({ "filters":filters }) })
+
     .registerEvent("updateFilter", function(err,filters,_state) {
 
       var filters = _state.filters
@@ -90,18 +114,18 @@ export default function init() {
       // ----- END : FOR MEDIA PLAN ----- //
 
       var tabs = [
-          dashboard.buildDomains(value)
-        , dashboard.buildUrls(value)
-        //, dashboard.buildTopics(value)
+          buildDomains(value)
+        , buildUrls(value)
+        //, buildTopics(value)
       ]
 
-      var summary_data = dashboard.buildSummaryData(value.full_urls)
-        , pop_summary_data = dashboard.buildSummaryData(compareTo)
+      var summary_data = buildSummaryData(value.full_urls)
+        , pop_summary_data = buildSummaryData(compareTo)
 
-      var summary = dashboard.buildSummaryAggregation(summary_data,pop_summary_data)
+      var summary = buildSummaryAggregation(summary_data,pop_summary_data)
 
-      var ts = dashboard.prepData(value.full_urls)
-        , pop_ts = dashboard.prepData(compareTo)
+      var ts = prepData(value.full_urls)
+        , pop_ts = prepData(compareTo)
 
       var mappedts = ts.reduce(function(p,c) { p[c.key] = c; return p}, {})
 
@@ -189,7 +213,7 @@ export default function init() {
           return p
         },{})
 
-        console.log(aggs)
+        //console.log(aggs)
 
         ds.map(function(o) {
           o.normalized_pop = o.pop / aggs.pop_max

@@ -24,11 +24,11 @@ export default function init() {
 
   state
     .subscribe("history",function(error,_state) {
-      console.log(
-        "current: "+JSON.stringify(_state.qs_state), 
-        JSON.stringify(_state.filters), 
-        _state.dashboard_options
-      )
+      //console.log(
+      //  "current: "+JSON.stringify(_state.qs_state), 
+      //  JSON.stringify(_state.filters), 
+      //  _state.dashboard_options
+      //)
 
       var for_state = ["filters"]
 
@@ -51,7 +51,7 @@ export default function init() {
     .subscribe("history.actions", function(error,value,_state) {
       var qs_state = qs({}).from(window.location.search)
       if (window.location.search.length && Object.keys(qs_state).length) {
-        var updates = dashboard.state.compare(qs_state,_state)
+        var updates = compare(qs_state,_state)
         return publishQSUpdates(updates,qs_state)
       } else {
         s.publish("selected_action",value[0])
