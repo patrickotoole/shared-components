@@ -1,3 +1,4 @@
+import {d3_updateable, d3_splat} from 'helpers'
 import accessor from '../helpers'
 import select from './select'
 

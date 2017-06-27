@@ -1,3 +1,4 @@
+import {d3_updateable, d3_splat} from 'helpers'
 import accessor from '../helpers'
 
 export default function comp_bubble(target) {

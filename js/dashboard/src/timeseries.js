@@ -1,4 +1,5 @@
 import accessor from './helpers'
+import {d3_updateable, d3_splat} from 'helpers'
 import {autoSize as autoSize} from './helpers'
 import {prepData as p} from './data_helpers';
 
