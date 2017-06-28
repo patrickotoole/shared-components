@@ -121,9 +121,9 @@ insert into visit_events_tree_nodes (parent,node) values (1,'{"pattern":"http://
 """
 
 CREAT_CAMPAIGN_ACTION_TABLE = """
-CREATE TABLE IF NOT EXISTS `hindsight_campaign_action` (
-  `advertiser` varchar(255) DEFAULT NULL,
-  `action_id` varchar(255) DEFAULT NULL,
+CREATE TABLE IF NOT EXISTS `action_campaign` (
+  `pixel_source_name` varchar(255) DEFAULT NULL,
+  `filter_id` varchar(255) DEFAULT NULL,
   `campaign_id` bigint(20) DEFAULT NULL,
   `active` tinyint(1) DEFAULT '1',
   `deleted` tinyint(1) DEFAULT '0',
