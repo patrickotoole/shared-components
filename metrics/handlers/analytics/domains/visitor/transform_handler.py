@@ -63,8 +63,9 @@ class VisitorTransformHandler(VisitorBase):
         filter_date = self.get_argument("date", False)
         num_users = self.get_argument("num_users",20000)
         skip_datasets = self.get_argument("skip_datasets","").split(",")
-        use_served = self.get_argument("served",False)
+        l1_type = self.get_argument("type","onsite")
         campaign_id = self.get_argument("campaign_id",False)
+        vendor = self.get_argument("vendor", "rockerbox")
 
         include_datasets = [x for x in self.get_argument("include_datasets","").split(",") if len(x)>1]
 
@@ -75,13 +76,13 @@ class VisitorTransformHandler(VisitorBase):
         datasets = [d for d in all_datasets if d not in skip_datasets]
 
         url_arg = self.request.arguments
-        if use_served: 
-            use_served = True
-
+        if l1_type not in ["onsite", "served"]:
+            raise Exception("not a supported l1_type")
+        
         if preventsample is not None:
             preventsample = preventsample == 'true'
         logging.info(preventsample)
-        self.get_uids(advertiser,[[terms]],int(num_days),process=process, prevent_sample=preventsample, num_users=num_users, datasets=datasets, filter_id=filter_id, date=filter_date, url_args=url_arg, l1_flag=use_served, campaign_id=campaign_id)
+        self.get_uids(advertiser,[[terms]],int(num_days),process=process, prevent_sample=preventsample, num_users=num_users, datasets=datasets, filter_id=filter_id, date=filter_date, url_args=url_arg, l1_type=l1_type, campaign_id=campaign_id, vendor=vendor)
 
     @tornado.web.authenticated
     @tornado.web.asynchronous

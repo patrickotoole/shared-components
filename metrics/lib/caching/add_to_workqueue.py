@@ -25,7 +25,7 @@ def build_post(udf,advertiser,params,base_url, params_obj):
         to_post['filter_id'] = filter_id
         to_post['pattern'] = pattern
         to_post['priority'] = 35
-        to_post['base_ur;'] = base_url 
+        to_post['base_url'] = base_url 
         
         TO_POST = {i:j for i,j in to_post.items() + params.items()}
         return TO_POST
@@ -45,11 +45,11 @@ if __name__ == "__main__":
 
     udf = "domains_full_time_minute"
 
-    #wq_url = "http://workqueue.crusher.getrockerbox.com/cache"
-    #base_url = "http://beta.crusher.getrockerbox.com"
+    wq_url = "http://workqueue.crusher.getrockerbox.com/cache"
+    base_url = "http://beta.crusher.getrockerbox.com"
 
-    wq_url = "http://localhost:8888/cache" 
-    base_url = "http://localhost:9001" 
+    #wq_url = "http://localhost:8888/cache" 
+    #base_url = "http://localhost:9001" 
 
     data = requests.get("http://portal.getrockerbox.com/admin/pixel/advertiser_data?skip=True",auth=("rockerbox","RBOXX2017"))
     valid_advertisers = {x:y for x,y in data.json().items() if y['has_data'] and len([z for z in y['segments'] if z['data_populated']==1]) >0 }

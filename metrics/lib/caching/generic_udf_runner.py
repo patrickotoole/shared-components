@@ -15,8 +15,8 @@ from lib.helpers import UDF_EXCLUDES
 URL ="/crusher/v1/visitor/{}?url_pattern={}&filter_id={}"
 URL2 ="/crusher/v2/visitor/{}?url_pattern={}&filter_id={}"
 
-INSERT ="insert into generic_function_cache_v (advertiser, url_pattern, udf, zipped, date, action_id, filter_id) values (%s, %s, %s, %s, %s, %s, %s)"
-REPLACE="replace into generic_function_cache_v (advertiser, url_pattern, udf, zipped, date, action_id, filter_id) values (%s, %s, %s, %s, %s, %s, %s)"
+INSERT ="insert into generic_function_cache (advertiser, url_pattern, udf, zipped, date, action_id, filter_id) values (%s, %s, %s, %s, %s, %s, %s)"
+REPLACE="replace into generic_function_cache (advertiser, url_pattern, udf, zipped, date, action_id, filter_id) values (%s, %s, %s, %s, %s, %s, %s)"
 
 PARAMETERS_FIRST = "select parameters from advertiser_udf_parameter where advertiser = '%(advertiser)s' and filter_id='%(filter_id)s' and udf='%(udf)s'"
 PARAMETERS_SECOND = "select parameters from advertiser_udf_parameter where advertiser = '%(advertiser)s' and filter_id = '%(filter_id)s' and udf is NULL"

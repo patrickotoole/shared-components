@@ -43,9 +43,9 @@ GET_MAX_ACTION_PLUS_1 = "select max(action_id)+1 from action"
 
 RESET_AUTO_INCR_ACTION = "alter table action auto_increment = %s"
 
-SELECT_CAMPAIGN_ACTION = "select action_id, campaign_id, action_name from hindsight_campaign_action where advertiser='{}'"
+SELECT_CAMPAIGN_ACTION = "select filter_id, campaign_id, action_name from action_campaign where pixel_source_name='{}'"
 
-GET_CAMPAIGN_ACTION = "select action_id, campaign_id, action_name, advertiser from hindsight_campaign_action where action_id='{}'"
+GET_CAMPAIGN_ACTION = "select filter_id, campaign_id, action_name, pixel_source_name from action_campaign where filter_id='{}'"
 
 from action_database_helpers import ActionDatabaseHelper
 
@@ -61,7 +61,7 @@ class ActionDatabase(ActionDatabaseHelper):
             
             parameters = self.get_parameters(advertiser)
             joined = joined.reset_index().merge(parameters, on="action_id", how='left').set_index("action_id")
-            joined['parameters'] = joined.parameters.map(lambda x : {} if pandas.isnull(x) else ujson.loads(x))
+            joined['parameters'] = joined['parameters'].map(lambda x : {} if pandas.isnull(x) else ujson.loads(x))
             
             default_params = {
             "submitted_by": "add_to_workqueue.py",
@@ -74,17 +74,17 @@ class ActionDatabase(ActionDatabaseHelper):
                 return {x:y for x,y in z.items() + {a:b for a,b in default_params.items() if a not in z.keys()}.items()}
 
             joined['override_parameters']=joined['parameters']
-            joined.parameters = joined.parameters.map(lambda x : combined_parameters(x))
+            joined['parameters'] = joined['parameters'].map(lambda x : combined_parameters(x))
  
             subfilters = self.get_subfilters(result)
             joined = joined.reset_index().merge(subfilters.reset_index(), on='action_id', how='left').set_index('action_id')
             joined['type'] = 'action'
+            joined['campaign_id'] = 0
             
             joined = joined.fillna(0)
-
             campaign_action = self.db.select_dataframe(SELECT_CAMPAIGN_ACTION.format(advertiser))
             campaign_parameters = self.get_parameters(advertiser, None, True)
-            campaign_action = campaign_action.reset_index().merge(campaign_parameters, on="action_id", how='left').set_index("index")
+            campaign_action = campaign_action.reset_index().merge(campaign_parameters, on="filter_id", how='left').set_index("index")
 
             def combine_campaign_parameters(z):
                 override = campaign_action[[campaign_action.campaign_id == z["campaign_id"]]].override_parameters[0]
@@ -94,17 +94,21 @@ class ActionDatabase(ActionDatabaseHelper):
                 return {"num_days":2, "served":"True", "skip_datasets":"uid_urls,url_to_action,corpus,domains", "num_users":25000,"campaign_id":z}
                 
 
-            campaign_action['parameters'] = campaign_action.parameters.map(lambda x : {} if pandas.isnull(x) else ujson.loads(x))
+            campaign_action['parameters'] = campaign_action['parameters'].map(lambda x : {} if pandas.isnull(x) else ujson.loads(x))
             campaign_action['override_parameters'] = campaign_action['parameters']
-            campaign_action.parameters = campaign_action.campaign_id.map(lambda x : construct_default_params(x))
-            campaign_action.parameters = campaign_action.parameters.map(lambda x : combine_campaign_parameters(x))
+            campaign_action['parameters'] = campaign_action['campaign_id'].map(lambda x : construct_default_params(x))
+            campaign_action['parameters'] = campaign_action['parameters'].map(lambda x : combine_campaign_parameters(x))
             campaign_action['type'] = 'campaign'
             campaign_action['advertiser'] = advertiser
+            campaign_action['url_pattern'] = [[] for x in range(0,len(campaign_action))]
 
-            return joined.reset_index(), campaign_action
+            joined_reset = joined.reset_index()
+            results = pandas.concat([joined_reset, campaign_action])
+            results = results.fillna(0)
+            return results
         except Exception as e:
             logging.info(str(e))
-            return pandas.DataFrame(), pandas.DataFrame()
+            return pandas.DataFrame()
 
     def get_advertiser_action(self, advertiser, action_id):
         try:

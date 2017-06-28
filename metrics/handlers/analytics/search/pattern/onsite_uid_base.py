@@ -1,7 +1,7 @@
 from twisted.internet import defer, threads
 from lib.helpers import decorators
 
-class OnsiteUidBase():
+class OnsiteUIDBase():
 
     @defer.inlineCallbacks    
     def onsite_uids(self, advertiser, term, dates, num_days, allow_sample, filter_id):

@@ -16,10 +16,10 @@ from helpers import PatternSearchHelpers
 from lib.aho import AhoCorasick
 from ..search_helpers import SearchHelpers
 from handlers.analytics.user_meta_base import UserMetaBaseHandler
-from served_uid_base import ServedUidBase 
-from onsite_uid_base import OnsiteUidBase
+from served_uid_base import ServedUIDBase 
+from onsite_uid_base import OnsiteUIDBase
 
-class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,PatternSearchHelpers, SearchHelpers, UserMetaBaseHandler, ServedUidBase, OnsiteUidBase):
+class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,PatternSearchHelpers, SearchHelpers, UserMetaBaseHandler, ServedUIDBase, OnsiteUIDBase):
     
     LEVELS = {
                 "l1":
@@ -299,7 +299,7 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
         defer.returnValue(shared_dict)
 
     @defer.inlineCallbacks
-    def build_arguments(self,advertiser,term,dates,num_days,response,allow_sample=None,filter_id=False,num_users=20000, datasets=['domains'], l1_flag=False, campaign_id=False):
+    def build_arguments(self,advertiser,term,dates,num_days,response,allow_sample=None,filter_id=False,num_users=20000, datasets=['domains'], l1_type="onsite", campaign_id=False, vendor='rockerbox'):
         shared_dict={
                         "ds": "SELECT * FROM rockerbox.visitor_domains_full where uid = ?",
                         "advertiser" : advertiser,
@@ -314,12 +314,11 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
         except:
             raise Exception("Not a valid dataset")
 
-
         #LEVEL 0
-        if l1_flag:
+        if l1_type=="served":
             if not campaign_id:
                 raise Exception("campaign id required when using served ids")
-            uids = yield self.served_uids(advertiser, campaign_id, 'rockerbox', dates)
+            uids, served_times = yield self.served_uids(advertiser, campaign_id, vendor, dates)
         else:
             uids = yield self.onsite_uids(advertiser, term, dates, num_days, allow_sample, filter_id)
 
@@ -329,6 +328,8 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
         returnDFs = {}
         if len(uids) > 0:
             shared_dict = yield self.run_init_level(needed_dfs, self.LEVELS["l1"], shared_dict)
+            if l1_type=="served":
+                shared_dict['uid_urls'] = pandas.DataFrame(served_times)
             shared_dict = yield self.run_level(needed_dfs, self.LEVELS["l2"], shared_dict)
             shared_dict = yield self.run_level(needed_dfs, self.LEVELS["l3"], shared_dict)
             shared_dict = yield self.run_level(needed_dfs, self.LEVELS["l4"], shared_dict)

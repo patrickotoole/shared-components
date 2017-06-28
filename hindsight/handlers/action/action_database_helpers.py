@@ -57,10 +57,10 @@ GETADVERTISERPATTERN = "SELECT pixel_source_name, url_pattern from action_with_p
 
 INSERT_PARAMETERS = "insert into advertiser_udf_parameter (advertiser, filter_id, udf, parameters) values ('%s', %s, 'domains_full_time_minute', '%s')"
 
-GET_CAMPAIGN_ACTION = "select advertiser, action_id, campaign_id, action_name from hindsight_campaign_action where %s"
+GET_CAMPAIGN_ACTION = "select pixel_source_name as advertiser, action_id, campaign_id, action_name from action_campaign where %s"
 
 GET_PARAMETERS_CAMPAIGN = """
-SELECT filter_id as action_id, parameters from campaign_action_udf_parameter where %(where)s
+SELECT filter_id, parameters from campaign_action_udf_parameter where %(where)s
 """
 
 class ActionDatabaseHelper(object):
@@ -85,12 +85,14 @@ class ActionDatabaseHelper(object):
 
     def query_action(self, advertiser, action_id=None):
         where = self.construct_where(advertiser,action_id)
-        result = self.db.select_dataframe(GET % {"where":where})
-        if result.empty:
+        try:
+            if action_id:
+                action_id = int(action_id)
+            result = self.db.select_dataframe(GET % {"where":where})
+            patterns = self.get_patterns(result.action_id.tolist())
+        except:
             result = self.db.select_dataframe(GET_CAMPAIGN_ACTION % where)
             patterns = None
-        else:
-            patterns = self.get_patterns(result.action_id.tolist())
         return result, patterns
 
     def get_subfilters(self, result):
@@ -110,7 +112,7 @@ class ActionDatabaseHelper(object):
         else:
             parameters = self.crushercache.select_dataframe(GET_PARAMETERS_CAMPAIGN % {"where":where_parameters})
             if len(parameters)==0:
-                parameters = pandas.DataFrame({"action_id":[], "parameters":[]})
+                parameters = pandas.DataFrame({"filter_id":[], "parameters":[]})
         return parameters
 
     def _insert_into_tree(self, action, advertiser):
