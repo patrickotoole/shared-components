@@ -1,6 +1,6 @@
 import {qs} from 'state';
 import state from 'state';
-import {compare} from '../state'
+import {compare} from '../helpers'
 
 function publishQSUpdates(updates,qs_state) {
   if (Object.keys(updates).length) {

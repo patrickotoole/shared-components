@@ -1,32 +1,21 @@
 import state from 'state';
 import {filter_data} from 'filter';
-import * as data from '../data'
-import {buildDomains, buildUrls, buildSummaryData, buildSummaryAggregation, prepData} from '../data_helpers'
+import {
+  buildCategories, 
+  buildCategoryHour, 
+  buildData, 
+  buildDomains, 
+  buildUrls, 
+  buildSummaryData, 
+  buildSummaryAggregation, 
+  prepData, 
+  prepareFilters
+} from '../helpers'
 
 const s = state;
 
-var buildCategories = data.buildCategories
-  , buildCategoryHour = data.buildCategoryHour
-  , buildData = data.buildData;
 
 
-function prepareFilters(filters) {
-  var mapping = {
-      "Category": "parent_category_name"
-    , "Title": "url"
-    , "Time": "hour"
-  }
-
-  var filters = filters.filter(function(x) { return Object.keys(x).length && x.value }).map(function(z) {
-    return { 
-        "field": mapping[z.field]
-      , "op": z.op
-      , "value": z.value
-    }
-  })
-
-  return filters
-}
 
 
 

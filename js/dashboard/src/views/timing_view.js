@@ -3,7 +3,7 @@ import accessor from '../helpers'
 import header from '../generic/header'
 import table from 'table'
 import refine from './refine'
-import * as timeseries from '../timeseries'
+import * as timeseries from '../generic/timeseries'
 import domain_expanded from './domain_expanded'
 
 

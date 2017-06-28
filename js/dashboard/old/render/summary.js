@@ -1,5 +1,5 @@
 import table from 'table'
-import * as timeseries from '../timeseries'
+import * as timeseries from '../generic/timeseries'
 
 function buildSummaryData(data) {
       var reduced = data.full_urls.reduce(function(p,c) {

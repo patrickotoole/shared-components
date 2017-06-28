@@ -21,7 +21,7 @@ import share from './generic/share'
 import select from './generic/select'
 
 import accessor from './helpers'
-import * as transform from './data_helpers'
+import * as transform from './helpers'
 
 function noop() {}
 

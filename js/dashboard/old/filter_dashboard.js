@@ -20,7 +20,7 @@ import * as header from './generic/header'
 
 import state from './state'
 import share from './share'
-import time_series from './timeseries'
+import time_series from './generic/timeseries'
 
 
 export function FilterDashboard(target) {

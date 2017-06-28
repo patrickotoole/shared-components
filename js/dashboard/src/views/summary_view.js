@@ -13,7 +13,7 @@ import stream_plot from '../generic/stream_plot'
 
 
 
-import * as timeseries from '../timeseries'
+import * as timeseries from '../generic/timeseries'
 
 
 import table from 'table'

@@ -1,7 +1,7 @@
 import {d3_updateable, d3_splat} from 'helpers'
 import accessor from '../helpers'
 import header from '../generic/header'
-import * as timeseries from '../timeseries'
+import * as timeseries from '../generic/timeseries'
 
 import table from 'table'
 import domain_expanded from './domain_expanded'

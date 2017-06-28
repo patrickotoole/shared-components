@@ -2,7 +2,7 @@ import {d3_updateable, d3_splat} from 'helpers'
 import accessor from '../helpers'
 import header from '../generic/header'
 import table from 'table'
-import time_series from '../timeseries'
+import time_series from '../generic/timeseries'
 import refine from './refine'
 
 
