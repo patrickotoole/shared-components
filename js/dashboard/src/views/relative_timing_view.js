@@ -7,7 +7,7 @@ import refine from './refine'
 
 
 import {drawStream} from './summary_view'
-import {simpleTimeseries} from './summary_view'
+import {simpleTimeseries} from 'chart'
 
 function noop(){}
 

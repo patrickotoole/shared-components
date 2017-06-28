@@ -23,3 +23,14 @@ export const d3_splat = function(target,selector,type,data,joiner) {
 
   return updateable
 }
+
+export function d3_class(target,cls,type,data) {
+  return d3_updateable(target,"." + cls, type || "div",data)
+    .classed(cls,true)
+}
+
+export function noop() {}
+export function identity(x) { return x }
+export function key(x) { return x.key }
+
+

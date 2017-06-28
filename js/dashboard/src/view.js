@@ -8,7 +8,6 @@ import segment_view from './views/segment_view'
 import summary_view from './views/summary_view'
 import relative_view from './views/relative_timing_view'
 import timing_view from './views/timing_view'
-
 import staged_filter_view from './views/staged_filter_view'
 
 
@@ -306,11 +305,9 @@ NewDashboard.prototype = {
                staged_filters = staged_filters.split(",").concat(x.key || x.url).filter(x => x.length).join(",")
                self.on("staged-filter.change")(staged_filters)
                HACKbuildStagedFilter(staged_filters)
-
     
              })
-
-              .draw()
+             .draw()
           }
 
           if (x.value == "media-view") {

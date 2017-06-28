@@ -10,7 +10,7 @@ import domain_expanded from './domain_expanded'
 
 
 import {drawStream} from './summary_view'
-import {simpleTimeseries} from './summary_view'
+import {simpleTimeseries} from 'chart'
 
 function noop(){}
 

@@ -3,6 +3,7 @@ import accessor from '../helpers'
 import header from '../generic/header'
 import button_radio from '../generic/button_radio'
 import select from '../generic/select'
+import {simpleTimeseries, simpleBar} from 'chart'
 
 import * as table from 'table'
 
@@ -10,38 +11,12 @@ function noop() {}
 function identity(x) { return x }
 function key(x) { return x.key }
 
-function simpleBar(wrap,value,scale,color) {
-
-  var height = 20
-    , width = wrap.style("width").replace("px","")
-
-  var canvas = d3_updateable(wrap,"svg","svg",[value],function() { return 1})
-    .style("width",width+"px")
-    .style("height",height+"px")
-
-
-  var chart = d3_updateable(canvas,'g.chart','g',false,function() { return 1 })
-    .attr("class","chart")
-  
-  var bars = d3_splat(chart,".pop-bar","rect",function(x) { return x}, function(x,i) { return i })
-    .attr("class","pop-bar")
-    .attr('height',height-4)
-    .attr({'x':0,'y':0})
-    .style('fill',color)
-    .attr("width",function(x) { return scale(x) })
-
-
-}
-
-
 export function SegmentView(target) {
   this._on = {
     select: noop
   }
   this.target = target
 }
-
-
 
 export default function segment_view(target) {
   return new SegmentView(target)

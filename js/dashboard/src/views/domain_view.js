@@ -57,6 +57,7 @@ DomainView.prototype = {
         .data(selected)
 
 
+
       var samp_max = d3.max(selected.values,function(x){return x.sample_percent_norm})
         , pop_max = d3.max(selected.values,function(x){return x.pop_percent})
         , max = Math.max(samp_max,pop_max);

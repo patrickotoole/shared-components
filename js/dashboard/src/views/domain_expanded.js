@@ -1,41 +1,17 @@
-import {d3_updateable, d3_splat} from 'helpers'
+import {d3_updateable, d3_splat, d3_class, noop, identity, key} from 'helpers'
 import accessor from '../helpers'
-//import time_series from '../generic/timeseries'
-import {simpleTimeseries} from './summary_view'
-
-
-function d3_class(target,cls,type,data) {
-  return d3_updateable(target,"." + cls, type || "div",data)
-    .classed(cls,true)
-}
-
-function noop() {}
-
+import {simpleTimeseries} from 'chart'
+import {STOPWORDS, hourbuckets, buckets} from '../constants'
 
 export function DomainExpanded(target) {
   this._on = {}
   this.target = target
 }
 
-function identity(x) { return x }
-function key(x) { return x.key }
-
-
 function domain_expanded(target) {
   return new DomainExpanded(target)
 }
 
-var allbuckets = []
-var hourbuckets = d3.range(0,24).map(x => String(x).length > 1 ? String(x) : "0" + x)
-
-var hours = [0,20,40]
-var buckets = d3.range(0,24).reduce((p,c) => {
-  hours.map(x => {
-    p[c + ":" + x] = 0
-  })
-  allbuckets = allbuckets.concat(hours.map(z => c + ":" + z))
-  return p
-},{})
 
 DomainExpanded.prototype = {
     data: function(val) {
@@ -54,15 +30,6 @@ DomainExpanded.prototype = {
       var data = this._raw
       var d = { domain: data[0].domain }
 
-      //var articles = data.reduce((p,c) => {
-      //  p[c.url] = p[c.url] || Object.assign({},buckets)
-      //  p[c.url][c.hour + ":" + c.minute] = c.count
-      //  return p
-      //},{})
-
-      //Object.keys(articles).map(k => {
-      //  articles[k] = allbuckets.map(b => articles[k][b])
-      //})
 
       var articles = data.reduce((p,c) => {
         p[c.url] = p[c.url] || Object.assign({},buckets)
@@ -86,12 +53,10 @@ DomainExpanded.prototype = {
       var kw_to_draw = to_draw
         .reduce(function(p,c){
           c.key.toLowerCase().split(d.domain)[1].split("/").reverse()[0].replace("_","-").split("-").map(x => {
-            var values = ["that","this","what","best","most","from","your","have","first","will","than","says","like","into","after","with"]
+            var values = STOPWORDS
             if (x.match(/\d+/g) == null && values.indexOf(x) == -1 && x.indexOf(",") == -1 && x.indexOf("?") == -1 && x.indexOf(".") == -1 && x.indexOf(":") == -1 && parseInt(x) != x && x.length > 3) {
               p[x] = p[x] || {}
-              Object.keys(c.value).map(q => {
-                p[x][q] = (p[x][q] || 0) + (c.value[q] || 0)
-              })
+              Object.keys(c.value).map(q => { p[x][q] = (p[x][q] || 0) + (c.value[q] || 0) })
             }
           })
 
@@ -415,7 +380,6 @@ d3_updateable(svg_legend,"line.three","line")
           var dthis = d3.select(this)
           var values = x.values
           simpleTimeseries(dthis,values,144,20)
-
         })
 
 

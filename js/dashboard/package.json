@@ -19,6 +19,8 @@
     "media_plan": "file:../media_plan",
     "api": "file:../api",
     "helpers": "file:../helpers",
+    "chart": "file:../chart",
+
     "filter": "file:../filter"
   },
   "devDependencies": {
