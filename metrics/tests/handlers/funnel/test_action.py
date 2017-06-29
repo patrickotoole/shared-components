@@ -141,6 +141,11 @@ CREATE TABLE IF NOT EXISTS `campaign_action_udf_parameter` (
 )
 """
 
+INSERT_PARAMETERS = """
+insert into advertiser_udf_parameter (advertiser, filter_id, udf, parameters) values ('alan', 1, 'domains_full_time_minute', '{"num_days":7}')
+"""
+
+
 class ActionTest(AsyncHTTPTestCase):
 
     
@@ -148,7 +153,6 @@ class ActionTest(AsyncHTTPTestCase):
     def get_app(self):        
         self.db = lnk.dbs.test
 
-        
         self.db.execute(CREATE_ACTION_TABLE) 
         self.db.execute(CREATE_PATTERN_TABLE)  
 
@@ -156,6 +160,7 @@ class ActionTest(AsyncHTTPTestCase):
 
         self.db.execute(CREAT_CAMPAIGN_ACTION_TABLE)
         self.db.execute(CREATE_CAMPAIGN_PARAMS_TABLE)
+        self.db.execute(INSERT_PARAMETERS)
 
         self.db.execute(CREATE_PARAMETERS )
         self.db.execute(CREATE_ACTION_PATTERN)
@@ -204,9 +209,16 @@ class ActionTest(AsyncHTTPTestCase):
         self.db.execute("TRUNCATE table advertiser")
         self.db.execute("TRUNCATE table action_with_patterns")
         self.db.execute("TRUNCATE table visit_events_tree_nodes")
+        self.db.execute("TRUNCATE table advertiser_udf_parameter")
 
     def test_get(self):        
         _a = ujson.loads(self.fetch("/?format=json&advertiser=alan",method="GET").body)
+        self.assertEqual(len(_a["response"]),1)
+
+    def test_get_parameters(self):
+        _a = ujson.loads(self.fetch("/?format=json&advertiser=alan",method="GET").body)
+        self.assertEqual(_a['response'][0]['override_parameters']['num_days'], _a['response'][0]['parameters']['num_days'])
+        self.assertEqual(_a['response'][0]['override_parameters']['num_days'],7)
         self.assertEqual(len(_a["response"]),1)
 
     def test_get_id(self):
