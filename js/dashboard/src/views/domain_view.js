@@ -4,7 +4,7 @@ import header from '../generic/header'
 import * as timeseries from '../generic/timeseries'
 
 import table from 'table'
-import domain_expanded from './domain_expanded'
+import {domain_expanded} from 'component'
 import domain_bullet from './domain_bullet'
 
 function noop() {}
@@ -95,6 +95,7 @@ DomainView.prototype = {
           var rolled = timeseries.prepData(dd)
           
           domain_expanded(td)
+            .domain(dd[0].domain)
             .raw(dd)
             .data(rolled)
             .urls(d.urls)

@@ -4,7 +4,7 @@ import header from '../generic/header'
 import table from 'table'
 import refine from './refine'
 import * as timeseries from '../generic/timeseries'
-import domain_expanded from './domain_expanded'
+import {domain_expanded} from 'component'
 
 
 

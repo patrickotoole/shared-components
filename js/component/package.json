@@ -1,30 +1,32 @@
 {
   "name": "component",
   "version": "0.0.1",
+  "description": "component",
+  "jsnext:main": "index",
   "main": "build/component.js",
-  "jsnext:main": "main.ts",
   "scripts": {
-    "pretest": "mkdir -p build && node -e 'process.stdout.write(\"var version = \\\"\" + require(\"./package.json\").version + \"\\\"; export * from \\\"../main.ts\\\"; export {version};\");' > build/bundle.js && rollup -c -f umd -u component -n component -o build/component.js -- build/bundle.js",
-    "test": "faucet `find test -name '*-test.js'`",
-    "prepublish": "npm run test && uglifyjs build/component.js -c -m -o build/component.min.js && rm -f build/component.zip && zip -j build/component.zip -- LICENSE README.md build/component.js build/component.min.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "rickotoole <rick@rockerbox.com> (http://rockerbox.com)",
   "license": "ISC",
-  "bundledDependencies": {
-    "d3": "0.0"
-  },
-  "devDependencies": {
-    "d3": "3.5.12",
-    "faucet": "0.0",
-    "jsdom": "7",
-    "node-inspector": "0.0",
-    "rollup": "0.20.5",
-    "rollup-plugin-typescript": "^0.8.1",
-    "tape": "4",
-    "typescript": "^2.1.4",
-    "uglify-js": "2"
+  "scripts": {
+    "pretest": "mkdir -p build && node -e 'process.stdout.write(\"var version = \\\"\" + require(\"./package.json\").version + \"\\\"; export * from \\\"../index\\\"; export {version};\");' > build/bundle.js && rollup -c -f umd -u component -n components -o build/components.js -- build/bundle.js",
+    "test": "faucet `find test -name '*-test.js'`",
+    "prepublish": "npm run test && uglifyjs build/component.js -c -m -o build/components.min.js && rm -f build/components.zip && zip -j build/components.zip -- LICENSE README.md build/components.js build/components.min.js"
   },
   "dependencies": {
-    "typescript": "^2.1.4"
+    "helpers": "file:../helpers"
+  },
+  "devDependencies": {
+    "rollup-plugin-node-resolve":"",
+    "rollup-plugin-commonjs":"",
+    "rollup-plugin-postcss":"",
+    "d3": "3.5.12",
+    "faucet": "0.0",
+    "rollup": "^0.40.1",
+    "jsdom": "7",
+    "tape": "4",
+    "uglify-js": "2"
   }
+
 }
