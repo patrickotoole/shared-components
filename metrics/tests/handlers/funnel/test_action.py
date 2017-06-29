@@ -16,6 +16,7 @@ import logging
 CREATE_ACTION_TABLE = """
 CREATE TABLE IF NOT EXISTS `action` (
   `action_id` int(11) NOT NULL AUTO_INCREMENT,
+  `filter_id` varchar(250),
   `start_date` varchar(8) NOT NULL,
   `end_date` varchar(8) NOT NULL,
   `operator` enum('and','or') NOT NULL,
@@ -48,8 +49,8 @@ CREATE TABLE IF NOT EXISTS action_filters (  `action_id` int(11) NOT NULL,
 """
 
 ACTION_FIXTURE_1 = """
-INSERT INTO action (`action_id`,`start_date`,`end_date`, `operator`, `pixel_source_name`, `action_name`, `active`, `featured`) 
-VALUES (1,0,0,"and","alan","alans_action",1,1)
+INSERT INTO action (`action_id`,`start_date`,`end_date`, `operator`, `pixel_source_name`, `action_name`, `active`, `featured`, `filter_id`) 
+VALUES (1,0,0,"and","alan","alans_action",1,1, "1")
 """
 
 ACTION_FIXTURE_2 = """
@@ -145,6 +146,10 @@ INSERT_PARAMETERS = """
 insert into advertiser_udf_parameter (advertiser, filter_id, udf, parameters) values ('alan', 1, 'domains_full_time_minute', '{"num_days":7}')
 """
 
+INSERT_CAMPAIGN = """
+insert into action_campaign (pixel_source_name, filter_id, campaign_id, action_name) values ('alan', '123456t6768', 123456, 'TestCampaign')
+"""
+
 
 class ActionTest(AsyncHTTPTestCase):
 
@@ -161,6 +166,7 @@ class ActionTest(AsyncHTTPTestCase):
         self.db.execute(CREAT_CAMPAIGN_ACTION_TABLE)
         self.db.execute(CREATE_CAMPAIGN_PARAMS_TABLE)
         self.db.execute(INSERT_PARAMETERS)
+        self.db.execute(INSERT_CAMPAIGN)
 
         self.db.execute(CREATE_PARAMETERS )
         self.db.execute(CREATE_ACTION_PATTERN)
@@ -210,16 +216,22 @@ class ActionTest(AsyncHTTPTestCase):
         self.db.execute("TRUNCATE table action_with_patterns")
         self.db.execute("TRUNCATE table visit_events_tree_nodes")
         self.db.execute("TRUNCATE table advertiser_udf_parameter")
+        self.db.execute("TRUNCATE table action_campaign")
 
     def test_get(self):        
         _a = ujson.loads(self.fetch("/?format=json&advertiser=alan",method="GET").body)
-        self.assertEqual(len(_a["response"]),1)
+        self.assertEqual(len(_a["response"]),2)
 
     def test_get_parameters(self):
         _a = ujson.loads(self.fetch("/?format=json&advertiser=alan",method="GET").body)
         self.assertEqual(_a['response'][0]['override_parameters']['num_days'], _a['response'][0]['parameters']['num_days'])
         self.assertEqual(_a['response'][0]['override_parameters']['num_days'],7)
-        self.assertEqual(len(_a["response"]),1)
+        self.assertEqual(len(_a["response"]),2)
+
+    def test_get_campaign_action(self):
+        _a = ujson.loads(self.fetch("/?format=json&advertiser=alan",method="GET").body)
+        self.assertEqual(_a['response'][1]['campaign_id'],123456)
+        self.assertEqual(len(_a["response"]),2)
 
     def test_get_id(self):
         _a = ujson.loads(self.fetch("/?format=json&id=1&advertiser=alan",method="GET").body)
