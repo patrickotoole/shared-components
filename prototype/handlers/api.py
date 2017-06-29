@@ -44,7 +44,7 @@ class ApiHandler(BaseHandler, ApiHelper):
         filter_id = self.get_argument("filter_id",False)
         keyword = self.get_argument("keyword", False)
         filter_limit = self.get_argument("size", 25000)
-        page = self.get_argument("page", False)
+        page = self.get_argument("offset", False)
         try:
             filter_limit = int(filter_limit)
         except:
