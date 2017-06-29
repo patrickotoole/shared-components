@@ -12,7 +12,7 @@ ONSITEQUERY = "select uid, full_onsite_url, time, segments from prototype.onsite
 DOMAINQUERY = """
 select offsite.* from prototype.offsite 
 join
-(select onsite.uid from prototype.onsite 
+(select distinct onsite.uid from prototype.onsite 
 inner join 
 (select uid from prototype.offsite where domain='{}') ofs 
 on onsite.uid = ofs.uid
@@ -24,7 +24,7 @@ limit {},{}
 KEYWORDQUERY = """
 select offsite.* from prototype.offsite 
 join
-(select onsite.uid from prototype.onsite 
+(select distinct onsite.uid from prototype.onsite 
 inner join 
 (select uid from prototype.offsite where match (url_sentence) against ('{}' in natural language mode)) ofs 
 on onsite.uid = ofs.uid
@@ -34,6 +34,28 @@ limit {},{}
 """
 
 VERIFYQUERY = "select action_name from action_with_patterns where action_id={} and pixel_source_name='{}'"
+
+COUNTKEYWORDQUERY = """
+select count(*) from prototype.offsite 
+join
+(select distinct onsite.uid from prototype.onsite 
+inner join 
+(select uid from prototype.offsite where match (url_sentence) against ('{}' in natural language mode)) ofs 
+on onsite.uid = ofs.uid
+where segments like '%{}%') ons
+on offsite.uid = ons.uid
+"""
+
+COUNTDOMAINQUERY = """
+select count(*) from prototype.offsite
+join
+(select distinct onsite.uid from prototype.onsite 
+inner join 
+(select uid from prototype.offsite where domain='{}') ofs 
+on onsite.uid = ofs.uid
+where segments like '%{}%') ons
+on offsite.uid = ons.uid
+"""
 
 class ApiHelper(UDFHandler):
 
@@ -54,7 +76,8 @@ class ApiHelper(UDFHandler):
             df = self.prototype.select_dataframe(KEYWORDQUERY.format(keyword, filter_id, 0, filter_limit))
         else:
             df = self.prototype.select_dataframe(KEYWORDQUERY.format(keyword, filter_id, int(page), filter_limit))
-        return df
+        count_df = self.prototype.select_dataframe(COUNTKEYWORDQUERY.format(keyword, filter_id))
+        return df, count_df
 
     def verify_filter_id(self, advertiser, filter_id):
         df = self.db.select_dataframe(VERIFYQUERY.format(filter_id, advertiser))
@@ -84,7 +107,7 @@ class ApiHelper(UDFHandler):
         if not valid_advertiser_filter:
             return None
         onsite_df =  self.onsite_data(filter_id, filter_limit)
-        offsite_df = self.offsite_keyword_data(filter_id, keyword, filter_limit, page)
-        kwargs = {"onsite":onsite_df, "offsite":offsite_df}
+        offsite_df, count = self.offsite_keyword_data(filter_id, keyword, filter_limit, page)
+        kwargs = {"onsite":onsite_df, "offsite":offsite_df, "count":count['count(*)'][0]}
         resp = self.run_udf(udf, kwargs)
         return resp
