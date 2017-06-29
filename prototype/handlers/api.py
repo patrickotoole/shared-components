@@ -10,6 +10,8 @@ class ApiHandler(BaseHandler, ApiHelper):
 
     def initialize(self, **kwargs):
         self.prototype = kwargs['prototype']
+        self.crushercache = kwargs['crushercache']
+        self.rockerboxidf = kwargs['rockerboxidf']
         self.db = kwargs['db']
         self._env = {}
         self.build_env()

@@ -37,7 +37,8 @@ if __name__ == '__main__':
         "db": lnk.dbs.rockerbox,
         "crushercache": lnk.dbs.crushercache,
         "prototype": lnk.dbs.crushercache,
-        "tree_sync": None
+        "tree_sync": None,
+        "rockerboxidf": lnk.dbs.rockerboxidf
     }
 
 

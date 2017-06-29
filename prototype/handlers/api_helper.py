@@ -90,6 +90,30 @@ class ApiHelper(UDFHandler):
             valid=True
         return valid
 
+    def remove_hex(self, domains):
+        fixed = []
+        for d in domains:
+            try:
+                dom = d.encode('latin')
+                fixed.append(dom)
+            except:
+                logging.info("can't encode")
+        return fixed
+
+    def get_idf(self, offsite_df):
+        domain_set = offsite_df['domain']
+
+        QUERY = """
+            SELECT domain, total_users as num_users, idf, category_name, case when parent_category_name = "" then category_name else parent_category_name end as parent_category_name
+            FROM domain_idf
+            WHERE domain in (%(domains)s) and category_name != ""
+        """
+        domain_set = [self.crushercache.escape_string(i.encode("utf-8")) for i in domain_set ]
+        domain_set = self.remove_hex(set(domain_set))
+        domains = "'" + "','".join(domain_set) + "'"
+        results = self.rockerboxidf.select_dataframe(QUERY % {"domains":domains})
+        return results
+
     @decorators.deferred
     def domain_query(self, domain_filter, filter_id, udf, advertiser, filter_limit, page):
         valid_advertiser_filter = self.verify_filter_id(advertiser, filter_id)
@@ -108,6 +132,7 @@ class ApiHelper(UDFHandler):
             return None
         onsite_df =  self.onsite_data(filter_id, filter_limit)
         offsite_df, count = self.offsite_keyword_data(filter_id, keyword, filter_limit, page)
-        kwargs = {"onsite":onsite_df, "offsite":offsite_df, "count":count['count(*)'][0]}
+        idf = self.get_idf(offsite_df)
+        kwargs = {"onsite":onsite_df, "offsite":offsite_df, "count":count['count(*)'][0], "idf":idf}
         resp = self.run_udf(udf, kwargs)
         return resp
