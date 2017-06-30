@@ -1,12 +1,23 @@
-import d3 from 'd3';
-
-function accessor(attr, val) {
-  if (val === undefined) return this["_" + attr]
-  this["_" + attr] = val;
-  return this
+function __$styleInject(css, returnValue) {
+  if (typeof document === 'undefined') {
+    return returnValue;
+  }
+  css = css || '';
+  var head = document.head || document.getElementsByTagName('head')[0];
+  var style = document.createElement('style');
+  style.type = 'text/css';
+  if (style.styleSheet){
+    style.styleSheet.cssText = css;
+  } else {
+    style.appendChild(document.createTextNode(css));
+  }
+  head.appendChild(style);
+  return returnValue;
 }
 
-function d3_updateable(target,selector,type,data,joiner) {
+import d3 from 'd3';
+
+const d3_updateable = function(target,selector,type,data,joiner) {
   var type = type || "div";
   var updateable = target.selectAll(selector).data(
     function(x){return data ? [data] : [x]},
@@ -17,9 +28,9 @@ function d3_updateable(target,selector,type,data,joiner) {
     .append(type);
 
   return updateable
-}
+};
 
-function d3_splat(target,selector,type,data,joiner) {
+const d3_splat = function(target,selector,type,data,joiner) {
   var type = type || "div";
   var updateable = target.selectAll(selector).data(
     data || function(x){return x},
@@ -30,41 +41,24 @@ function d3_splat(target,selector,type,data,joiner) {
     .append(type);
 
   return updateable
+};
+
+
+
+
+
+
+
+function accessor(attr, val) {
+  if (val === undefined) return this["_" + attr]
+  this["_" + attr] = val;
+  return this
 }
+
+__$styleInject(".table-wrapper tr { height:33px}\n.table-wrapper tr th { border-right:1px dotted #ccc } \n.table-wrapper tr th:last-of-type { border-right:none } \n\n.table-wrapper tr { border-bottom:1px solid #ddd }\n.table-wrapper tr th, .table-wrapper tr td { \n  padding-left:10px;\n  max-width:200px\n}\n\n.table-wrapper thead tr { \n  background-color:#e3ebf0;\n}\n.table-wrapper thead tr th .title { \n  text-transform:uppercase\n}\n.table-wrapper tbody tr { \n}\n.table-wrapper tbody tr:hover { \n  background-color:white;\n  background-color:#f9f9fb\n}\n",undefined);
 
 function Table(target) {
-  var CSS_STRING = String(function() {/*
-.table-wrapper tr { height:33px}
-.table-wrapper tr th { border-right:1px dotted #ccc } 
-.table-wrapper tr th:last-of-type { border-right:none } 
-
-.table-wrapper tr { border-bottom:1px solid #ddd }
-.table-wrapper tr th, .table-wrapper tr td { 
-  padding-left:10px;
-  max-width:200px
-}
-
-.table-wrapper thead tr { 
-  background-color:#e3ebf0;
-}
-.table-wrapper thead tr th .title { 
-  text-transform:uppercase
-}
-.table-wrapper tbody tr { 
-}
-.table-wrapper tbody tr:hover { 
-  background-color:white;
-  background-color:#f9f9fb
-}
-  */});
-
-  try {
-    d3_updateable(d3.select("head"),"style#table-css","style")
-      .attr("id","table-css")
-      .text(CSS_STRING.replace("function () {/*","").replace("*/}",""));
-  } catch(e) {
-  }
-
+  this._wrapper_class = "table-wrapper";
   this._target = target;
   this._data = {};//EXAMPLE_DATA
   this._sort = {};
@@ -152,6 +146,8 @@ Table.prototype = {
       return value
     }
   , skip_option: function(val) { return accessor.bind(this)("skip_option",val) }
+  , wrapper_class: function(val) { return accessor.bind(this)("wrapper_class",val) }
+
 
   , title: function(val) { return accessor.bind(this)("title",val) }
   , row: function(val) { return accessor.bind(this)("render_row",val) }
@@ -185,10 +181,10 @@ Table.prototype = {
       }
       else return this.headers()
     }
-  , sort: function(key,ascending) {
-      if (!key) return this._sort
+  , sort: function(key$$1,ascending) {
+      if (!key$$1) return this._sort
       this._sort = {
-          key: key
+          key: key$$1
         , value: !!ascending
       };
       return this
@@ -197,8 +193,8 @@ Table.prototype = {
   , render_wrapper: function() {
       var wrap = this._target;
 
-      var wrapper = d3_updateable(wrap,".table-wrapper","div")
-        .classed("table-wrapper",true)
+      var wrapper = d3_updateable(wrap,"."+this._wrapper_class,"div")
+        .classed(this._wrapper_class,true)
         .style("position","relative");
 
 

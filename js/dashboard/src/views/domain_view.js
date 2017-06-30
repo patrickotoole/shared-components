@@ -5,7 +5,7 @@ import * as timeseries from '../generic/timeseries'
 
 import table from 'table'
 import {domain_expanded} from 'component'
-import domain_bullet from './domain_bullet'
+import {domain_bullet} from 'chart'
 
 function noop() {}
 function identity(x) { return x }

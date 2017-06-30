@@ -44,8 +44,5 @@ export default class TabularBody extends D3ComponentBase {
         simpleTimeseries(dthis,values,144,20)
       })
 
-
-
-
   }
 }

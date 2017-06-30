@@ -1,36 +1,7 @@
+import {accessor, d3_updateable, d3_splat} from 'helpers'
 import d3 from 'd3';
+import './table.css'
 
-function accessor(attr, val) {
-  if (val === undefined) return this["_" + attr]
-  this["_" + attr] = val
-  return this
-}
-
-function d3_updateable(target,selector,type,data,joiner) {
-  var type = type || "div"
-  var updateable = target.selectAll(selector).data(
-    function(x){return data ? [data] : [x]},
-    joiner || function(x){return [x]}
-  )
-
-  updateable.enter()
-    .append(type)
-
-  return updateable
-}
-
-function d3_splat(target,selector,type,data,joiner) {
-  var type = type || "div"
-  var updateable = target.selectAll(selector).data(
-    data || function(x){return x},
-    joiner || function(x){return x}
-  )
-
-  updateable.enter()
-    .append(type)
-
-  return updateable
-}
 
 var EXAMPLE_DATA = {
     "key": "Top Sites"
@@ -47,38 +18,7 @@ var EXAMPLE_DATA = {
 }
 
 function Table(target) {
-  var CSS_STRING = String(function() {/*
-.table-wrapper tr { height:33px}
-.table-wrapper tr th { border-right:1px dotted #ccc } 
-.table-wrapper tr th:last-of-type { border-right:none } 
-
-.table-wrapper tr { border-bottom:1px solid #ddd }
-.table-wrapper tr th, .table-wrapper tr td { 
-  padding-left:10px;
-  max-width:200px
-}
-
-.table-wrapper thead tr { 
-  background-color:#e3ebf0;
-}
-.table-wrapper thead tr th .title { 
-  text-transform:uppercase
-}
-.table-wrapper tbody tr { 
-}
-.table-wrapper tbody tr:hover { 
-  background-color:white;
-  background-color:#f9f9fb
-}
-  */})
-
-  try {
-    d3_updateable(d3.select("head"),"style#table-css","style")
-      .attr("id","table-css")
-      .text(CSS_STRING.replace("function () {/*","").replace("*/}",""))
-  } catch(e) {
-  }
-
+  this._wrapper_class = "table-wrapper"
   this._target = target;
   this._data = {}//EXAMPLE_DATA
   this._sort = {}
@@ -166,6 +106,8 @@ Table.prototype = {
       return value
     }
   , skip_option: function(val) { return accessor.bind(this)("skip_option",val) }
+  , wrapper_class: function(val) { return accessor.bind(this)("wrapper_class",val) }
+
 
   , title: function(val) { return accessor.bind(this)("title",val) }
   , row: function(val) { return accessor.bind(this)("render_row",val) }
@@ -211,8 +153,8 @@ Table.prototype = {
   , render_wrapper: function() {
       var wrap = this._target
 
-      var wrapper = d3_updateable(wrap,".table-wrapper","div")
-        .classed("table-wrapper",true)
+      var wrapper = d3_updateable(wrap,"."+this._wrapper_class,"div")
+        .classed(this._wrapper_class,true)
         .style("position","relative")
 
 

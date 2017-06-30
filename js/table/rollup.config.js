@@ -1,3 +1,7 @@
+import resolve from 'rollup-plugin-node-resolve';
+import commonjs from 'rollup-plugin-commonjs';
+import postcss from 'rollup-plugin-postcss'
+
 
 export default {
   moduleId: 'table',
@@ -19,6 +23,15 @@ export default {
   globals: {
     d3: 'd3'
   },
+  plugins: [ 
+    resolve({
+      jsnext: true,
+      main: true,
+      browser: true,
+    }),
+    commonjs(),
+    postcss()
+  ],
   exports: "named"
 };
 

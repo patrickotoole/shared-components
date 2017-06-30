@@ -147,6 +147,7 @@ class RelativeTiming {
 
           refine(td)
             .data(d)
+            .domain(d.domain)
             .stages(stages)
             .before_urls(before_urls)
             .after_urls(after_urls)

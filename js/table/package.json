@@ -2,8 +2,8 @@
   "name": "table",
   "version": "0.0.2",
   "description": "table",
+  "jsnext:main": "index",
   "main": "build/table.js",
-  "module": "build/table.es.js",
 
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -16,7 +16,14 @@
     "test": "faucet `find test -name '*-test.js'`",
     "prepublish": "npm run test && uglifyjs build/table.js -c -m -o build/table.min.js && rm -f build/table.zip && zip -j build/table.zip -- LICENSE README.md build/table.js build/table.min.js"
   },
+  "dependencies": {
+    "helpers": "file:../helpers"
+  },
   "devDependencies": {
+    "rollup-plugin-node-resolve":"",
+    "rollup-plugin-commonjs":"",
+    "rollup-plugin-postcss":"",
+
     "faucet": "0.0",
     "rollup": "^0.41.4",
     "jsdom": "7",

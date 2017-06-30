@@ -4,72 +4,43 @@ export default class TabularHeader extends D3ComponentBase {
   constructor(target) {
     super()
     this._target = target
+    this.WIDTH = 144
     this._label = "URL"
+    this._headers = ["12am", "12pm", "12am"]
+    this._xs = [0,this.WIDTH/2,this.WIDTH]
+    this._anchors = ["start","middle","end"]
   }
 
-  props() { return ["label"] }
+  props() { return ["label","headers"] }
 
   draw() {
-    let title_row = this._target
 
-    var euh = d3_class(title_row,"expansion-urls-title")
+    var euh = d3_class(this._target,"expansion-urls-title")
 
     d3_class(euh,"title").text(this.label())
     d3_class(euh,"view").text("Views")
 
     var svg_legend = d3_class(euh,"legend","svg")
 
-    d3_updateable(svg_legend,"text.one","text")
-      .attr("class","one")
-      .attr("x","0")
-      .attr("y","20")
-      .style("text-anchor","start")
-      .text("12 am")
+    if (this.headers().length == 2) {
+      this._xs = [this.WIDTH/2-this.WIDTH/4,this.WIDTH/2+this.WIDTH/4]
+      this._anchors = ["middle","middle"]
+    }
 
-    d3_updateable(svg_legend,"text.two","text")
-      .attr("class","two")
-      .attr("x","72")
+    d3_splat(svg_legend,"text","text",this.headers(),(x,i) => { return i })
       .attr("y","20")
-      .style("text-anchor","middle")
-      .text("12 pm")
+      .attr("x",(x,i) => this._xs[i])
+      .style("text-anchor",(x,i) => this._anchors[i])
+      .text(String)
 
-    d3_updateable(svg_legend,"text.three","text")
-      .attr("class","three")
-      .attr("x","144")
-      .attr("y","20")
-      .style("text-anchor","end")
-      .text("12 am")
-
-    d3_updateable(svg_legend,"line.one","line")
-      .classed("one",true)
+    d3_splat(svg_legend,"line","line",this.headers(),(x,i) => { return i })
       .style("stroke-dasharray", "1,5")
       .attr("stroke-width",1)
       .attr("stroke","black")
-      .attr("y1", 25)
+      .attr("y1", this.headers().length == 2 ? 0 : 25)
       .attr("y2", 35)
-      .attr("x1", 0)
-      .attr("x2", 0)
-
-    d3_updateable(svg_legend,"line.two","line")
-      .classed("two",true)
-      .style("stroke-dasharray", "1,5")
-      .attr("stroke-width",1)
-      .attr("stroke","black")
-      .attr("y1", 25)
-      .attr("y2", 35)
-      .attr("x1", 72)
-      .attr("x2", 72)
-
-    d3_updateable(svg_legend,"line.three","line")
-      .classed("three",true)
-      .style("stroke-dasharray", "1,5")
-      .attr("stroke-width",1)
-      .attr("stroke","black")
-      .attr("y1", 25)
-      .attr("y2", 35)
-      .attr("x1", 144)
-      .attr("x2", 144)
-
+      .attr("x1",(x,i) => this.headers().length == 2 ? this.WIDTH/2 : this._xs[i])
+      .attr("x2",(x,i) => this.headers().length == 2 ? this.WIDTH/2 : this._xs[i])
 
   }
 }

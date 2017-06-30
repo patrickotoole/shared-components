@@ -12,9 +12,10 @@ class TabularTimeseries extends D3ComponentBase {
   constructor(target) {
     super()
     this._target = target
+    this._headers = ["12am","12pm","12am"]
   }
 
-  props() { return ["data","label","split"] }
+  props() { return ["data","label","split","headers"] }
 
   draw() {
     let td = this._target
@@ -24,6 +25,7 @@ class TabularTimeseries extends D3ComponentBase {
 
     var header = (new TabularHeader(title_row))
       .label(this.label())
+      .headers(this.headers())
       .draw()
 
     var body = (new TabularBody(expansion_row))
@@ -31,6 +33,5 @@ class TabularTimeseries extends D3ComponentBase {
       .split(this.split() || false)
       .draw()
 
-        
   }
 }

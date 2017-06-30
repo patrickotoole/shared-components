@@ -139,6 +139,7 @@ class Timing {
           var rolled = timeseries.prepData(dd)
           
           domain_expanded(td)
+            .domain(dd[0].domain)
             .raw(dd)
             .data(rolled)
             .on("stage-filter", function(x) {
