@@ -93,7 +93,7 @@ class ActionDatabase(ActionDatabaseHelper):
                 return {x:y for x,y in override.items() + {a:b for a,b in z.items() if a not in override.keys()}.items()}
 
             def construct_default_params(z):
-                return {"num_days":2, "served":"True", "skip_datasets":"uid_urls,url_to_action,corpus,domains", "num_users":25000,"campaign_id":z}
+                return {"num_days":2, "type":"served", "skip_datasets":"uid_urls,url_to_action,corpus,domains", "num_users":25000,"campaign_id":z}
                 
 
             campaign_action['parameters'] = campaign_action['parameters'].map(lambda x : {} if pandas.isnull(x) else ujson.loads(x))
