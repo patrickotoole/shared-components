@@ -299,7 +299,7 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
         defer.returnValue(shared_dict)
 
     @defer.inlineCallbacks
-    def build_arguments(self,advertiser,term,dates,num_days,response,allow_sample=None,filter_id=False,num_users=20000, datasets=['domains'], l1_type="onsite", campaign_id=False, vendor='rockerbox'):
+    def build_arguments(self,advertiser,term,dates,num_days,response,allow_sample=None,filter_id=False,num_users=20000, datasets=['domains'], l1_type="onsite", vendor='rockerbox'):
         shared_dict={
                         "ds": "SELECT * FROM rockerbox.visitor_domains_full where uid = ?",
                         "advertiser" : advertiser,
@@ -313,15 +313,11 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
             needed_dfs = self.get_dependents(datasets)
         except:
             raise Exception("Not a valid dataset")
-
         #LEVEL 0
         if l1_type=="served":
-            if not campaign_id:
-                raise Exception("campaign id required when using served ids")
-            uids, served_times = yield self.served_uids(advertiser, campaign_id, vendor, dates)
+            uids, served_times = yield self.served_uids(advertiser, filter_id, vendor, dates)
         else:
             uids = yield self.onsite_uids(advertiser, term, dates, num_days, allow_sample, filter_id)
-
         num_users = int(num_users)
         uids = uids[:num_users]
         shared_dict['uids'] = uids
@@ -342,5 +338,6 @@ class GenericSearchBase(PatternStatsBase,PatternSearchResponse,VisitEventBase,Pa
                 returnDFs[k] = shared_dict[k]
         else:
             raise Exception("No users in segment")
+        
         defer.returnValue(returnDFs)
 

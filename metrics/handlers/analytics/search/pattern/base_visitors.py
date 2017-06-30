@@ -88,12 +88,13 @@ class VisitorBase(GenericSearchBase, BaseDomainHandler):
             datelist = build_datelist(NUM_DAYS, offset)
         else:
             datelist = build_datelist(NUM_DAYS)
-        args = [advertiser,pattern_terms[0][0],datelist,NUM_DAYS,response,ALLOW_SAMPLE,filter_id,NUM_USERS,datasets, kwargs['l1_type'], kwargs['campaign_id'], kwargs['vendor']]
+        args = [advertiser,pattern_terms[0][0],datelist,NUM_DAYS,response,ALLOW_SAMPLE,filter_id,NUM_USERS,datasets, kwargs['l1_type'], kwargs['vendor']]
 
         now = time.time()
         try:
             kwargs = yield self.build_arguments(*args)
-        except:
+        except Exception as e:
+            logging.info(str(e))
             logging.info("Issue with building datasets")
             self.set_status(400)
             self.write({"error":"Failed to build base datasets"})

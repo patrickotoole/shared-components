@@ -64,7 +64,6 @@ class VisitorTransformHandler(VisitorBase):
         num_users = self.get_argument("num_users",20000)
         skip_datasets = self.get_argument("skip_datasets","").split(",")
         l1_type = self.get_argument("type","onsite")
-        campaign_id = self.get_argument("campaign_id",False)
         vendor = self.get_argument("vendor", "rockerbox")
 
         include_datasets = [x for x in self.get_argument("include_datasets","").split(",") if len(x)>1]
@@ -82,7 +81,7 @@ class VisitorTransformHandler(VisitorBase):
         if preventsample is not None:
             preventsample = preventsample == 'true'
         logging.info(preventsample)
-        self.get_uids(advertiser,[[terms]],int(num_days),process=process, prevent_sample=preventsample, num_users=num_users, datasets=datasets, filter_id=filter_id, date=filter_date, url_args=url_arg, l1_type=l1_type, campaign_id=campaign_id, vendor=vendor)
+        self.get_uids(advertiser,[[terms]],int(num_days),process=process, prevent_sample=preventsample, num_users=num_users, datasets=datasets, filter_id=filter_id, date=filter_date, url_args=url_arg, l1_type=l1_type, vendor=vendor)
 
     @tornado.web.authenticated
     @tornado.web.asynchronous

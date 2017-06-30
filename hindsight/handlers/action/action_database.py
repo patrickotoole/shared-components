@@ -80,6 +80,7 @@ class ActionDatabase(ActionDatabaseHelper):
             joined = joined.reset_index().merge(subfilters.reset_index(), on='action_id', how='left').set_index('action_id')
             joined['type'] = 'action'
             joined['campaign_id'] = 0
+            joined['filter_id']= joined.index
             
             joined = joined.fillna(0)
             campaign_action = self.db.select_dataframe(SELECT_CAMPAIGN_ACTION.format(advertiser))
@@ -87,7 +88,8 @@ class ActionDatabase(ActionDatabaseHelper):
             campaign_action = campaign_action.reset_index().merge(campaign_parameters, on="filter_id", how='left').set_index("index")
 
             def combine_campaign_parameters(z):
-                override = campaign_action[[campaign_action.campaign_id == z["campaign_id"]]].override_parameters[0]
+                override = campaign_action[campaign_action.campaign_id == z["campaign_id"]].override_parameters
+                override = override.reset_index()['override_parameters'][0]
                 return {x:y for x,y in override.items() + {a:b for a,b in z.items() if a not in override.keys()}.items()}
 
             def construct_default_params(z):
