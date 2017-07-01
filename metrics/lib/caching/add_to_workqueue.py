@@ -19,7 +19,8 @@ def setup(rb,crushercache):
 def build_post(udf,advertiser,params,base_url, params_obj):
 
     def _build(filter_id,pattern):
-        to_post = [z['parameters'] for z in params_obj if z['action_id'] ==filter_id][0]
+        to_post = [z['parameters'] for z in params_obj if z['action_id'] ==filter_id]
+        to_post = {} if len(to_post)==0 else to_post[0]
         to_post['udf'] = udf
         to_post['advertiser'] = advertiser
         to_post['filter_id'] = filter_id
@@ -62,7 +63,7 @@ if __name__ == "__main__":
         api_wrapper.authenticate()
         params_resp = api_wrapper.get("/crusher/funnel/action?format=json")
 
-        params_obj = params_resp.json['result'] 
+        params_obj = params_resp.json['response'] 
 
         builder = build_post(udf,advertiser,variables["params"],base_url, params_obj)
         built = variables["actions"].T.apply(lambda x: [builder(x.action_id,x.url_pattern)] )
