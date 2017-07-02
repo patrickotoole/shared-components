@@ -1,4 +1,4 @@
-var buckets = [10,30,60,120,180,360,720,1440,2880,5760,10080].reverse().map(function(x) { return String(x*60) })
+export var buckets = [10,30,60,120,180,360,720,1440,2880,5760,10080].reverse().map(function(x) { return String(x*60) })
 buckets = buckets.concat([10,30,60,120,180,360,720,1440,2880,5760,10080].map(function(x) { return String(-x*60) }))
 
  
@@ -57,6 +57,18 @@ const urlBucketReducer = (prefix, p,c) => {
   p[c.url][prefix + c.time_diff_bucket] = c.visits
   return p
 }
+const urlToKeywordsObjReducer = (domain, p,c) => {
+  cleanAndSplitURL(domain,c.key).map(x => {
+    if (isWord(x) && STOPWORDS.indexOf(x) == -1) {
+      p[x] = p[x] || {}
+      p[x].key = x
+      Object.keys(c.value).map(q => {
+        p[x][q] = (p[x][q] || 0) + c.value[q]
+      })
+    }
+  })
+  return p
+}
 
 export function urlsAndKeywords(before_urls, after_urls, domain) {
 
@@ -80,23 +92,8 @@ export function urlsAndKeywords(before_urls, after_urls, domain) {
       })
 
     const keywords = {}
-
-    d3.entries(url_ts).reduce(function(p,c) {
-    
-      cleanAndSplitURL(domain,c.key).map(x => {
-
-        if (isWord(x) && STOPWORDS.indexOf(x) == -1) {
-          p[x] = p[x] || {}
-          p[x].key = x
-          Object.keys(c.value).map(q => {
-            p[x][q] = (p[x][q] || 0) + c.value[q]
-          })
-        }
-
-        return p
-      })
-      return p
-    },keywords)
+    d3.entries(url_ts)
+      .reduce(urlToKeywordsObjReducer.bind(false,domain),keywords)
     
     
     const kws = Object.keys(keywords)

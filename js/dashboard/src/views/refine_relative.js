@@ -1,17 +1,11 @@
 import {d3_updateable, d3_splat, d3_class, noop, D3ComponentBase} from 'helpers'
-import accessor from '../helpers'
-import header from '../generic/header'
 import {table, summary_table} from 'table'
 import {simpleTimeseries, before_after_timeseries} from 'chart'
 import {tabular_timeseries, vertical_option} from 'component'
 
-import {rollupBeforeAndAfter, processData } from './refine_relative_process'
-
+import {rollupBeforeAndAfter, processData, buckets} from './refine_relative_process'
 import './refine_relative.css'
 
-
-var buckets = [10,30,60,120,180,360,720,1440,2880,5760,10080].reverse().map(function(x) { return String(x*60) })
-buckets = buckets.concat([10,30,60,120,180,360,720,1440,2880,5760,10080].map(function(x) { return String(-x*60) }))
 
 function selectOptionRect(td,options,before_pos,after_pos) {
 
@@ -27,26 +21,37 @@ function selectOptionRect(td,options,before_pos,after_pos) {
 }
 
 
-export default function refine(target) {
-  return new Refine(target)
+export default function refine_relative(target) {
+  return new RefineRelative(target)
 }
 
-class Refine extends D3ComponentBase {
+class RefineRelative extends D3ComponentBase {
   constructor(target) {
     super(target)
+    this._options = [
+        {"key":"All","value":"all", "selected":1}
+      , {"key":"Consideration","value":"consideration", "selected":0}
+      , {"key":"Validation","value":"validation", "selected":0}
+    ]
+    this._summary_headers = [
+        {"key":"name","value":""}
+      , {"key":"all","value":"All"}
+      , {"key":"consideration","value":"Consideration"}
+      , {"key":"validation","value":"Validation"}
+    ]
   }
 
-  props() { return ["data","domain","stages","before_urls","after_urls"] }
+  props() { return ["data","domain","stages","before_urls","after_urls","summary_headers","options"] }
 
   draw() {
-
-    var self = this
 
     var td = d3_class(this._target,"refine-relative")
     var before_urls = this._before_urls
       , after_urls = this._after_urls
       , d = this._data
       , stages = this._stages
+      , summary_headers = this._summary_headers
+      , options = this._options
 
     var before_pos, after_pos;
 
@@ -58,28 +63,16 @@ class Refine extends D3ComponentBase {
     var overall_rollup = rollupBeforeAndAfter(before_urls, after_urls)
     var {
         url_summary
-      , kws_summary
       , urls
       , urls_consid
       , urls_valid
+
+      , kws_summary
       , kws
       , kws_consid
       , kws_valid 
 
     } = processData(before_urls,after_urls,before_pos,after_pos,d.domain)
-
-    var summary_headers = [
-          {"key":"name","value":""}
-        , {"key":"all","value":"All"}
-        , {"key":"consideration","value":"Consideration"}
-        , {"key":"validation","value":"Validation"}
-      ]
-
-    var options = [
-        {"key":"All","value":"all", "selected":1}
-      , {"key":"Consideration","value":"consideration", "selected":0}
-      , {"key":"Validation","value":"validation", "selected":0}
-    ]
 
 
 
@@ -140,7 +133,7 @@ class Refine extends D3ComponentBase {
       .headers(["Before","After"])
       .label("URL")
       .data(urls)
-      .split(self.domain())
+      .split(this.domain())
       .draw()
 
     tabular_timeseries(d3_class(modify,"kw-depth"))
@@ -152,3 +145,5 @@ class Refine extends D3ComponentBase {
   }
 
 }
+
+

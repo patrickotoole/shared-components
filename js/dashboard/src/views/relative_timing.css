@@ -1,0 +1,32 @@
+.ba-row {
+        padding-bottom:60px;
+}
+
+.ba-row .expanded td {
+background:#f9f9fb;
+            padding-top:10px;
+            padding-bottom:10px;
+}
+
+.ba-row th {
+  border-right:1px rgba(0,0,0,.1);
+}
+
+.ba-row th span.greater-than {
+font-size:.9em;
+width:70px;
+transform:rotate(45deg);
+text-align:right;
+display:inline-block;
+margin-left: -48px;
+margin-bottom: 12px;
+
+}
+.ba-row th span.less-than {
+font-size:.9em;
+width:70px;
+transform:rotate(-45deg);
+display:inline-block;
+margin-left:-9px;
+margin-bottom: 12px
+}

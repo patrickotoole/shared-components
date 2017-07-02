@@ -54,6 +54,7 @@ DomainView.prototype = {
       _explore.datum(data)
 
       var t = table(_explore)
+        .top(140)
         .data(selected)
 
 
@@ -72,24 +73,7 @@ DomainView.prototype = {
         ])
         .sort("importance")
         .option_text("&#65291;")
-        .on("expand",function(d) {
-
-          d3.select(this).selectAll("td.option-header").html("&ndash;")
-          if (this.nextSibling && d3.select(this.nextSibling).classed("expanded") == true) {
-            d3.select(this).selectAll("td.option-header").html("&#65291;")
-            return d3.select(this.parentNode).selectAll(".expanded").remove()
-          }
-
-          d3.select(this.parentNode).selectAll(".expanded").remove()
-          var t = document.createElement('tr');
-          this.parentNode.insertBefore(t, this.nextSibling);  
-
-          var tr = d3.select(t).classed("expanded",true).datum({})
-          var td = d3_updateable(tr,"td","td")
-            .attr("colspan",this.children.length)
-            .style("background","#f9f9fb")
-            .style("padding-top","10px")
-            .style("padding-bottom","10px")
+        .on("expand",function(d,td) {
 
           var dd = this.parentElement.__data__.full_urls.filter(function(x) { return x.domain == d.key})
           var rolled = timeseries.prepData(dd)

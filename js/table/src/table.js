@@ -1,4 +1,4 @@
-import {accessor, d3_updateable, d3_splat} from 'helpers'
+import {accessor, d3_updateable, d3_splat, noop} from 'helpers'
 import d3 from 'd3';
 import './table.css'
 
@@ -39,6 +39,25 @@ function Table(target) {
 
   this._hidden_fields = []
   this._on = {}
+
+  this._render_expand = function(d) {
+    d3.select(this).selectAll("td.option-header").html("&ndash;")
+    if (this.nextSibling && d3.select(this.nextSibling).classed("expanded") == true) {
+      d3.select(this).selectAll("td.option-header").html("&#65291;")
+      return d3.select(this.parentNode).selectAll(".expanded").remove()
+    }
+
+    d3.select(this.parentNode).selectAll(".expanded").remove()
+    var t = document.createElement('tr');
+    this.parentNode.insertBefore(t, this.nextSibling);  
+
+
+    var tr = d3.select(t).classed("expanded",true).datum({})
+    var td = d3_updateable(tr,"td","td")
+      .attr("colspan",this.children.length)
+
+    return td
+  }
   this._render_header = function(wrap) {
 
 
@@ -391,7 +410,10 @@ Table.prototype = {
       var rows = d3_splat(tbody,"tr","tr",data,function(x,i){ return String(sortby.key + x[sortby.key]) + i })
         .order()
         .on("click",function(x) {
-          self.on("expand").bind(this)(x)
+          if (self.on("expand") != noop) {
+            var td = self._render_expand.bind(this)(x)
+            self.on("expand").bind(this)(x,td)
+          }
         })
 
       rows.exit().remove()
@@ -448,11 +470,13 @@ Table.prototype = {
 
       this.render_rows(this._table_main)
 
+      this.on("draw").bind(this)()
+
       return this
 
     }
   , on: function(action, fn) {
-      if (fn === undefined) return this._on[action] || function() {};
+      if (fn === undefined) return this._on[action] || noop;
       this._on[action] = fn;
       return this
     }
