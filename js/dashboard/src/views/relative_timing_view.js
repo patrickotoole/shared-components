@@ -3,7 +3,7 @@ import header from '../generic/header'
 import table from 'table'
 
 import refine_relative from './refine_relative'
-import {categoryWeights, beforeAndAfterTabular} from './relative_timing_process'
+import {categoryWeights, beforeAndAfterTabular, computeScale} from './relative_timing_process'
 import {timingHeaders} from './relative_timing_constants'
 
 import {drawStream} from './summary_view'

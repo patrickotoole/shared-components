@@ -1,0 +1,7 @@
+.summary-view .table-wrapper { background:#e3ebf0; padding-top:5px; padding-bottom:10px }
+.summary-view .table-wrapper tr { border-bottom:none }
+.summary-view .table-wrapper thead tr { background:none }
+.summary-view .table-wrapper tbody tr:hover { background:none }
+.summary-view .table-wrapper tr td { border-right:1px dotted #ccc;text-align:center }
+.summary-view .table-wrapper tr td:last-of-type { border-right:none }
+

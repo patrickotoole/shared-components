@@ -11,7 +11,7 @@ import comp_bar from '../generic/comp_bar'
 import comp_bubble from '../generic/comp_bubble'
 import stream_plot from '../generic/stream_plot'
 
-
+import './summary.css'
 
 
 import * as timeseries from '../generic/timeseries'
@@ -553,24 +553,18 @@ SummaryView.prototype = {
   , draw: function() {
 
 
-  var CSS_STRING = String(function() {/*
-.summary-wrap .table-wrapper { background:#e3ebf0; padding-top:5px; padding-bottom:10px }
-.summary-wrap .table-wrapper tr { border-bottom:none }
-.summary-wrap .table-wrapper thead tr { background:none }
-.summary-wrap .table-wrapper tbody tr:hover { background:none }
-.summary-wrap .table-wrapper tr td { border-right:1px dotted #ccc;text-align:center }
-.summary-wrap .table-wrapper tr td:last-of-type { border-right:none }
-  */})
+  //var CSS_STRING = String(function() {/*
+  //*/})
 
-  d3_updateable(d3.select("head"),"style#custom-table-css","style")
-    .attr("id","custom-table-css")
-    .text(CSS_STRING.replace("function () {/*","").replace("*/}",""))
+  //d3_updateable(d3.select("head"),"style#custom-table-css","style")
+  //  .attr("id","custom-table-css")
+  //  .text(CSS_STRING.replace("function () {/*","").replace("*/}",""))
 
 
 
 
       var wrap = d3_updateable(this.target,".summary-wrap","div")
-        .classed("summary-wrap",true)
+        .classed("summary-view",true)
 
       header(wrap)
         .text("Summary")
