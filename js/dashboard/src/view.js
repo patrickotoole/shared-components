@@ -6,8 +6,8 @@ import option_view from './views/option_view'
 import domain_view from './views/domain_view'
 import segment_view from './views/segment_view'
 import summary_view from './views/summary_view'
-import relative_view from './views/relative_timing_view'
-import timing_view from './views/timing_view'
+import relative_view from './views/relative_timing/view'
+import timing_view from './views/timing/view'
 import staged_filter_view from './views/staged_filter_view'
 
 
