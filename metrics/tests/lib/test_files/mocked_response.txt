@@ -1,8 +1,0 @@
-advertiser,line_item,site_domain,imps,clicks,click_thru_pct,booked_revenue,post_view_convs,post_click_convs,media_cost
-LearnVest (195681),LearnVest -- Retargeting - 7-2-2014.rj (677525),bobvila.com,0,0,0.000000000000000000%,7.000000,1,0,0.000000
-LearnVest (195681),LearnVest -- Retargeting - 7-2-2014.rj (677525),brainyquote.com,0,0,0.000000000000000000%,14.000000,2,0,0.000000
-LearnVest (195681),LearnVest -- Retargeting - 7-2-2014.rj (677525),cooksinfo.com,0,0,0.000000000000000000%,7.000000,1,0,0.000000
-LearnVest (195681),LearnVest -- Retargeting - 7-2-2014.rj (677525),ghanaweb.com,0,0,0.000000000000000000%,7.000000,1,0,0.000000
-LearnVest (195681),LearnVest -- Retargeting - 7-2-2014.rj (677525),kayak.com,0,0,0.000000000000000000%,7.000000,1,0,0.000000
-LearnVest (195681),LearnVest -- Retargeting - 7-2-2014.rj (677525),sfgate.com,0,0,0.000000000000000000%,7.000000,1,0,0.000000
-LearnVest (195681),LearnVest -- Retargeting (1269029),0800-horoscope.com,4,0,0.000000000000000000%,0.000000,0,0,0.006501

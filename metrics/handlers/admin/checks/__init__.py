@@ -1,5 +1,0 @@
-from check_handler import CampaignChecksHandler
-from circleci_handler import CircleCIXMLHandler
-from fixture_handler import FixtureHandler
-from relation_handler import CampaignRelationsHandler
-from suite_handler import SuiteHandler

@@ -1,0 +1,18 @@
+.timing-row {
+        padding-bottom:60px;
+}
+
+.timing-row .expanded {
+  background:white;
+  padding:20px
+}
+
+.timing-row tr td:not(:first-child) {
+          border-right:1px solid white;
+          padding-left:0px;
+          text-align:center;
+
+}
+.timing-row .table-wrapper tr th {
+  padding:5px; text-align:center
+}

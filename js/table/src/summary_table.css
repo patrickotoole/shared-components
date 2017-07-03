@@ -1,0 +1,12 @@
+.summary-table { 
+  display:inline-block;
+  vertical-align:top;
+}
+.summary-table > .title {
+  font-weight:bold;
+  font-size:14px;
+}
+
+.summary-table .wrap {
+  width:100%
+}

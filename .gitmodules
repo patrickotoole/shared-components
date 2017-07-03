@@ -1,3 +1,0 @@
-[submodule "turnip"]
-  path = metrics/static/js/rockerbox/turnip
-  url = https://github.com/rockerbox/turnip

@@ -1,0 +1,72 @@
+.expansion-urls-title {
+  height:36px;
+  line-height:36px;
+  display:inline-block;
+  vertical-align:top;
+}
+.expansion-urls-title .title {
+  width:265px;
+  font-weight:bold;
+  display:inline-block;
+  vertical-align:top;
+}
+
+.expansion-urls-title .view {
+  width:40px;
+  margin-left:20px;
+  margin-right:20px;
+  font-weight:bold;
+  display:inline-block;
+  vertical-align:top;
+}
+.expansion-urls-title .legend {
+  width:144px;
+  height:36px;
+  vertical-align:top;
+}
+
+.scrollbox {
+  display:inline-block;
+  vertical-align:top;
+  max-height:250px;
+  overflow:scroll;
+}
+
+.url-row .name {
+  width:260px;
+  overflow:hidden;
+  line-height:20px;
+  height:20px;
+  display:inline-block;
+}
+
+.url-row input {
+      margin-right:10px;
+      display:inline-block;
+      vertical-align:top;
+}
+
+.url-row .url {
+      display:inline-block;
+      text-overflow:ellipsis;
+      width:205px;
+}
+
+.url-row .number {
+      width:40px;
+      height:20px;
+      line-height:20px;
+      vertical-align:top;
+      text-align:center;
+      font-size:13px;
+      font-weight:bold;
+      margin-left:20px;
+      margin-right:20px;
+      display:inline-block;
+}
+
+.url-row .plot {
+      width:144px;
+      height:20px;
+      display:inline-block;
+}
