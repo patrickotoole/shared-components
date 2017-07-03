@@ -60,7 +60,6 @@ export default function init() {
     .registerEvent("staged-filter.change", function(str) { s.publish("staged_filter",str ) })
     .registerEvent("logic.change", function(logic) { s.publish("logic_options",logic) })
     .registerEvent("filter.change", function(filters) { s.publishBatch({ "filters":filters }) })
-
     .registerEvent("updateFilter", function(err,filters,_state) {
 
       var filters = _state.filters
@@ -301,6 +300,34 @@ export default function init() {
 
       }
 
+      var categories = d3.nest()
+        .key(x => x.parent_category_name)
+        .rollup(v => v[0].category_idf ? 1/v[0].category_idf : 0)
+        .map(value.full_urls) 
+
+      var cat_idf_sum = d3.sum(Object.keys(categories).map(x => categories[x]))
+      var cat_idf_percent = {}
+      Object.keys(categories).map(x => {
+        cat_idf_percent[x] = categories[x]/cat_idf_sum
+      })
+
+      cat_summary.map(x => {
+        x.sample_percent_norm = x.sample_percent = x.percent_pop*100
+        x.pop_percent = x.real_pop_percent = cat_idf_percent[x.key]*100
+        x.importance = Math.log(categories[x.key]*x.samp)
+        x.ratio = x.sample_percent/x.real_pop_percent
+        x.value = x.samp
+      })
+
+      
+
+      tabs.push({key:"Top Categories", values: cat_summary})
+
+      if (_state.tabs) {
+        _state.tabs.map((x,i) => {
+          tabs[i].selected = x.selected
+        })
+      }
       
 
       s.setStatic("keyword_summary", entries) 
@@ -309,6 +336,8 @@ export default function init() {
 
       s.setStatic("summary",summary)
       s.setStatic("tabs",tabs)
+
+
       s.publishStatic("formatted_data",value)
 
     })

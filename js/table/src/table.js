@@ -188,7 +188,6 @@ Table.prototype = {
 
 
 
-      if (!this._skip_option) {
       var table_fixed = d3_updateable(wrapper,"table.fixed","table")
         .classed("hidden", true) // TODO: make this visible when main is not in view
         .classed("fixed",true)
@@ -228,22 +227,23 @@ Table.prototype = {
 
       var thead = d3_updateable(table_fixed,"thead","thead")
 
-      var table_button = d3_updateable(wrapper,".table-option","a")
-        .classed("table-option",true)
-        .style("position","absolute")
-        .style("top","-1px")
-        .style("right","0px")
-        .style("cursor","pointer")
-        .style("line-height","33px")
-        .style("font-weight","bold")
-        .style("padding-right","8px")
-        .style("padding-left","8px")
-        .text("OPTIONS")
-        .style("background","#e3ebf0")
-        .on("click",function(x) {
-          this._options_header.classed("hidden",!this._options_header.classed("hidden"))
-          this._show_options = !this._options_header.classed("hidden")
-        }.bind(this))
+      if (!this._skip_option) {
+        var table_button = d3_updateable(wrapper,".table-option","a")
+          .classed("table-option",true)
+          .style("position","absolute")
+          .style("top","-1px")
+          .style("right","0px")
+          .style("cursor","pointer")
+          .style("line-height","33px")
+          .style("font-weight","bold")
+          .style("padding-right","8px")
+          .style("padding-left","8px")
+          .text("OPTIONS")
+          .style("background","#e3ebf0")
+          .on("click",function(x) {
+            this._options_header.classed("hidden",!this._options_header.classed("hidden"))
+            this._show_options = !this._options_header.classed("hidden")
+          }.bind(this))
       }
 
       return wrapper

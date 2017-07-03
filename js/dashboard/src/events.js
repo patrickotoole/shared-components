@@ -27,6 +27,7 @@ export default function init() {
       const value = s.state()
       value.tabs.map(function(t) { t.selected = (t.key == x.key) ? 1 : 0 })
       s.publishStatic("tabs",value.tabs)
+      s.prepareEvent("updateFilter")
     })
     .registerEvent("ba.sort", function(x) {
       s.publishBatch({ "sortby": x.value, "filters":value.filters })

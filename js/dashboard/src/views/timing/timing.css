@@ -13,3 +13,6 @@
           text-align:center;
 
 }
+.timing-row .table-wrapper tr th {
+  padding:5px; text-align:center
+}

@@ -36,7 +36,7 @@ export function create(data,cb) {
 
 export function getAll(cb) {
   d3.json("/crusher/funnel/action?format=json",function(value) {
-    value.response.map(function(x) { x.key = x.action_name; x.value = x.action_id })
+    value.response.map(function(x) { x.key = x.action_name; x.action_id = x.filter_id; x.value = x.action_id })
     cb(false,value.response)
   })
 

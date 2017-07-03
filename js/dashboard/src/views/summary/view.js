@@ -10,7 +10,11 @@ import {drawKeywords, drawKeywordDiff} from './keywords'
 import header from '../../generic/header'
 import select from '../../generic/select'
 
+import './summary.css'
 
+export default function summary_view(target) {
+  return new SummaryView(target)
+}
 
 export class SummaryView extends D3ComponentBase {
   constructor(target) {
@@ -20,44 +24,23 @@ export class SummaryView extends D3ComponentBase {
   props() { return ["data", "timing", "category", "keywords", "before", "after"] }
 
   draw() {
-    var wrap = d3_updateable(this._target,".summary-wrap","div")
-      .classed("summary-view",true)
+    var wrap = d3_class(this._target,"summary-view")
 
     header(wrap)
       .text("Summary")
       .draw()
 
-
-    var tswrap = d3_updateable(wrap,".ts-row","div")
-      .classed("ts-row",true)
-      .style("padding-bottom","10px")
-
-    var piewrap = d3_updateable(wrap,".pie-row","div")
-      .classed("pie-row",true)
-      .style("padding-bottom","10px")
-
-    var catwrap = d3_updateable(wrap,".cat-row","div")
-      .classed("cat-row dash-row",true)
-      .style("padding-bottom","10px")
-
-    var keywrap = d3_updateable(wrap,".key-row","div")
-      .classed("key-row dash-row",true)
-      .style("padding-bottom","10px")
-
-    var bawrap = d3_updateable(wrap,".ba-row","div",false,function() { return 1})
-      .classed("ba-row",true)
-      .style("padding-bottom","10px")
-
-    var streamwrap = d3_updateable(wrap,".stream-ba-row","div",false,function() { return 1})
-      .classed("stream-ba-row",true)
-      .style("padding-bottom","10px")
+    var tswrap = d3_class(wrap,"ts-row")
+      , piewrap = d3_class(wrap,"pie-row")
+      , catwrap = d3_class(wrap,"cat-row").classed("dash-row",true)
+      , keywrap = d3_class(wrap,"key-row")
+      , bawrap = d3_class(wrap,"ba-row") 
+      , streamwrap = d3_class(wrap,"stream-ba-row") 
 
 
     var radius_scale = d3.scale.linear()
       .domain([this._data.domains.population,this._data.views.population])
       .range([20,35])
-
-
 
     table(piewrap)
       .data({"key":"T","values":[this.data()]})
@@ -70,7 +53,6 @@ export class SummaryView extends D3ComponentBase {
         var data = d3.select(this.parentNode).datum()[x.key];
         buildSummaryBlock(data,this,radius_scale,x)
       })
-
       .render("sessions",function(x) {
         var data = d3.select(this.parentNode).datum()[x.key];
         buildSummaryBlock(data,this,radius_scale,x)

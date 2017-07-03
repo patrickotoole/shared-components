@@ -30,3 +30,6 @@ display:inline-block;
 margin-left:-9px;
 margin-bottom: 12px
 }
+.ba-row .table-wrapper tr th {
+  border:0px
+}

@@ -30,7 +30,12 @@ Select.prototype = {
 
       this._options = d3_splat(this._select,"option","option",identity,key)
         .text(key)
-        .property("selected", (x) => x.value == this._selected ? "selected" : null)
+        .property("selected", (x) => {
+          return (x.value && x.value == this._selected) ? 
+            "selected" : x.selected == 1 ? 
+            "selected" : null
+         
+        })
 
       return this
     }
