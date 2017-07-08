@@ -26,7 +26,7 @@
   "devDependencies": {
     "d3": "3.5.12",
     "faucet": "0.0",
-    "rollup": "^0.41.4",
+    "rollup": "^0.43.0",
     "jsdom": "7",
     "tape": "4",
     "uglify-js": "2",

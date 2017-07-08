@@ -1,8 +1,12 @@
 import state from 'state';
 import {filter_data} from 'filter';
 import {
-  buildCategories, 
-  buildCategoryHour, 
+  aggregateCategory,
+  aggregateCategoryHour,
+  categorySummary
+} from '../helpers/data_helpers/category'
+
+import {
   buildData, 
   buildDomains, 
   buildUrls, 
@@ -34,6 +38,20 @@ var ops = {
       }
 }
 
+      function determineLogic(options) {
+        const _default = options[0]
+        const selected = options.filter(function(x) { return x.selected })
+        return selected.length > 0 ? selected[0] : _default
+      }
+
+function filterUrls(urls,logic,filters) {
+  return filter_data(urls)
+    .op("is in", ops["is in"])
+    .op("is not in", ops["is not in"])
+    .logic(logic.value)
+    .by(filters)
+}
+
 export default function init() {
   const s = state;
 
@@ -60,52 +78,58 @@ export default function init() {
     .registerEvent("staged-filter.change", function(str) { s.publish("staged_filter",str ) })
     .registerEvent("logic.change", function(logic) { s.publish("logic_options",logic) })
     .registerEvent("filter.change", function(filters) { s.publishBatch({ "filters":filters }) })
-    .registerEvent("updateFilter", function(err,filters,_state) {
-
-      var filters = _state.filters
-      var value = _state.data
-
-      if (value == undefined) return // return early if there is no data...
-
-      var filters = prepareFilters(filters)
-
-      var logic = _state.logic_options.filter(function(x) { return x.selected })
-      logic = logic.length > 0 ? logic[0] : _state.logic_options[0]
-
-      var full_urls = filter_data(value.original_urls)
-        .op("is in", ops["is in"])
-        .op("is not in", ops["is not in"])
-        .logic(logic.value)
-        .by(filters)
+    .registerEvent("updateFilter", function(err,_filters,_state) {
 
 
-      // should not filter if...
-      //debugger
+      if (_state.data == undefined) return 
 
-      if ( (value.full_urls) && 
-           (value.full_urls.length == full_urls.length) && 
-           (_state.selected_comparison && (_state.comparison_data == value.comparison))) return
+      const filters = prepareFilters(_state.filters)
+      const logic = determineLogic(_state.logic_options)
+      const full_urls = filterUrls(_state.data.original_urls,logic,filters)
+
+
+      // No change in filter, or comparison
+      if ( (_state.data.full_urls) && (_state.data.full_urls.length == full_urls.length) && 
+           (_state.selected_comparison && (_state.comparison_data == value.comparison))) return 
+
+
+
+      const value = {}
 
       value.full_urls = full_urls
 
-      var compareTo = _state.comparison_data ? _state.comparison_data.original_urls : value.original_urls;
+      var compareTo = _state.comparison_data ? 
+        _state.comparison_data.original_urls : 
+        _state.data.original_urls;
 
       value.comparison = compareTo
 
-      // all this logic should be move to the respective views...
 
-      // ----- START : FOR MEDIA PLAN ----- //
 
-      buildCategories(value)
-      buildCategoryHour(value)
+      // MEDIA PLAN
 
-      // ----- END : FOR MEDIA PLAN ----- //
+      value.display_categories = {"key": "Categories", values: aggregateCategory(full_urls)}
+      value.category_hour = aggregateCategoryHour(full_urls)
+
+
+      // EXPLORE TABS
+
+      var cat_summary = categorySummary(value.full_urls,value.comparison)
 
       var tabs = [
           buildDomains(value)
         , buildUrls(value)
-        //, buildTopics(value)
+        , {key:"Top Categories", values: cat_summary}
       ]
+
+      if (_state.tabs) {
+        _state.tabs.map((x,i) => {
+          tabs[i].selected = x.selected
+        })
+      }
+
+
+
 
       var summary_data = buildSummaryData(value.full_urls)
         , pop_summary_data = buildSummaryData(compareTo)
@@ -127,100 +151,44 @@ export default function init() {
         }
       })
 
-      var cat_roll = d3.nest()
-        .key(function(k) { return k.parent_category_name })
-        .rollup(function(v) {
-          return v.reduce(function(p,c) {
-            p.views += c.count
-            p.sessions += c.uniques
-            return p
-          },{ articles: {}, views: 0, sessions: 0})
-        })
-        .entries(value.full_urls)
 
-      var pop_cat_roll = d3.nest()
-        .key(function(k) { return k.parent_category_name })
-        .rollup(function(v) {
-          return v.reduce(function(p,c) {
-            p.views += c.count
-            p.sessions += c.uniques
-            return p
-          },{ articles: {}, views: 0, sessions: 0})
-        })
-        .entries(compareTo)
+      
 
-      var mapped_cat_roll = cat_roll.reduce(function(p,c) { p[c.key] = c; return p}, {})
+      //var parseWords = function(p,c) {
+      //  var splitted = c.url.split(".com/")
+      //  if (splitted.length > 1) {
+      //    var last = splitted[1].split("/").slice(-1)[0].split("?")[0]
+      //    var words = last.split("-").join("+").split("+").join("_").split("_").join(" ").split(" ")
+      //    words.map(function(w) { 
+      //      if ((w.length <= 4) || (String(parseInt(w[0])) == w[0] ) || (w.indexOf("asp") > -1) || (w.indexOf("php") > -1) || (w.indexOf("html") > -1) ) return
+      //      p[w] = p[w] ? p[w] + 1 : 1
+      //    })
+      //  }
+      //  return p
+      //}
 
-      var cat_summary = pop_cat_roll.map(function(x) {
-        return {
-            key: x.key
-          , pop: x.values.views
-          , samp: mapped_cat_roll[x.key] ? mapped_cat_roll[x.key].values.views : 0
-        }
-      }).sort(function(a,b) { return b.pop - a.pop})
-        .filter(function(x) { return x.key != "NA" })
-
-      var parseWords = function(p,c) {
-        var splitted = c.url.split(".com/")
-        if (splitted.length > 1) {
-          var last = splitted[1].split("/").slice(-1)[0].split("?")[0]
-          var words = last.split("-").join("+").split("+").join("_").split("_").join(" ").split(" ")
-          words.map(function(w) { 
-            if ((w.length <= 4) || (String(parseInt(w[0])) == w[0] ) || (w.indexOf("asp") > -1) || (w.indexOf("php") > -1) || (w.indexOf("html") > -1) ) return
-            p[w] = p[w] ? p[w] + 1 : 1
-          })
-        }
-        return p
-      }
-
-      var pop_counts = compareTo.reduce(parseWords,{})
-      var samp_counts = value.full_urls.reduce(parseWords,{})
+      //var pop_counts = compareTo.reduce(parseWords,{})
+      //var samp_counts = value.full_urls.reduce(parseWords,{})
 
 
-      var entries = d3.entries(pop_counts).filter(function(x) { return x.value > 1})
-        .map(function(x) {
-          x.samp = samp_counts[x.key]
-          x.pop = x.value
-          return x
-        })
-        .sort(function(a,b) { return b.pop - a.pop})
-        .slice(0,25)
+      //var entries = d3.entries(pop_counts).filter(function(x) { return x.value > 1})
+      //  .map(function(x) {
+      //    x.samp = samp_counts[x.key]
+      //    x.pop = x.value
+      //    return x
+      //  })
+      //  .sort(function(a,b) { return b.pop - a.pop})
+      //  .slice(0,25)
 
 
-      var modifyWithComparisons = function(ds) {
+      
 
-        var aggs = ds.reduce(function(p,c) {
-          p.pop_max = (p.pop_max || 0) < c.pop ? c.pop : p.pop_max
-          p.pop_total = (p.pop_total || 0) + c.pop
-
-          if (c.samp) {
-            p.samp_max = (p.samp_max || 0) > c.samp ? p.samp_max : c.samp
-            p.samp_total = (p.samp_total || 0) + c.samp
-          }
-
-          return p
-        },{})
-
-        //console.log(aggs)
-
-        ds.map(function(o) {
-          o.normalized_pop = o.pop / aggs.pop_max
-          o.percent_pop = o.pop / aggs.pop_total
-
-          o.normalized_samp = o.samp / aggs.samp_max
-          o.percent_samp = o.samp / aggs.samp_total
-
-          o.normalized_diff = (o.normalized_samp - o.normalized_pop)/o.normalized_pop
-          o.percent_diff = (o.percent_samp - o.percent_pop)/o.percent_pop
-        })
-      }
-
-      modifyWithComparisons(cat_summary)
-      modifyWithComparisons(entries)
+      //modifyWithComparisons(cat_summary)
+      //modifyWithComparisons(entries)
 
 
-      if (value.before) {
-        var before_urls = filter_data(value.before)
+      if (_state.data.before) {
+        var before_urls = filter_data(_state.data.before)
           .op("is in", ops["is in"])
           .op("is not in", ops["is not in"])
           //.op("does not contain", ops["does not contain"])
@@ -228,7 +196,7 @@ export default function init() {
           .logic(logic.value)
           .by(filters)
 
-        var after_urls = filter_data(value.after)
+        var after_urls = filter_data(_state.data.after)
           .op("is in", ops["is in"])
           .op("is not in", ops["is not in"])
           //.op("does not contain", ops["does not contain"])
@@ -300,37 +268,15 @@ export default function init() {
 
       }
 
-      var categories = d3.nest()
-        .key(x => x.parent_category_name)
-        .rollup(v => v[0].category_idf ? 1/v[0].category_idf : 0)
-        .map(value.full_urls) 
-
-      var cat_idf_sum = d3.sum(Object.keys(categories).map(x => categories[x]))
-      var cat_idf_percent = {}
-      Object.keys(categories).map(x => {
-        cat_idf_percent[x] = categories[x]/cat_idf_sum
-      })
-
-      cat_summary.map(x => {
-        x.sample_percent_norm = x.sample_percent = x.percent_pop*100
-        x.pop_percent = x.real_pop_percent = cat_idf_percent[x.key]*100
-        x.importance = Math.log(categories[x.key]*x.samp)
-        x.ratio = x.sample_percent/x.real_pop_percent
-        x.value = x.samp
-      })
 
       
 
-      tabs.push({key:"Top Categories", values: cat_summary})
-
-      if (_state.tabs) {
-        _state.tabs.map((x,i) => {
-          tabs[i].selected = x.selected
-        })
-      }
       
 
-      s.setStatic("keyword_summary", entries) 
+      
+      
+
+      //s.setStatic("keyword_summary", entries) 
       s.setStatic("time_summary", prepped)
       s.setStatic("category_summary", cat_summary)
 

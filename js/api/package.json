@@ -13,9 +13,6 @@
     "test": "faucet `find test -name '*-test.js'`",
     "prepublish": "npm run test && uglifyjs build/api.js -c -m -o build/api.min.js && rm -f build/api.zip && zip -j build/api.zip -- LICENSE README.md build/api.js build/api.min.js"
   },
-  "bundledDependencies" : {
-    "d3": "0.0"
-  },
   "devDependencies": {
     "d3": "3.5.12",
     "faucet": "0.0",

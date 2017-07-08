@@ -354,44 +354,7 @@ export function buildActions(data) {
 
 // from data.js
 
-export function buildCategories(value) {
-  var categories = d3.nest()
-    .key(function(x){ return x.parent_category_name})
-    .rollup(function(v) {
-      return v.reduce(function(p,c) { return p + c.uniques },0)
-    })
-    .entries(value.full_urls)
 
-  var total = categories.reduce(function(p,c) { return p + c.values },0)
-
-  categories.map(function(x) {
-    x.value = x.values
-    x.percent = x.value / total
-  })
-
-  value["display_categories"] = {
-      "key":"Categories"
-    , "values": categories.filter(function(x) { return x.key != "NA" })
-  }
-}
-
-export function buildCategoryHour(value) {
-  var category_hour = d3.nest()
-    .key(function(x){ return x.parent_category_name + x.hour + x.minute})
-    .rollup(function(v) {
-      return {
-          "parent_category_name": v[0].parent_category_name
-        , "hour": v[0].hour
-        , "minute": v[0].minute 
-        , "count":v.reduce(function(p,c) { return p + c.count },0)
-      }
-    })
-    .entries(value.full_urls)
-    .map(function(x) { return x.values })
-
-  value["category_hour"] = category_hour
- 
-}
 
 export function buildData(data,buckets,pop_categories) {
 

@@ -5,7 +5,7 @@ import postcss from 'rollup-plugin-postcss';
 
 
 export default {
-  moduleId: 'dashboard',
+  //moduleId: 'dashboard',
   moduleName: 'dashboard',
   entry: 'build/bundle.js',
   dest: 'build/dashboard.js',
