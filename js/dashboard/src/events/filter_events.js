@@ -118,8 +118,8 @@ export default function init() {
       // EXPLORE TABS
       var tabs = [
           buildDomainsTab(full_urls,categories)
-        , buildUrlsTab(full_urls,categories)
         , {key:"Top Categories", values: cat_summary}
+        , buildUrlsTab(full_urls,categories)
       ]
 
       if (_state.tabs) {
@@ -136,9 +136,23 @@ export default function init() {
       // TIMING
       const timing = buildTiming(value.full_urls, value.comparison)
       const timing_tabular = timingTabular(full_urls)
+      const cat_timing_tabular = timingTabular(full_urls,"parent_category_name")
+      const timing_tabs = [
+          {"key":"Top Domains", "values": timing_tabular}
+        , {"key":"Top Categories", "values": cat_timing_tabular}
+
+      ]
+
+      if (_state.tabs) {
+        _state.tabs.map((x,i) => {
+          if (timing_tabs[i]) timing_tabs[i].selected = x.selected
+        })
+      }
+
+
 
       s.setStatic("time_summary", timing)
-      s.setStatic("time_tabs", [{"key":"Top Domains", "values": timing_tabular}])
+      s.setStatic("time_tabs", timing_tabs)
 
 
 

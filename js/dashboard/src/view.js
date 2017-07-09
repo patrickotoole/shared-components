@@ -352,6 +352,7 @@ NewDashboard.prototype = {
           if (x.value == "timing-view") {
             timing_view(dthis)
              .data(self.time_tabs())
+             .on("select", self.on("tab.change") )
              .on("stage-filter",function(x) {
 
                staged_filters = staged_filters.split(",").concat(x.key || x.url).filter(x => x.length).join(",")

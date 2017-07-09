@@ -34,9 +34,9 @@ export function buildTiming(urls, comparison) {
   return prepped
 }
 
-export const timingTabular = (data) => {
+export const timingTabular = (data,key="domain") => {
   return d3.nest()
-    .key(x => x.domain)
+    .key(x => x[key])
     .key(x => x.hour)
     .entries(data)
     .map(x => {
@@ -56,9 +56,10 @@ export const timingTabular = (data) => {
         return p
       },{})
 
-      x.tabular["domain"] = x.key
+      x.tabular["key"] = x.key
       x.tabular["total"] = d3.sum(x.buckets,x => x.views)
       
-      return x
+      return x.tabular
     })
+    .filter(x => x.key != "NA")
 }

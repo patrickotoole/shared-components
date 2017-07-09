@@ -26,15 +26,21 @@ class Timing extends D3ComponentBase {
 
     var self = this
     var data = this._data
+      , filtered = data.filter(function(x){ return x.selected})
+      , selected = filtered.length ? filtered[0] : data[0]
+
+
     var wrap = d3_class(this._target,"timing-wrap")
 
-    const headers = [{key:"domain",value:"Domain"}].concat(timingHeaders)
+    const headers = [{key:"key",value:selected.key.replace("Top ","")}].concat(timingHeaders)
     const d = data[0].values//timingTabular(data.full_urls)
     const oscale = computeScale(d)
 
 
     header(wrap)
-      .text("Timing")
+      .text(selected.key)
+      .options(data)
+      .on("select", function(x) { this.on("select")(x) }.bind(this))
       .draw()
 
     var timingwrap = d3_class(wrap,"timing-row")
@@ -42,7 +48,7 @@ class Timing extends D3ComponentBase {
     var table_obj = table(timingwrap)
       .top(140)
       .headers(headers)
-      .data({"key":"", "values":d.map(x => x.tabular) })
+      .data(selected)
       .sort("total")
       .skip_option(true)
       .on("expand",function(d,td) {
