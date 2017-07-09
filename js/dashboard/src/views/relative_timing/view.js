@@ -3,7 +3,7 @@ import header from '../../generic/header'
 import table from 'table'
 
 import refine_relative from './refine_relative'
-import {categoryWeights, beforeAndAfterTabular, computeScale} from './relative_timing_process'
+import {categoryWeights, computeScale} from './relative_timing_process'
 import {timingHeaders} from './relative_timing_constants'
 
 import {drawStream} from '../summary/before_and_after'
@@ -26,28 +26,25 @@ class RelativeTiming extends D3ComponentBase {
 
     var self = this
     var data = this._data
+      , filtered = data.filter(function(x){ return x.selected})
+      , selected = filtered.length ? filtered[0] : data[0]
+
     var wrap = d3_class(this._target,"summary-wrap")
 
     header(wrap)
-      .text("Before and After")
+      .text(selected.key)
+      .options(data)
+      .on("select", function(x) { this.on("select")(x) }.bind(this))
       .draw()
+
 
     var bawrap = d3_class(wrap,"ba-row")
 
-    try {
-      var stages = drawStream(bawrap,this._data.before_categories,this._data.after_categories)
-      //bawrap.selectAll(".before-stream").remove() // HACK
-    } catch(e) {
-      bawrap.html("")
-      return
-    }
-
-    const weights = categoryWeights(data.before_categories)
-    const sorted_tabular = beforeAndAfterTabular(data.before,data.after,weights)
+    const sorted_tabular = selected.values.filter(x => x.key != "")
       .slice(0,1000)
 
     const oscale = computeScale(sorted_tabular)
-    const headers = [{"key":"domain", "value":"Domain"}].concat(timingHeaders)
+    const headers = [{"key":"key", "value":selected.key.replace("Top ","")}].concat(timingHeaders)
 
     table(bawrap)
       .top(140)

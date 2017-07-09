@@ -1,6 +1,25 @@
 import { filter_data } from 'filter';
 import { buildData } from '../../helpers'
 
+function prefixReducer(prefix, p,c) {
+  p[c.key] = p[c.key] || {}
+  p[c.key]['key'] = c.key
+  
+  p[c.key][prefix + c.time_diff_bucket] = (p[c.key][c.time_diff_bucket] || 0) + c.visits
+  return p
+}
+export const beforeAndAfterTabular = (before, after) => {
+  const domain_time = {}
+
+  before.reduce(prefixReducer.bind(false,""),domain_time)
+  after.reduce(prefixReducer.bind(false,"-"),domain_time)
+
+  const sorted = Object.keys(domain_time)
+    .map((k) => { return domain_time[k] })
+
+  return sorted
+}
+
 
 export function buildBeforeAndAfter(before_urls,after_urls,cat_summary,sort_by) {
 

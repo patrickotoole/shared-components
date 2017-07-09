@@ -7,7 +7,8 @@ import {
 } from '../helpers/data_helpers/category'
 
 import {
-  buildBeforeAndAfter
+  buildBeforeAndAfter,
+  beforeAndAfterTabular
 } from '../helpers/data_helpers/before_and_after'
 
 import {
@@ -160,12 +161,27 @@ export default function init() {
       // BEFORE AND AFTER
       if (_state.data.before) {
 
-        const before_urls = filterUrls(_state.data.before,logic,filters)
-          , after_urls = filterUrls(_state.data.after,logic,filters)
+        const catmap = (x) => Object.assign(x,{key:x.parent_category_name})
+
+        const before_urls = filterUrls(_state.data.before,logic,filters).map(x => Object.assign({key:x.domain},x) )
+          , after_urls = filterUrls(_state.data.after,logic,filters).map(x => Object.assign({key:x.domain},x) )
           , before_and_after = buildBeforeAndAfter(before_urls,after_urls,cat_summary,_state.sortby)
+          , before_after_tabular = beforeAndAfterTabular(before_urls,after_urls)
+          , cat_before_after_tabular = beforeAndAfterTabular(before_urls.map(catmap),after_urls.map(catmap))
+
+        const before_tabs = [
+            {key:"Top Domains",values:before_after_tabular}
+          , {key:"Top Categories",values:cat_before_after_tabular}
+        ]
+
+      if (_state.tabs) {
+        _state.tabs.map((x,i) => {
+          if (before_tabs[i]) before_tabs[i].selected = x.selected
+        })
+      }
 
         s.setStatic("before_urls",before_and_after) 
-        s.setStatic("after_urls", before_and_after.after_urls)
+        s.setStatic("before_tabs",before_tabs)
 
       }
 

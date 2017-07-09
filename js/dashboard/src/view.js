@@ -95,6 +95,9 @@ NewDashboard.prototype = {
   , before: function(val) {
       return accessor.bind(this)("before",val) || []
     }
+  , before_tabs: function(val) {
+      return accessor.bind(this)("before_tabs",val) || []
+    }
   , after: function(val) {
       return accessor.bind(this)("after",val) || []
     }
@@ -325,7 +328,8 @@ NewDashboard.prototype = {
 
           if (x.value == "ba-view") {
             relative_view(dthis)
-             .data(self.before())
+             .data(self.before_tabs())
+             .on("select", self.on("tab.change") )
              .on("stage-filter",function(x) {
 
                staged_filters = staged_filters.split(",").concat(x.key || x.url).filter(x => x.length).join(",")
@@ -343,7 +347,7 @@ NewDashboard.prototype = {
              .timing(self.time_summary())
              .category(self.category_summary())
              .before(self.before())
-             .after(self.after())
+             //.after(self.after())
              .keywords(self.keyword_summary())
              .on("ba.sort",self.on("ba.sort"))
              .draw()
