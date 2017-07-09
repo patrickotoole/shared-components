@@ -1,4 +1,4 @@
-import {formatHour} from './timing_process'
+import {formatHour} from '../../helpers/data_helpers/timing'
 
 export const hourbuckets = d3.range(0,24).map(x => String(x).length > 1 ? String(x) : "0" + x)
 

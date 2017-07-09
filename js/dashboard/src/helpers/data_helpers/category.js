@@ -1,13 +1,18 @@
 export function aggregateCategory(urls) {
   const categories = d3.nest()
     .key(function(x){ return x.parent_category_name})
-    .rollup(function(v) { return d3.sum(v,x => x.uniques) })
+    .rollup(function(v) { 
+      return {
+          "articles": v
+        , "value": d3.sum(v,x => x.uniques)
+      } 
+    })
     .entries(urls)
+    .map(function(v) { return Object.assign(v.values,{key: v.key}) })
 
-  const total = d3.sum(categories,c => c.values)
+  const total = d3.sum(categories,c => c.value)
 
   categories.map(function(x) {
-    x.value = x.values
     x.percent = x.value / total
   })
 
@@ -22,7 +27,8 @@ export function aggregateCategoryHour(urls) {
           "parent_category_name": v[0].parent_category_name
         , "hour": v[0].hour
         , "minute": v[0].minute 
-        , "count":v.reduce(function(p,c) { return p + c.count },0)
+        , "count": v.reduce(function(p,c) { return p + c.count },0)
+        , "articles": v
       }
     })
     .entries(urls)
@@ -131,7 +137,6 @@ export function categorySummary(samp_urls,pop_urls) {
         y.value = y.samp
     })
 
-    console.log(x.values)
 
     return x.values
   }).sort(function(a,b) { return b.pop - a.pop})

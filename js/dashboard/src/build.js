@@ -70,6 +70,7 @@ class Dashboard {
 
    let db = view(this._target)
      .staged_filters(value.staged_filter || "")
+     .media(value.media_plan || {})
      .saved(value.saved || [])
      .data(value.formatted_data || {})
      .actions(value.actions || [])
@@ -90,6 +91,7 @@ class Dashboard {
      .filters(value.filters || false)
      .view_options(value.dashboard_options || false)
      .explore_tabs(value.tabs || false)
+     .time_tabs(value.time_tabs || false)
      .on("add-filter", s.prepareEvent("add-filter"))
      .on("modify-filter", s.prepareEvent("modify-filter"))
      .on("staged-filter.change", s.prepareEvent("staged-filter.change"))

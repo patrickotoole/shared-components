@@ -1,4 +1,6 @@
 import {d3_updateable, d3_splat} from 'helpers'
+import {filter_data} from 'filter';
+
 export * from './helpers/data_helpers'
 export * from './helpers/graph_helpers'
 export * from './helpers/state_helpers'
@@ -21,3 +23,31 @@ export function remainingSection(section) {
     .classed("remaining-section",true)
 }
 
+var ops = {
+    "is in": function(field,value) {
+        return function(x) {
+          var values = value.split(",")
+          return values.reduce(function(p,value) { return p + String(x[field]).indexOf(String(value)) > -1 }, 0) > 0
+        } 
+      }
+  , "is not in": function(field,value) {
+        return function(x) {
+          var values = value.split(",")
+          return values.reduce(function(p,value) { return p + String(x[field]).indexOf(String(value)) > -1 }, 0) == 0
+        } 
+      }
+}
+
+export function determineLogic(options) {
+  const _default = options[0]
+  const selected = options.filter(function(x) { return x.selected })
+  return selected.length > 0 ? selected[0] : _default
+}
+
+export function filterUrls(urls,logic,filters) {
+  return filter_data(urls)
+    .op("is in", ops["is in"])
+    .op("is not in", ops["is not in"])
+    .logic(logic.value)
+    .by(filters)
+}

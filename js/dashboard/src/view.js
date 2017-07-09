@@ -40,6 +40,9 @@ NewDashboard.prototype = {
   , staged_filters: function(val) {
       return accessor.bind(this)("staged_filters",val) || ""
     }
+  , media: function(val) {
+      return accessor.bind(this)("media",val) 
+    }
   , saved: function(val) {
       return accessor.bind(this)("saved",val) 
     }
@@ -80,6 +83,9 @@ NewDashboard.prototype = {
   , time_summary: function(val) {
       return accessor.bind(this)("time_summary",val) || []
     }
+  , time_tabs: function(val) {
+      return accessor.bind(this)("time_tabs",val) || []
+    }
   , category_summary: function(val) {
       return accessor.bind(this)("category_summary",val) || []
     }
@@ -102,6 +108,7 @@ NewDashboard.prototype = {
   , draw: function() {
 
       var data = this.data()
+      var media = this.media()
 
       var options = JSON.parse(JSON.stringify(this.view_options()))
       var tabs = JSON.parse(JSON.stringify(this.explore_tabs()))
@@ -344,7 +351,7 @@ NewDashboard.prototype = {
 
           if (x.value == "timing-view") {
             timing_view(dthis)
-             .data(self.data())
+             .data(self.time_tabs())
              .on("stage-filter",function(x) {
 
                staged_filters = staged_filters.split(",").concat(x.key || x.url).filter(x => x.length).join(",")

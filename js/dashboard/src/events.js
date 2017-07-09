@@ -30,6 +30,7 @@ export default function init() {
       s.prepareEvent("updateFilter")
     })
     .registerEvent("ba.sort", function(x) {
-      s.publishBatch({ "sortby": x.value, "filters":value.filters })
+      s.publish("sortby", x.value)
+      s.prepareEvent("updateFilter")(false,s.state().filters,s.state())
     })
 }

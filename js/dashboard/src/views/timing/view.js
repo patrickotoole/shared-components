@@ -6,7 +6,8 @@ import {domain_expanded} from 'component'
 import {simpleTimeseries} from 'chart'
 
 import {hourbuckets, timingHeaders} from './timing_constants'
-import {timingTabular, computeScale} from './timing_process'
+import {computeScale} from './timing_process'
+
 
 
 import './timing.css'
@@ -28,7 +29,7 @@ class Timing extends D3ComponentBase {
     var wrap = d3_class(this._target,"timing-wrap")
 
     const headers = [{key:"domain",value:"Domain"}].concat(timingHeaders)
-    const d = timingTabular(data.full_urls)
+    const d = data[0].values//timingTabular(data.full_urls)
     const oscale = computeScale(d)
 
 
