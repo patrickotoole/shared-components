@@ -37,6 +37,9 @@ NewDashboard.prototype = {
     data: function(val) {
       return accessor.bind(this)("data",val) 
     }
+  , transform: function(val) {
+      return accessor.bind(this)("transform",val) || ""
+    }
   , staged_filters: function(val) {
       return accessor.bind(this)("staged_filters",val) || ""
     }
@@ -328,6 +331,7 @@ NewDashboard.prototype = {
 
           if (x.value == "ba-view") {
             relative_view(dthis)
+             .normalize(self.transform() == "normalize")
              .data(self.before_tabs())
              .on("select", self.on("tab.change") )
              .on("stage-filter",function(x) {

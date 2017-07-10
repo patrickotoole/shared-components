@@ -69,6 +69,7 @@ class Dashboard {
    let value = s.state()
 
    let db = view(this._target)
+     .transform(value.transform || "")
      .staged_filters(value.staged_filter || "")
      .media(value.media_plan || {})
      .saved(value.saved || [])

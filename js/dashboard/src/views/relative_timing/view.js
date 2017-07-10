@@ -1,13 +1,16 @@
-import {d3_updateable, d3_splat, d3_class, D3ComponentBase} from 'helpers'
+import {identity, d3_updateable, d3_splat, d3_class, D3ComponentBase} from 'helpers'
 import header from '../../generic/header'
 import table from 'table'
 
 import refine_relative from './refine_relative'
-import {categoryWeights, computeScale} from './relative_timing_process'
-import {timingHeaders} from './relative_timing_constants'
+import {categoryWeights, computeScale, normalizeRow, normalize, totalsByTime} from './relative_timing_process'
+import {timingHeaders, timeBuckets} from './relative_timing_constants'
 
 import {drawStream} from '../summary/before_and_after'
 import {simpleTimeseries} from 'chart'
+
+import timeseries from '../../generic/timeseries'
+
 
 import './relative_timing.css'
 
@@ -20,7 +23,7 @@ class RelativeTiming extends D3ComponentBase {
     super(target)
   }
 
-  props() { return ["data"] }
+  props() { return ["data","normalize"] }
 
   draw() {
 
@@ -37,10 +40,22 @@ class RelativeTiming extends D3ComponentBase {
       .on("select", function(x) { this.on("select")(x) }.bind(this))
       .draw()
 
+    var totals_by_time= totalsByTime(selected.values)
+    var values = normalize(totals_by_time)
+
+    var ts = d3_class(wrap,"timeseries-row")
+    var svg = d3_updateable(ts,"svg","svg").attr("width",936).attr("height",80).style("margin-left","254px")
+
+    simpleTimeseries(svg,values,682,80,-2)
+
 
     var bawrap = d3_class(wrap,"ba-row")
 
+
+
+
     const sorted_tabular = selected.values.filter(x => x.key != "")
+      .map(this.normalize() ? normalizeRow : identity)
       .slice(0,1000)
 
     const oscale = computeScale(sorted_tabular)
