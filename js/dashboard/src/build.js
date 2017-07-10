@@ -94,6 +94,9 @@ class Dashboard {
      .view_options(value.dashboard_options || false)
      .explore_tabs(value.tabs || false)
      .time_tabs(value.time_tabs || false)
+     .sort(value.sort || false)
+     .ascending(value.ascending || false)
+
      .on("add-filter", s.prepareEvent("add-filter"))
      .on("modify-filter", s.prepareEvent("modify-filter"))
      .on("staged-filter.change", s.prepareEvent("staged-filter.change"))
@@ -106,6 +109,7 @@ class Dashboard {
      .on("view.change", s.prepareEvent("view.change"))
      .on("tab.change", s.prepareEvent("tab.change"))
      .on("ba.sort", s.prepareEvent("ba.sort"))
+     .on("sort.change", s.prepareEvent("sort.change"))
      .draw()
    
   }

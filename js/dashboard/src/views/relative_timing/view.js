@@ -23,7 +23,7 @@ class RelativeTiming extends D3ComponentBase {
     super(target)
   }
 
-  props() { return ["data","normalize"] }
+  props() { return ["data","normalize", "sort", "ascending"] }
 
   draw() {
 
@@ -61,9 +61,20 @@ class RelativeTiming extends D3ComponentBase {
     const oscale = computeScale(sorted_tabular)
     const headers = [{"key":"key", "value":selected.key.replace("Top ","")}].concat(timingHeaders)
 
+
+    const _default = "600"
+    const s = this.sort() 
+    const asc = this.ascending() 
+
+
+    const selectedHeader = headers.filter(x => x.key == s)
+    const sortby = selectedHeader.length ? selectedHeader[0].key : _default
+
     table(bawrap)
       .top(140)
       .headers(headers)
+      .sort(sortby,asc)
+      .on("sort", this.on("sort"))
       .on("expand",function(d,td) {
 
         refine_relative(td)

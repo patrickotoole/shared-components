@@ -44,6 +44,10 @@ export default function init() {
       if (_state.comparison_date) qs_state['comparison_date'] = _state.comparison_date
       if (_state.transform) qs_state['transform'] = _state.transform
       if (_state.tab_position) qs_state['tab_position'] = _state.tab_position
+      if (_state.sort) qs_state['sort'] = _state.sort
+      if (_state.ascending) qs_state['ascending'] = _state.ascending
+
+
 
 
       if (_state.selected_action && qs(qs_state).to(qs_state) != window.location.search) {

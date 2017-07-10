@@ -25,6 +25,27 @@ export function compare(qs_state,_state) {
     .failure("tab_position", (_new,_old,obj) => {
       Object.assign(obj, { "tab_position": _new })
     })
+
+    .accessor(
+        "sort"
+      , (x,y) => x.sort
+      , (_,y) => y.sort
+    )
+    .failure("sort", (_new,_old,obj) => {
+      Object.assign(obj, { "sort": _new })
+    })
+
+
+    .accessor(
+        "ascending"
+      , (x,y) => x.ascending
+      , (_,y) => y.ascending
+    )
+    .failure("ascending", (_new,_old,obj) => {
+      Object.assign(obj, { "ascending": _new })
+    })
+
+
     .accessor(
         "selected_view"
       , (x,y) => x.selected_view

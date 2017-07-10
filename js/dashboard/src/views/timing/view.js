@@ -22,6 +22,9 @@ class Timing extends D3ComponentBase {
     super(target)
   }
 
+  props() { return ["data","normalize", "sort", "ascending"] }
+
+
   draw() {
 
     var self = this
@@ -36,6 +39,15 @@ class Timing extends D3ComponentBase {
     const d = data[0].values//timingTabular(data.full_urls)
     const oscale = computeScale(d)
 
+    const _default = "total"
+    const s = this.sort() 
+    const asc = this.ascending() 
+
+
+    const selectedHeader = headers.filter(x => x.key == s)
+    const sortby = selectedHeader.length ? selectedHeader[0].key : _default
+
+
 
     header(wrap)
       .text(selected.key)
@@ -48,8 +60,9 @@ class Timing extends D3ComponentBase {
     var table_obj = table(timingwrap)
       .top(140)
       .headers(headers)
+      .sort(sortby,asc)
+      .on("sort", this.on("sort"))
       .data(selected)
-      .sort("total")
       .skip_option(true)
       .on("expand",function(d,td) {
 

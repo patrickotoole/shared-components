@@ -17,6 +17,18 @@ export default function init() {
   // OTHER events
 
   state
+    .registerEvent("sort.change", function(x) {
+      const _s = s.state()
+      const asc = _s.sort == x.key
+
+      s.update("loading")
+
+      s.publishStatic("sort",x.key)
+      s.publishStatic("ascending",asc && !_s.ascending)
+
+      s.prepareEvent("updateFilter")(false,s.state().filters,s.state())
+
+    })
     .registerEvent("view.change", function(x) {
       s.update("loading",true)
       var CP = deepcopy(s.state().dashboard_options).map(function(d) { d.selected = (x.value == d.value) ? 1 : 0; return d })
@@ -24,9 +36,7 @@ export default function init() {
     })
     .registerEvent("tab.change", function(x) {
       s.update("loading",true)
-      //const value = s.state()
-      //value.tabs.map(function(t) { t.selected = (t.key == x.key) ? 1 : 0 })
-      //s.publishStatic("tabs",value.tabs)
+
       s.publishStatic("tab_position",x.key)
       s.prepareEvent("updateFilter")(false,s.state().filters,s.state())
     })

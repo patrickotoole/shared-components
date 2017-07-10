@@ -12,7 +12,7 @@ export class DomainView extends D3ComponentBase {
     super(target)
   }
 
-  props() { return ["data", "options"] }
+  props() { return ["data", "options", "sort", "ascending"] }
 
   draw() {
 
@@ -38,6 +38,16 @@ export class DomainView extends D3ComponentBase {
       , max = Math.max(samp_max,pop_max);
 
 
+    const _default = "importance"
+    const s = this.sort() 
+    const asc = this.ascending() 
+
+
+    const selectedHeader = headers.filter(x => x.key == s)
+    const sortby = selectedHeader.length ? selectedHeader[0].key : _default
+
+
+
     header(_explore)
       .text(selected.key )
       .options(tabs)
@@ -51,7 +61,8 @@ export class DomainView extends D3ComponentBase {
       .top(140)
       .data(selected)
       .headers( headers)
-      .sort("importance")
+      .sort(sortby,asc)
+      .on("sort", this.on("sort"))
       .option_text("&#65291;")
       .on("expand",function(d,td) {
 

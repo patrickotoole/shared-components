@@ -269,12 +269,7 @@ Table.prototype = {
         .style("position","relative")
         .order()
 
-
-      d3_updateable(th,"span","span")
-        .classed("title",true)
-        .style("cursor","pointer")
-        .text(function(x) { return x.value })
-        .on("click",function(x) {
+      var defaultSort = function(x) {
           if (x.sort === false) {
             delete x['sort']
             this._sort = {}
@@ -285,7 +280,16 @@ Table.prototype = {
             this.sort(x.key,x.sort)
             this.draw()
           }
-        }.bind(this))
+        }.bind(this)
+
+
+      d3_updateable(th,"span","span")
+        .classed("title",true)
+        .style("cursor","pointer")
+        .text(function(x) { return x.value })
+        .on("click",this.on("sort") != noop ? this.on("sort") : defaultSort)
+
+
 
       d3_updateable(th,"i","i")
         .style("padding-left","5px")

@@ -111,6 +111,12 @@ NewDashboard.prototype = {
       if (val !== undefined) this._segment_view && this._segment_view.is_loading(val).draw()
       return accessor.bind(this)("loading",val)
     }
+  , sort: function(val) {
+      return accessor.bind(this)("sort",val)
+    }
+  , ascending: function(val) {
+      return accessor.bind(this)("ascending",val)
+    }
   , draw: function() {
 
       var data = this.data()
@@ -312,7 +318,11 @@ NewDashboard.prototype = {
             var dv = domain_view(dthis)
               .options(tabs)
               .data(data)
+              .sort(self.sort())
+              .ascending(self.ascending())
               .on("select", self.on("tab.change") )
+              .on("sort", self.on("sort.change") )
+
               .on("stage-filter",function(x) {
 
                staged_filters = staged_filters.split(",").concat(x.key || x.url).filter(x => x.length).join(",")
@@ -333,7 +343,10 @@ NewDashboard.prototype = {
             relative_view(dthis)
              .normalize(self.transform() == "normalize")
              .data(self.before_tabs())
+             .sort(self.sort())
+             .ascending(self.ascending())
              .on("select", self.on("tab.change") )
+             .on("sort", self.on("sort.change") )
              .on("stage-filter",function(x) {
 
                staged_filters = staged_filters.split(",").concat(x.key || x.url).filter(x => x.length).join(",")
@@ -360,7 +373,11 @@ NewDashboard.prototype = {
           if (x.value == "timing-view") {
             timing_view(dthis)
              .data(self.time_tabs())
+             .sort(self.sort())
+             .ascending(self.ascending())
              .on("select", self.on("tab.change") )
+             .on("sort", self.on("sort.change") )
+
              .on("stage-filter",function(x) {
 
                staged_filters = staged_filters.split(",").concat(x.key || x.url).filter(x => x.length).join(",")
