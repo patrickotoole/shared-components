@@ -373,6 +373,7 @@ NewDashboard.prototype = {
           if (x.value == "timing-view") {
             timing_view(dthis)
              .data(self.time_tabs())
+             .normalize(self.transform() == "normalize")
              .sort(self.sort())
              .ascending(self.ascending())
              .on("select", self.on("tab.change") )

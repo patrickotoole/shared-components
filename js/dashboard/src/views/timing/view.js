@@ -6,7 +6,7 @@ import {domain_expanded} from 'component'
 import {simpleTimeseries} from 'chart'
 
 import {hourbuckets, timingHeaders} from './timing_constants'
-import {computeScale} from './timing_process'
+import {computeScale, normalizeRow} from './timing_process'
 
 
 
@@ -37,7 +37,6 @@ class Timing extends D3ComponentBase {
 
     const headers = [{key:"key",value:selected.key.replace("Top ","")}].concat(timingHeaders)
     const d = data[0].values//timingTabular(data.full_urls)
-    const oscale = computeScale(d)
 
     const _default = "total"
     const s = this.sort() 
@@ -47,6 +46,35 @@ class Timing extends D3ComponentBase {
     const selectedHeader = headers.filter(x => x.key == s)
     const sortby = selectedHeader.length ? selectedHeader[0].key : _default
 
+    const hourlyTotals = selected.values.reduce((p,c) => {
+      timingHeaders.map(k => {
+        var h = k.key
+        p[h] = (p[h] || 0) + (c[h] || 0)
+      })
+      return p
+    },{})
+
+    const overallTotal = d3.sum(Object.keys(hourlyTotals).map(k => hourlyTotals[k]))
+
+    const percentTotals = Object.keys(hourlyTotals).reduce((p,k) => {
+      p[k] = hourlyTotals[k]/overallTotal
+      return p
+    },{})
+
+    const normalizer = normalizeRow(percentTotals)
+
+    var max = 0
+    const values = selected.values.map(row => {
+      const normed = this.normalize() ? normalizer(row) : row
+
+      const local_max = d3.max(Object.keys(normed).map(k => normed[k]))
+      max = local_max > max ? local_max : max
+
+      return Object.assign(normed,{"key":row.key})
+    })
+
+
+    const oscale = computeScale(values,max)
 
 
     header(wrap)
@@ -62,7 +90,7 @@ class Timing extends D3ComponentBase {
       .headers(headers)
       .sort(sortby,asc)
       .on("sort", this.on("sort"))
-      .data(selected)
+      .data({"values":values})
       .skip_option(true)
       .on("expand",function(d,td) {
 
