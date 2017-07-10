@@ -18,6 +18,14 @@ export function compare(qs_state,_state) {
       })
     })
     .accessor(
+        "tab_position"
+      , (x,y) => x.tab_position
+      , (_,y) => y.tab_position
+    )
+    .failure("tab_position", (_new,_old,obj) => {
+      Object.assign(obj, { "tab_position": _new })
+    })
+    .accessor(
         "selected_view"
       , (x,y) => x.selected_view
       , (_,y) => y.dashboard_options.filter(x => x.selected)[0].value 

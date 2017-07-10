@@ -42,6 +42,8 @@ export default function init() {
       if (_state.dashboard_options) qs_state['selected_view'] = _state.dashboard_options.filter(x => x.selected)[0].value
       if (_state.action_date) qs_state['action_date'] = _state.action_date
       if (_state.comparison_date) qs_state['comparison_date'] = _state.comparison_date
+      if (_state.transform) qs_state['transform'] = _state.transform
+      if (_state.tab_position) qs_state['tab_position'] = _state.tab_position
 
 
       if (_state.selected_action && qs(qs_state).to(qs_state) != window.location.search) {

@@ -123,10 +123,10 @@ export default function init() {
         , buildUrlsTab(full_urls,categories)
       ]
 
-      if (_state.tabs) {
-        _state.tabs.map((x,i) => {
-          tabs[i].selected = x.selected
-        })
+      
+
+      if (_state.tab_position) {
+        tabs.map(x => x.selected = (x.key == _state.tab_position) )
       }
 
       s.setStatic("tabs",tabs)
@@ -144,10 +144,8 @@ export default function init() {
 
       ]
 
-      if (_state.tabs) {
-        _state.tabs.map((x,i) => {
-          if (timing_tabs[i]) timing_tabs[i].selected = x.selected
-        })
+      if (_state.tab_position) {
+        timing_tabs.map(x => x.selected = (x.key == _state.tab_position) )
       }
 
 
@@ -174,11 +172,10 @@ export default function init() {
           , {key:"Top Categories",values:cat_before_after_tabular}
         ]
 
-      if (_state.tabs) {
-        _state.tabs.map((x,i) => {
-          if (before_tabs[i]) before_tabs[i].selected = x.selected
-        })
+      if (_state.tab_position) {
+        before_tabs.map(x => x.selected = (x.key == _state.tab_position) )
       }
+
 
         s.setStatic("before_urls",before_and_after) 
         s.setStatic("before_tabs",before_tabs)
