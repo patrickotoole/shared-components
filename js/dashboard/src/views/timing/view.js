@@ -35,6 +35,8 @@ class Timing extends D3ComponentBase {
 
     var wrap = d3_class(this._target,"timing-wrap")
 
+
+
     const headers = [{key:"key",value:selected.key.replace("Top ","")}].concat(timingHeaders)
     const d = data[0].values//timingTabular(data.full_urls)
 
@@ -55,18 +57,18 @@ class Timing extends D3ComponentBase {
     },{})
 
     const overallTotal = d3.sum(Object.keys(hourlyTotals).map(k => hourlyTotals[k]))
-
     const percentTotals = Object.keys(hourlyTotals).reduce((p,k) => {
       p[k] = hourlyTotals[k]/overallTotal
       return p
     },{})
 
+    const rowValue = selected.values.map(x => Math.sqrt(1 + x.total) )
     const normalizer = normalizeRow(percentTotals)
 
     var max = 0
-    const values = selected.values.map(row => {
-      const normed = this.normalize() ? normalizer(row) : row
-
+    const values = selected.values.map((row,i) => {
+      
+      const normed = this.normalize() ? normalizer(row,rowValue[i]) : row
       const local_max = d3.max(Object.keys(normed).map(k => normed[k]))
       max = local_max > max ? local_max : max
 
@@ -82,6 +84,16 @@ class Timing extends D3ComponentBase {
       .options(data)
       .on("select", function(x) { this.on("select")(x) }.bind(this))
       .draw()
+
+
+    var ts = d3_class(wrap,"timeseries-row")
+    var svg = d3_updateable(ts,"svg","svg").attr("width",998).attr("height",80).style("margin-left","254px")
+
+    var totals = timingHeaders.map(h => {
+      return hourlyTotals[h.key]
+    })
+
+    simpleTimeseries(svg,totals,744,80,-1)
 
     var timingwrap = d3_class(wrap,"timing-row")
 

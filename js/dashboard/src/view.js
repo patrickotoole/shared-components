@@ -345,6 +345,7 @@ NewDashboard.prototype = {
              .data(self.before_tabs())
              .sort(self.sort())
              .ascending(self.ascending())
+             .on("transform.change", self.on("transform.change") )
              .on("select", self.on("tab.change") )
              .on("sort", self.on("sort.change") )
              .on("stage-filter",function(x) {
@@ -376,6 +377,7 @@ NewDashboard.prototype = {
              .normalize(self.transform() == "normalize")
              .sort(self.sort())
              .ascending(self.ascending())
+             .on("transform.change", self.on("transform.change") )
              .on("select", self.on("tab.change") )
              .on("sort", self.on("sort.change") )
 

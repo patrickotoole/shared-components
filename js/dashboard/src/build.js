@@ -110,6 +110,8 @@ class Dashboard {
      .on("tab.change", s.prepareEvent("tab.change"))
      .on("ba.sort", s.prepareEvent("ba.sort"))
      .on("sort.change", s.prepareEvent("sort.change"))
+     .on("transform.change", s.prepareEvent("transform.change"))
+
      .draw()
    
   }

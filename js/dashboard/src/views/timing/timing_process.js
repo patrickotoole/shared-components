@@ -9,18 +9,19 @@ export const computeScale = (data,_max) => {
 }
 
 export function normalizeRow(weights) {
-  return function normalize(x) {
+
+  return function normalize(x,mult) {
     var keys = timingHeaders.map(t => t.key)
     var values = keys.map(k => x[k])
 
     var total = d3.sum(values)
 
-    var estimates = Object.keys(weights).map(k => weights[k]*total)
+    var estimates = Object.keys(weights).map(k => Math.sqrt(weights[k]*total) )
 
-    var normalized = values.map((k,i) => 1 + (k/estimates[i]))
+    var normalized = values.map((k,i) => (k/estimates[i]))
     var values = {}
     keys.map((k,i) => {
-      values[k] = normalized[i] || ""
+      values[k] = Math.round(normalized[i]*mult || 0) || ""
     })
     return values
 

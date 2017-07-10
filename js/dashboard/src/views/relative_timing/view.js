@@ -1,5 +1,7 @@
 import {identity, d3_updateable, d3_splat, d3_class, D3ComponentBase} from 'helpers'
 import header from '../../generic/header'
+import select from '../../generic/select'
+
 import table from 'table'
 
 import refine_relative from './refine_relative'
@@ -44,13 +46,41 @@ class RelativeTiming extends D3ComponentBase {
     var values = normalize(totals_by_time)
 
     var ts = d3_class(wrap,"timeseries-row")
-    var svg = d3_updateable(ts,"svg","svg").attr("width",936).attr("height",80).style("margin-left","254px")
 
-    simpleTimeseries(svg,values,682,80,-2)
+    var transform_selector = d3_class(ts,"transform")
+
+    select(transform_selector)
+      .options([{"key":"Activity","value":false},{"key":"Normalized","value":"normalize"}])
+      .on("select", function(x){
+
+        self.on("transform.change").bind(this)(x)
+      })
+      .draw()
+
+    var toggle = d3_class(transform_selector,"show-values")
 
 
     var bawrap = d3_class(wrap,"ba-row")
 
+    d3_updateable(toggle,"span","span")
+      .text("show values? ")
+
+    d3_updateable(toggle,"input","input")
+      .attr("type","checkbox")
+      .on("change",function(x) {
+        bawrap.classed("show-values",this.checked)
+      })
+
+
+    
+
+    var svg = d3_updateable(ts,"svg","svg").attr("width",682).attr("height",80)
+      .style("display","inline-block")
+
+    simpleTimeseries(svg,values,682,80,-2)
+
+
+    console.log(this.normalize())
 
 
 

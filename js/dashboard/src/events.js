@@ -17,6 +17,12 @@ export default function init() {
   // OTHER events
 
   state
+    .registerEvent("transform.change", function(x) {
+      s.update("loading")
+      s.publishStatic("transform",x.value)
+      s.prepareEvent("updateFilter")(false,s.state().filters,s.state())
+    })
+
     .registerEvent("sort.change", function(x) {
       const _s = s.state()
       const asc = _s.sort == x.key
