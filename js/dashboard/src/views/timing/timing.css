@@ -16,3 +16,11 @@
 .timing-row .table-wrapper tr th {
   padding:5px; text-align:center
 }
+.timing-row tr td:not(:first-child) {
+  color:transparent;
+  cursor:pointer
+}
+
+.timing-row tr td:not(:first-child):hover, .timing-row.show-values tr td:not(:first-child) {
+  color:inherit
+}

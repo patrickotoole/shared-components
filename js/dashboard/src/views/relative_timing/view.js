@@ -52,7 +52,6 @@ class RelativeTiming extends D3ComponentBase {
     select(transform_selector)
       .options([{"key":"Activity","value":false},{"key":"Normalized","value":"normalize"}])
       .on("select", function(x){
-
         self.on("transform.change").bind(this)(x)
       })
       .draw()
@@ -60,7 +59,6 @@ class RelativeTiming extends D3ComponentBase {
     var toggle = d3_class(transform_selector,"show-values")
 
 
-    var bawrap = d3_class(wrap,"ba-row")
 
     d3_updateable(toggle,"span","span")
       .text("show values? ")
@@ -80,8 +78,9 @@ class RelativeTiming extends D3ComponentBase {
     simpleTimeseries(svg,values,682,80,-2)
 
 
-    console.log(this.normalize())
 
+
+    var bawrap = d3_class(wrap,"ba-row")
 
 
     const sorted_tabular = selected.values.filter(x => x.key != "")

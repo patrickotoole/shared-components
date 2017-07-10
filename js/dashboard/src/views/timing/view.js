@@ -1,5 +1,7 @@
 import {d3_updateable, d3_splat, d3_class, D3ComponentBase, noop} from 'helpers'
 import header from '../../generic/header'
+import select from '../../generic/select'
+
 import table from 'table'
 import * as timeseries from '../../generic/timeseries'
 import {domain_expanded} from 'component'
@@ -87,7 +89,33 @@ class Timing extends D3ComponentBase {
 
 
     var ts = d3_class(wrap,"timeseries-row")
-    var svg = d3_updateable(ts,"svg","svg").attr("width",998).attr("height",80).style("margin-left","254px")
+
+
+    var transform_selector = d3_class(ts,"transform")
+
+    select(transform_selector)
+      .options([{"key":"Activity","value":false},{"key":"Normalized","value":"normalize"}])
+      .on("select", function(x){
+        self.on("transform.change").bind(this)(x)
+      })
+      .draw()
+
+    var toggle = d3_class(transform_selector,"show-values")
+
+
+
+    d3_updateable(toggle,"span","span")
+      .text("show values? ")
+
+    d3_updateable(toggle,"input","input")
+      .attr("type","checkbox")
+      .on("change",function(x) {
+        timingwrap.classed("show-values",this.checked)
+      })
+
+
+
+    var svg = d3_updateable(ts,"svg","svg").attr("width",744).attr("height",80)
 
     var totals = timingHeaders.map(h => {
       return hourlyTotals[h.key]
