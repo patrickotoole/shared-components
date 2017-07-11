@@ -75,6 +75,11 @@ Header.prototype = {
     text: function(val) {
       return accessor.bind(this)("text",val) 
     }
+
+
+  , select_only: function(val) {
+      return accessor.bind(this)("select_only",val) 
+    }
   , options: function(val) {
       return accessor.bind(this)("options",val) 
     }
@@ -85,12 +90,28 @@ Header.prototype = {
       return accessor.bind(this)("expansion",val) 
     }
   , draw: function() {
+
+      
+
       var wrap = d3_updateable(this.target, ".header-wrap","div")
         .classed("header-wrap",true)
 
       var expand_wrap = expansionWrap(wrap)
         , button_wrap = buttonWrap(wrap)
         , head_wrap = headWrap(wrap)
+
+      if (this._select_only) {
+        var bound = this.on("select").bind(this)
+
+        
+
+        var selectBox = select(head_wrap)
+          .options(this._options)
+          .on("select",function(x) { bound(x) })
+          .draw()
+
+        return
+      }
 
       d3_updateable(head_wrap,"span.title","span")
         .classed("title",true)

@@ -1,4 +1,4 @@
-import {d3_updateable, d3_splat} from 'helpers'
+import {noop, d3_updateable, d3_splat} from 'helpers'
 import accessor from '../helpers'
 
 export default function stream_plot(target) {
@@ -63,6 +63,7 @@ class StreamPlot {
 
     this._width = 370
     this._height = 250
+    this._middle = 180
     this._color = d3.scale.ordinal()
       .range(
 ['#999','#aaa','#bbb','#ccc','#ddd','#deebf7','#c6dbef','#9ecae1','#6baed6','#4292c6','#2171b5','rgba(33, 113, 181,.9)','rgba(8, 81, 156,.91)','#08519c','rgba(8, 48, 107,.9)','#08306b'].reverse())
@@ -73,6 +74,10 @@ class StreamPlot {
   value_accessor(val) { return accessor.bind(this)("value_accessor",val) }
   height(val) { return accessor.bind(this)("height",val) }
   width(val) { return accessor.bind(this)("width",val) }
+  middle(val) { return accessor.bind(this)("middle",val) }
+  skip_middle(val) { return accessor.bind(this)("skip_middle",val) }
+
+
 
 
   data(val) { return accessor.bind(this)("data",val) } 
@@ -100,7 +105,7 @@ class StreamPlot {
   
     var x = d3.scale.ordinal()
       .domain(buckets)
-      .range(d3.range(0,width,width/(buckets.length-1)))
+      .range(d3.range(0,width+10,width/(buckets.length-1)))
   
     var xreverse = d3.scale.ordinal()
       .domain(buckets.slice().reverse())
@@ -123,16 +128,19 @@ class StreamPlot {
   
   
     var svg = d3_updateable(target,"svg","svg")
-      .attr("width", width*2+180)
+      .attr("width", width*2+this._middle)
       .attr("height", height + 100);
 
     this._svg = svg
   
     var before = d3_updateable(svg,".before-canvas","g")
       .attr("class","before-canvas")
-      .attr("transform", "translate(0,60)")
+      .attr("transform", "translate(-1,60)")
 
     function hoverCategory(cat,time) {
+      if (cat === false) {
+        self.on("category.hover")(false)
+      }
       apaths.style("opacity",".5")
       bpaths.style("opacity",".5")
       apaths.filter(y => y[0].key == cat).style("opacity",undefined)
@@ -155,20 +163,31 @@ class StreamPlot {
   
     var b = d3_updateable(before,"g","g")
 
+    function mOver(x) {
+      hoverCategory.bind(this)(x[0].key)
+    }
+    function mOut(x) {
+      hoverCategory.bind(this)(false)
+      apaths.style("opacity",undefined)
+      bpaths.style("opacity",undefined)
+    }
+    function click(x) {
+        var bool = apaths.on("mouseover") == mOver
+
+        apaths.on("mouseover",bool ? noop: mOver)
+        apaths.on("mouseout",bool ? noop: mOut)
+        bpaths.on("mouseover",bool ? noop: mOver)
+        bpaths.on("mouseout",bool ? noop: mOut)
+
+    }
+
     var bpaths = d3_splat(b,"path","path", before_stacked,function(x,i) { return x[0].key})
       .attr("d", barea)
       .attr("class", function(x) { return x[0].key})
       .style("fill", function(x,i) { return color(x[0].key); })
-      .on("mouseover",function(x) {
-        var dd = d3.event
-        var pos = parseInt(dd.offsetX/(width/buckets.length))
-        
-        hoverCategory.bind(this)(x[0].key,buckets.slice().reverse()[pos])
-      })
-      .on("mouseout",function(x) {
-        apaths.style("opacity",undefined)
-        bpaths.style("opacity",undefined)
-      })
+      .on("mouseover",mOver)
+      .on("mouseout",mOut)
+      .on("click",click)
 
     bpaths.exit().remove()
 
@@ -185,28 +204,27 @@ class StreamPlot {
 
     var middle = d3_updateable(svg,".middle-canvas","g")
       .attr("class","middle-canvas")
-      .attr("transform","translate(" + (width + 180/2) + ",60)")
+      .attr("transform","translate(" + (width + this._middle/2) + ",60)")
+      .style("display",this._skip_middle ? "none": "inherit")
   
   
   
     var after = d3_updateable(svg,".after-canvas","g")
       .attr("class","after-canvas")
-      .attr("transform", "translate(" + (width + 180) + ",60)")
+      .attr("transform", "translate(" + (width + this._middle) + ",60)")
 
     var a = d3_updateable(after,"g","g")
 
+    
   
     var apaths = d3_splat(a,"path","path",after_stacked,function(x,i) { return x[0].key})
       .attr("d", aarea)
       .attr("class", function(x) { return x[0].key})
       .style("fill", function(x,i) { return color(x[0].key); })
-      .on("mouseover",function(x) {
-        hoverCategory.bind(this)(x[0].key)
-      })
-      .on("mouseout",function(x) {
-        apaths.style("opacity",undefined)
-        bpaths.style("opacity",undefined)
-      })
+      .on("mouseover",mOver)
+      .on("mouseout",mOut)
+      .on("click",click)
+
 
     apaths.exit().remove()
 

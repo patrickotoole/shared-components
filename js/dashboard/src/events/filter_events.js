@@ -168,13 +168,13 @@ export default function init() {
           , cat_before_after_tabular = beforeAndAfterTabular(before_urls.map(catmap),after_urls.map(catmap))
 
         const before_tabs = [
-            {key:"Top Domains",values:before_after_tabular}
-          , {key:"Top Categories",values:cat_before_after_tabular}
+            {key:"Top Domains",values:before_after_tabular,data:before_and_after}
+          , {key:"Top Categories",values:cat_before_after_tabular,data:before_and_after}
         ]
 
-      if (_state.tab_position) {
-        before_tabs.map(x => x.selected = (x.key == _state.tab_position) )
-      }
+        if (_state.tab_position) {
+          before_tabs.map(x => x.selected = (x.key == _state.tab_position) )
+        }
 
 
         s.setStatic("before_urls",before_and_after) 

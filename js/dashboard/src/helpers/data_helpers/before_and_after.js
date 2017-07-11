@@ -4,6 +4,8 @@ import { buildData } from '../../helpers'
 function prefixReducer(prefix, p,c) {
   p[c.key] = p[c.key] || {}
   p[c.key]['key'] = c.key
+  p[c.key]['parent_category_name'] = c.parent_category_name
+
   
   p[c.key][prefix + c.time_diff_bucket] = (p[c.key][c.time_diff_bucket] || 0) + c.visits
   return p

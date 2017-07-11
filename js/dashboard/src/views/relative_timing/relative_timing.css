@@ -39,22 +39,26 @@ margin-left: -20px;
 .transform select {
   height: 36px;
   vertical-align: top;
-      width:224px;
+      width:200px;
 }
 
 .transform {
+  width:255px;
   padding:15px;
   vertical-align: top;
   display:inline-block;
+  padding-top:0px;
 }
 .transform span {
   text-transform:uppercase;
   font-weight:bold
 }
 
+.transform .filter-values,
 .transform .show-values {
   text-align:right;
   padding-top: 10px;
+  margin-right:25px;
 }
 
 .ba-row tr td:not(:first-child) {
@@ -64,4 +68,34 @@ margin-left: -20px;
 
 .ba-row tr td:not(:first-child):hover, .ba-row.show-values tr td:not(:first-child) {
   color:inherit
+}
+.timeseries-row {
+  padding-bottom:80px
+}
+.stream-wrap {
+  
+}
+.stream-wrap .inner {
+  margin-top:-60px
+}
+.stream-wrap .axis.before,
+.stream-wrap .axis.after {
+  display:none
+}
+
+.time-wrap {
+  float:right;
+  width:682px;
+}
+.time-wrap rect {
+  fill: grey
+}
+.time-wrap rect.selected,
+.time-wrap rect:hover {
+  fill: black
+}
+
+tr.hide-category, 
+tr.hide-time {
+  display:none
 }
