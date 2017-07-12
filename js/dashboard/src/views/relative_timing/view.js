@@ -1,6 +1,10 @@
 import {noop, identity, d3_updateable, d3_splat, d3_class, D3ComponentBase} from 'helpers'
 import header from '../../generic/header'
 import select from '../../generic/select'
+import data_selector from '../../generic/data_selector'
+import object_selector from '../../generic/object_selector'
+
+
 
 import table from 'table'
 
@@ -43,16 +47,14 @@ class RelativeTiming extends D3ComponentBase {
     var totals_by_time= totalsByTime(selected.values)
     var values = normalize(totals_by_time)
 
+      function toggleValues(x) {
+        bawrap.classed("show-values",this.checked)
+      }
+
+    self.on("toggle.values",toggleValues)
+
     var ts = d3_class(wrap,"timeseries-row")
       .style("padding-bottom",selected.key == "Top Categories" ? "0px" : null)
-
-
-    var transform_selector = d3_class(ts,"transform")
-
-    select(d3_class(transform_selector,"header","span"))
-      .options(data)
-      .on("select", function(x) { this.on("select")(x) }.bind(this))
-      .draw()
 
     var OPTIONS = [
           {"key":"Activity","value":false}
@@ -62,47 +64,14 @@ class RelativeTiming extends D3ComponentBase {
         , {"key":"Percent Diff","value":"percent_diff"}
       ]
 
-
-
-    select(d3_class(transform_selector,"trans","span"))
-      .options(OPTIONS)
-      .on("select", function(x){
-        self.on("transform.change").bind(this)(x)
-      })
-      .selected(this.transform() )
+    data_selector(ts)
+      .datasets(data)
+      .transforms(OPTIONS)
+      .selected_transform(this.transform())
+      .on("toggle.values", x => { this.on("select")(x) } )
+      .on("transform.change", this.on("transform.change") )
+      .on("dataset.change", this.on("toggle.values") )
       .draw()
-
-
-
-
-    var toggle = d3_class(transform_selector,"show-values")
-
-    d3_updateable(toggle,"span","span")
-      .text("show values? ")
-
-    d3_updateable(toggle,"input","input")
-      .attr("type","checkbox")
-      .on("change",function(x) {
-        bawrap.classed("show-values",this.checked)
-      })
-
-
-    var toggle = d3_class(transform_selector,"filter-values")
-
-    d3_updateable(toggle,"span","span")
-      .text("live filter? ")
-
-    d3_updateable(toggle,"input","input")
-      .attr("type","checkbox")
-      .attr("disabled",true)
-      .attr("checked","checked")
-
-    var toggle = d3_class(transform_selector,"reset-values")
-
-    d3_updateable(toggle,"a","a")
-      .style("display","none")
-      .style("text-align","center")
-      .text("Reset")
 
 
 
@@ -152,8 +121,10 @@ class RelativeTiming extends D3ComponentBase {
     var sts = simpleTimeseries(svg,values,682,80,-2)
 
     var lock = false
+    var dont_hide_times = []
 
-    function filterTime(t,i) {
+
+    function filterTime(t,i,skip_hide) {
       var key = timeBuckets[i]
 
       if (lock) {
@@ -162,7 +133,9 @@ class RelativeTiming extends D3ComponentBase {
       lock = setTimeout(function() {
         lock = false
         var tr = bawrap.selectAll("tbody").selectAll("tr")
-          .classed("hide-time",false)
+
+        console.log(skip_hide)
+        if (!skip_hide) tr.classed("hide-time",false)
 
         if (i === false) return false
 
@@ -174,28 +147,60 @@ class RelativeTiming extends D3ComponentBase {
 
     }
 
+    object_selector(sts)
+      .selectAll("rect")
+      .key((x,i) => timeBuckets[i])
+      .on("click",function(key,selections) {
 
-    sts.selectAll("rect")
-      .on("mouseover",filterTime)
-      .on("mouseout",function() { 
-        filterTime(false,false)
+        console.log(selections)
+        var tr = bawrap.selectAll("tbody")
+          .selectAll("tr")
+          .classed("hide-time", function(x) {
+
+            var bool = selections.filter(s => {
+              return x[s] != undefined || x[s] != ""
+            })
+
+            console.log(bool.length,x)
+
+            return !bool.length
+
+          })
+
       })
-      .on("click",function() {
-        lock = false
-        var bool = (sts.selectAll("rect").on("mouseover") == filterTime)
+      .draw()
 
-        sts.selectAll("rect")
-          .on("mouseover", bool ? noop : filterTime)
-          .on("mouseout", bool ? noop : function() { filterTime(false,false) })
+    //sts.selectAll("rect")
+    //  .on("mouseover",filterTime)
+    //  .on("mouseout",function() { 
+    //    filterTime(false,false)
+    //  })
+    //  .on("click",function(t,i) {
 
-          .classed("selected",false)
+    //    if (d3.select(this).classed("selected") == false) {
+    //      d3.select(this).classed("selected",true)
 
-        d3.select(this).classed("selected",bool)
+    //      sts.selectAll("rect")
+    //        .on("mouseover", noop)
+    //        .on("mouseout", noop) 
 
-        //d3.event.stopPropagation()
-        return false
+    //      filterTime(false,i,true)
+    //      if (sts.selectAll("rect.selected").size() > 0) return
+    //    }
+    //    
 
-      })
+    //    lock = false
+    //    var bool = (sts.selectAll("rect").on("mouseover") == filterTime)
+
+    //    sts.selectAll("rect")
+    //      .on("mouseover", bool ? noop : filterTime)
+    //      .on("mouseout",  bool ? noop : function() { filterTime(false,false) })
+    //      .classed("selected",false)
+
+    //    d3.select(this).classed("selected",bool)
+
+    //    return false
+    //  })
 
     const categories = data[0].data.category.reduce((p,c) => {
       p[c.key] = c
@@ -205,17 +210,13 @@ class RelativeTiming extends D3ComponentBase {
     var bawrap = d3_class(wrap,"ba-row")
       .style("min-height","600px")
 
-    //TODO: fix this
-
     var normByCol = normalizeByColumns(selected.values)
-
 
     const sorted_tabular = selected.values.filter(x => x.key != "")
       .map(
         this.transform() == "normalize" ?  normalizeRow : 
         this.transform() == "percent" ? normalizeByColumns(selected.values) : 
         this.transform() == "percent_diff" ? row => normalizeRowSimple( normByCol(row) ) : 
-
         this.transform() == "importance" && selected.key.indexOf("Cat") == -1 ? normalizeByCategory(categories) : 
         identity
       )
