@@ -99,7 +99,7 @@ export function normalizeRow(x) {
   var obj = {}
   t1.slice().reverse().concat(t1.map(x => "-" + x)).map((x,i) => obj[x] = normed[i])
 
-  return Object.assign({key:x.key},obj)
+  return Object.assign({},x,obj)
 }
 
 export function totalsByTime(values) {
