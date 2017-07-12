@@ -159,10 +159,16 @@ export default function init() {
       // BEFORE AND AFTER
       if (_state.data.before) {
 
-        const catmap = (x) => Object.assign(x,{key:x.parent_category_name})
+        const domain_idfs = d3.nest()
+          .key(x => x.domain)
+          .rollup(x => x[0].idf)
+          .map(full_urls)
 
-        const before_urls = filterUrls(_state.data.before,logic,filters).map(x => Object.assign({key:x.domain},x) )
-          , after_urls = filterUrls(_state.data.after,logic,filters).map(x => Object.assign({key:x.domain},x) )
+        const catmap = (x) => Object.assign(x,{key:x.parent_category_name})
+        const urlmap = (x) => Object.assign({key:x.domain, idf: domain_idfs[x.domain]},x)
+
+        const before_urls = filterUrls(_state.data.before,logic,filters).map(urlmap)
+          , after_urls = filterUrls(_state.data.after,logic,filters).map(urlmap)
           , before_and_after = buildBeforeAndAfter(before_urls,after_urls,cat_summary,_state.sortby)
           , before_after_tabular = beforeAndAfterTabular(before_urls,after_urls)
           , cat_before_after_tabular = beforeAndAfterTabular(before_urls.map(catmap),after_urls.map(catmap))

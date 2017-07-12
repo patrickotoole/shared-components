@@ -24,7 +24,7 @@ class Timing extends D3ComponentBase {
     super(target)
   }
 
-  props() { return ["data","normalize", "sort", "ascending"] }
+  props() { return ["data","transform", "sort", "ascending"] }
 
 
   draw() {
@@ -70,7 +70,7 @@ class Timing extends D3ComponentBase {
     var max = 0
     const values = selected.values.map((row,i) => {
       
-      const normed = this.normalize() ? normalizer(row,rowValue[i]) : row
+      const normed = this.transform() == "normalize" ? normalizer(row,rowValue[i]) : row
       const local_max = d3.max(Object.keys(normed).map(k => normed[k]))
       max = local_max > max ? local_max : max
 

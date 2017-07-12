@@ -66,6 +66,7 @@ function categoryReducer(group) {
       , views: 0
       , sessions: 0
       , pop_size: group[0].category_idf ? 1/group[0].category_idf : 0
+      , idf: group[0].category_idf
     })
 }
 

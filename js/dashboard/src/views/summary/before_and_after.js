@@ -112,32 +112,12 @@ export function drawStreamSkinny(target,before,after,filter) {
         , vwrap = d3_updateable(wrap,".volume","g")
             .attr("class","volume")
             .attr("transform","translate(15,30)")
-        , pwrap = d3_updateable(wrap,".percent","g")
-            .attr("class","percent")
-            .attr("transform","translate(15,90)")
-        , iwrap = d3_updateable(wrap,".importance","g")
-            .attr("class","importance")
-            .attr("transform","translate(15,150)")
 
 
-      d3_updateable(vwrap,"text","text").text("Visits")
+      d3_updateable(vwrap,"text","text").text("Visits: " + d3.sum(volume) )
         .attr("style","title")
-      simpleTimeseries(vwrap,volume,200)
-        .attr("transform","translate(0,2)")
 
 
-      d3_updateable(pwrap,"text","text").text("Share of time")
-        .attr("class","title")
-
-      simpleTimeseries(pwrap,percent,200)
-        .attr("transform","translate(0,2)")
-
-
-      d3_updateable(iwrap,"text","text").text("Importance")
-        .attr("class","title")
-
-      simpleTimeseries(iwrap,importance,200)
-        .attr("transform","translate(0,2)")
 
 
       return

@@ -5,9 +5,8 @@ import select from '../../generic/select'
 import table from 'table'
 
 import refine_relative from './refine_relative'
-import {categoryWeights, computeScale, normalizeRow, normalize, totalsByTime} from './relative_timing_process'
+import {categoryWeights, computeScale, normalizeRowSimple, normalizeRow, normalize, totalsByTime, normalizeByColumns, normalizeByCategory} from './relative_timing_process'
 import {timingHeaders, timeBuckets} from './relative_timing_constants'
-
 import {drawStream, drawStreamSkinny} from '../summary/before_and_after'
 import {simpleTimeseries} from 'chart'
 
@@ -25,7 +24,7 @@ class RelativeTiming extends D3ComponentBase {
     super(target)
   }
 
-  props() { return ["data","normalize", "sort", "ascending"] }
+  props() { return ["data","transform", "sort", "ascending"] }
 
   draw() {
 
@@ -55,11 +54,22 @@ class RelativeTiming extends D3ComponentBase {
       .on("select", function(x) { this.on("select")(x) }.bind(this))
       .draw()
 
+    var OPTIONS = [
+          {"key":"Activity","value":false}
+        , {"key":"Intent Score","value":"normalize"}
+        , {"key":"Importance","value":"importance"}
+        , {"key":"Percentage","value":"percent"}
+        , {"key":"Percent Diff","value":"percent_diff"}
+      ]
+
+
+
     select(d3_class(transform_selector,"trans","span"))
-      .options([{"key":"Activity","value":false},{"key":"Normalized","value":"normalize"}])
+      .options(OPTIONS)
       .on("select", function(x){
         self.on("transform.change").bind(this)(x)
       })
+      .selected(this.transform() )
       .draw()
 
 
@@ -94,10 +104,6 @@ class RelativeTiming extends D3ComponentBase {
       .style("text-align","center")
       .text("Reset")
 
-    d3_updateable(toggle,"input","input")
-      .attr("type","checkbox")
-      .attr("disabled",true)
-      .attr("checked","checked")
 
 
 
@@ -191,14 +197,28 @@ class RelativeTiming extends D3ComponentBase {
 
       })
 
-
+    const categories = data[0].data.category.reduce((p,c) => {
+      p[c.key] = c
+      return p
+    },{})
 
     var bawrap = d3_class(wrap,"ba-row")
       .style("min-height","600px")
 
+    //TODO: fix this
+
+    var normByCol = normalizeByColumns(selected.values)
+
 
     const sorted_tabular = selected.values.filter(x => x.key != "")
-      .map(this.normalize() ? normalizeRow : identity)
+      .map(
+        this.transform() == "normalize" ?  normalizeRow : 
+        this.transform() == "percent" ? normalizeByColumns(selected.values) : 
+        this.transform() == "percent_diff" ? row => normalizeRowSimple( normByCol(row) ) : 
+
+        this.transform() == "importance" && selected.key.indexOf("Cat") == -1 ? normalizeByCategory(categories) : 
+        identity
+      )
       .slice(0,1000)
 
     const oscale = computeScale(sorted_tabular)
@@ -244,8 +264,11 @@ class RelativeTiming extends D3ComponentBase {
           .style("padding-left","0px")
           .style("text-align","center")
           .style("background-color",function(x) {
+
             var value = this.parentNode.__data__[x['key']] || 0
-            return "rgba(70, 130, 180," + oscale(Math.log(value+1)) + ")"
+            var slug = value > 0 ? "rgba(70, 130, 180," : "rgba(244, 109, 67,"
+            value = Math.abs(value)
+            return slug + oscale(Math.log(value+1)) + ")"
           })     
       })
       .option_text("<div style='width:40px;text-align:center'>&#65291;</div>")

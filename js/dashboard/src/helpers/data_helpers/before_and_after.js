@@ -5,6 +5,9 @@ function prefixReducer(prefix, p,c) {
   p[c.key] = p[c.key] || {}
   p[c.key]['key'] = c.key
   p[c.key]['parent_category_name'] = c.parent_category_name
+  p[c.key]['idf'] = c.idf
+
+  p[c.key]['total'] = (p[c.key]['total'] || 0) + c.visits
 
   
   p[c.key][prefix + c.time_diff_bucket] = (p[c.key][c.time_diff_bucket] || 0) + c.visits

@@ -51,10 +51,10 @@ class Dashboard {
       , logic_categories: []
       , filters: [{}] 
       , dashboard_options: [
-            {"key":"Data summary","value":"summary-view","selected":1}
-          , {"key":"Explore data","value":"data-view","selected":0}
-          , {"key":"Before & After","value":"ba-view","selected":0}
+            {"key":"Overall","value":"data-view","selected":1}
+          , {"key":"Path","value":"ba-view","selected":0}
           , {"key":"Timing","value":"timing-view","selected":0}
+          , {"key":"Data summary","value":"summary-view","selected":0}
           , {"key":"Media Plan", "value":"media-view","selected":0}
 
         ]

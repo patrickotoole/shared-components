@@ -1,4 +1,59 @@
-import {timeBuckets} from './relative_timing_constants'
+import {timeBuckets} from './relative_timing_constants';
+
+export function normalizeRowSimple(row) {
+
+  var items = 0
+
+  var mean = timeBuckets.reduce((p,c) => {
+    if (row[c] && row[c] != "") {
+      items ++ 
+      p += row[c] || 0
+    }
+    return p
+  },0)/items
+
+  timeBuckets.map(b => {
+    if (row[b]) row[b] = row[b] > mean ? 
+      Math.round((row[b] - mean)/mean*10)/10 : 
+      Math.round(-(mean - row[b])/mean*10)/10
+  })
+
+  return row
+}
+
+export function normalizeByCategory(categories) {
+
+  return function normalize(row) {
+    const cat_idf = ((categories[row.parent_category_name] && categories[row.parent_category_name].idf)  || 0.032) * 100000
+    let idf = row.idf == "NA" ? 14345/100 : row.idf
+    idf = (row.key.split(".")).length > 2 ? idf*.1 : idf
+
+    timeBuckets.map(b => {
+
+      if (row[b]) row[b] = Math.log(1 + (row[b]/Math.sqrt(row.total))*(row[b]*row[b])*(idf)*(1/cat_idf))
+    })
+    return row
+  }
+}
+
+export function normalizeByColumns(values) {
+
+  var tb = timeBuckets.reduce((p,c) => { p[c] =0; return p}, {})
+  
+  var totals = values.reduce((tb,row) => {
+    timeBuckets.map(b => {
+      tb[b] += row[b] || 0
+    })
+    return tb
+  },tb)
+
+  return function normalize(row) {
+    timeBuckets.map(b => {
+      if (row[b]) row[b] = Math.round(row[b]/totals[b]*1000)/10 
+    })
+    return row
+  }
+}
 
 
 export const categoryWeights = (categories) => {
@@ -59,8 +114,8 @@ export function totalsByTime(values) {
 
 export const computeScale = (data) => {
   const max = data.reduce((p,c) => {
-    Object.keys(c).filter(z => z != "domain" && z != "weighted").map(function(x) {
-      p = c[x] > p ? c[x] : p
+    timeBuckets.map(x => {
+      p = Math.abs(c[x]) > p ? Math.abs(c[x]) : p
     })
   
     return p

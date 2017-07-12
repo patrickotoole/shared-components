@@ -341,7 +341,7 @@ NewDashboard.prototype = {
 
           if (x.value == "ba-view") {
             relative_view(dthis)
-             .normalize(self.transform() == "normalize")
+             .transform(self.transform())
              .data(self.before_tabs())
              .sort(self.sort())
              .ascending(self.ascending())
@@ -374,7 +374,7 @@ NewDashboard.prototype = {
           if (x.value == "timing-view") {
             timing_view(dthis)
              .data(self.time_tabs())
-             .normalize(self.transform() == "normalize")
+             .transform(self.transform())
              .sort(self.sort())
              .ascending(self.ascending())
              .on("transform.change", self.on("transform.change") )

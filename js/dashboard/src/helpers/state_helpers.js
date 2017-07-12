@@ -27,6 +27,17 @@ export function compare(qs_state,_state) {
     })
 
     .accessor(
+        "transform"
+      , (x,y) => x.transform
+      , (_,y) => y.transform
+    )
+    .failure("transform", (_new,_old,obj) => {
+      Object.assign(obj, { "transform": _new })
+    })
+
+
+
+    .accessor(
         "sort"
       , (x,y) => x.sort
       , (_,y) => y.sort
