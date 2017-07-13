@@ -5,7 +5,7 @@ export const computeScale = (data,_max) => {
 
   const max = _max || 1000 // need to actually compute this from data
 
-  return d3.scale.linear().range([0,.8]).domain([0,Math.log(max)])
+  return d3.scale.linear().range([0,1]).domain([0,Math.log(max)])
 }
 
 export function normalizeRow(weights) {
