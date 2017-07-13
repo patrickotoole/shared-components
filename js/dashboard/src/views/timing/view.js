@@ -1,6 +1,10 @@
 import {d3_updateable, d3_splat, d3_class, D3ComponentBase, noop} from 'helpers'
 import header from '../../generic/header'
 import select from '../../generic/select'
+import data_selector from '../../generic/data_selector'
+
+import object_selector from '../../generic/object_selector'
+
 
 import table from 'table'
 import * as timeseries from '../../generic/timeseries'
@@ -71,48 +75,43 @@ class Timing extends D3ComponentBase {
     const values = selected.values.map((row,i) => {
       
       const normed = this.transform() == "normalize" ? normalizer(row,rowValue[i]) : row
-      const local_max = d3.max(Object.keys(normed).map(k => normed[k]))
+      const local_max = d3.max(timingHeaders.map(x => x.key).map(k => normed[k]))
       max = local_max > max ? local_max : max
 
       return Object.assign(normed,{"key":row.key})
     })
 
+console.log(max)
 
     const oscale = computeScale(values,max)
 
 
     header(wrap)
-      .text(selected.key)
-      .options(data)
-      .on("select", function(x) { this.on("select")(x) }.bind(this))
+      .text("Before and After") //selected.key)
+      //.options(data)
+      //.on("select", function(x) { this.on("select")(x) }.bind(this))
       .draw()
 
 
     var ts = d3_class(wrap,"timeseries-row")
 
+    var OPTIONS = [
+          {"key":"Activity","value":false}
+        , {"key":"Scored","value":"normalize"}
+      ]
 
-    var transform_selector = d3_class(ts,"transform")
-
-    select(transform_selector)
-      .options([{"key":"Activity","value":false},{"key":"Normalized","value":"normalize"}])
-      .on("select", function(x){
-        self.on("transform.change").bind(this)(x)
-      })
-      .draw()
-
-    var toggle = d3_class(transform_selector,"show-values")
-
-
-
-    d3_updateable(toggle,"span","span")
-      .text("show values? ")
-
-    d3_updateable(toggle,"input","input")
-      .attr("type","checkbox")
-      .on("change",function(x) {
+      function toggleValues(x) {
         timingwrap.classed("show-values",this.checked)
-      })
+      }
 
+    data_selector(ts)
+      .datasets(data)
+      .transforms(OPTIONS)
+      .selected_transform(this.transform())
+      .on("toggle.values", toggleValues )
+      .on("transform.change", this.on("transform.change") )
+      .on("dataset.change", x => { this.on("select")(x) })
+      .draw()
 
 
     var svg = d3_updateable(ts,"svg","svg").attr("width",744).attr("height",80)
@@ -121,7 +120,30 @@ class Timing extends D3ComponentBase {
       return hourlyTotals[h.key]
     })
 
-    simpleTimeseries(svg,totals,744,80,-1)
+    var sts = simpleTimeseries(svg,totals,744,80,-1)
+
+    object_selector(sts)
+      .selectAll("rect")
+      .key((x,i) => timingHeaders[i].key)
+      .on("mouseout",function(key,selections) {
+
+        timingwrap.selectAll("tbody")
+          .selectAll("tr")
+          .classed("hide-time", false)
+
+      })
+      .on("interact",function(key,selections) {
+
+        var tr = timingwrap.selectAll("tbody")
+          .selectAll("tr")
+          .classed("hide-time", function(x) { 
+            var bool = selections.filter(s => { return x[s] != undefined && x[s] != "" }) 
+            return !bool.length 
+          })
+
+      })
+      .draw()
+
 
     var timingwrap = d3_class(wrap,"timing-row")
 
@@ -130,7 +152,7 @@ class Timing extends D3ComponentBase {
       .headers(headers)
       .sort(sortby,asc)
       .on("sort", this.on("sort"))
-      .data({"values":values})
+      .data({"values":values.slice(0,500)})
       .skip_option(true)
       .on("expand",function(d,td) {
 

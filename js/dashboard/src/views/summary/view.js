@@ -88,7 +88,7 @@ export class SummaryView extends D3ComponentBase {
       .draw()
 
 
-    drawStream(streamwrap,this._before.before_categories,this._before.after_categories)
+    //drawStream(streamwrap,this._before.before_categories,this._before.after_categories)
 
 
     return this

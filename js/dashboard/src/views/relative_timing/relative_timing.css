@@ -69,7 +69,7 @@ margin-left: -20px;
 .ba-row tr td:not(:first-child):hover, .ba-row.show-values tr td:not(:first-child) {
   color:inherit
 }
-.timeseries-row {
+.summary-wrap .timeseries-row {
   padding-bottom:80px
 }
 .stream-wrap {

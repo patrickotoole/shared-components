@@ -147,6 +147,46 @@ export function drawStreamSkinny(target,before,after,filter) {
   var svg = stream
     ._svg.style("margin","auto").style("display","block")
 
+  var mline = d3_updateable(svg,"g.m-line-wrap","g")
+    .attr("class","m-line-wrap")
+
+  d3_updateable(mline,"line","line")
+    .attr("stroke-width",30)
+    .attr("stroke","white")
+    .attr("y1", 60)
+    .attr("y2", stream._height+60)
+    .attr("x1", 341)
+    .attr("x2", 341)
+
+  var m = d3_updateable(mline,"g","g")
+    .attr("writing-mode","tb-rl")
+    .attr("transform","translate(341," + (stream._height/2 + 60) + ")")
+
+  d3_updateable(m,"text","text")
+    .text("User activity on your site")
+    .style("text-anchor","middle")
+
+
+
+
+  var title = d3_updateable(svg,".main-title","text")
+    .attr("x","341")
+    .attr("y","30")
+    .style("text-anchor","middle")
+    .style("font-weight","bold")
+    .attr("class","main-title")
+    .text("Category Importance of User's Journey to site (hover to explore, click to select)")
+
+  var title = d3_updateable(svg,".second-title","text")
+    .attr("x","341")
+    .attr("y","345")
+    .style("text-anchor","middle")
+    .style("font-weight","bold")
+    .attr("class","second-title")
+    .text("Time weighted volume")
+
+
+
 
   var bline = d3_updateable(svg.selectAll(".before-canvas"),"g.line-wrap","g")
     .attr("class","line-wrap")

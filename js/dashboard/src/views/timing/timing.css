@@ -24,3 +24,11 @@
 .timing-row tr td:not(:first-child):hover, .timing-row.show-values tr td:not(:first-child) {
   color:inherit
 }
+
+.timing-wrap rect {
+  fill: grey
+}
+.timing-wrap rect.selected,
+.timing-wrap rect:hover {
+  fill: black
+}
