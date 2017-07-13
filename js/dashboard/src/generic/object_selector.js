@@ -34,7 +34,7 @@ class ObjectSelector extends D3ComponentBase {
       }
 
 
-      self.on("click").bind(this)(self.key()(x,i),skip ? [self.key()(x,i)] : self._selections)
+      self.on("interact").bind(this)(self.key()(x,i),skip ? [self.key()(x,i)] : self._selections)
 
     }
 
@@ -44,9 +44,15 @@ class ObjectSelector extends D3ComponentBase {
         if (self._selections.length == 0) click.bind(this)(x,i,true)
       })
       .on("mouseout", function(x,i) {
-        if (self._selections.length == 0) click.bind(this)(x,i,true)
+        if (self._selections.length == 0) {
+          click.bind(this)(x,i,true)
+          self.on("mouseout").bind(this)(x,i)
+        }
       })
-      .on("click", click)
+      .on("click", function(x,i) {
+        click.bind(this)(x,i)
+        self.on("click").bind(this)(self.key()(x,i), self._selections)
+      })
 
 
     return this

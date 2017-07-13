@@ -117,9 +117,6 @@ export function drawStreamSkinny(target,before,after,filter) {
       d3_updateable(vwrap,"text","text").text("Visits: " + d3.sum(volume) )
         .attr("style","title")
 
-
-
-
       return
     })
     .draw()

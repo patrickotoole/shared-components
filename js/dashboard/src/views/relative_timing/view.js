@@ -47,11 +47,11 @@ class RelativeTiming extends D3ComponentBase {
     var totals_by_time= totalsByTime(selected.values)
     var values = normalize(totals_by_time)
 
-      function toggleValues(x) {
-        bawrap.classed("show-values",this.checked)
-      }
+    function toggleValues(x) {
+      bawrap.classed("show-values",this.checked)
+    }
 
-    self.on("toggle.values",toggleValues)
+    this.on("toggle.values",toggleValues)
 
     var ts = d3_class(wrap,"timeseries-row")
       .style("padding-bottom",selected.key == "Top Categories" ? "0px" : null)
@@ -68,9 +68,9 @@ class RelativeTiming extends D3ComponentBase {
       .datasets(data)
       .transforms(OPTIONS)
       .selected_transform(this.transform())
-      .on("toggle.values", x => { this.on("select")(x) } )
+      .on("toggle.values", this.on("toggle.values") )
       .on("transform.change", this.on("transform.change") )
-      .on("dataset.change", this.on("toggle.values") )
+      .on("dataset.change", x => { this.on("select")(x) })
       .draw()
 
 
@@ -87,10 +87,10 @@ class RelativeTiming extends D3ComponentBase {
       .style("width","255px")
       .style("height","200px")
       .style("display",selected.key == "Top Categories" ? "none" : "inline-block")
-
-
-      .style("margin-top","-110px")
+      .style("margin-top","-140px")
       .style("float","left")
+
+    
 
     function filter(cat) {
 
@@ -105,7 +105,95 @@ class RelativeTiming extends D3ComponentBase {
         .classed("hide-category",true)
     }
 
-    var stages = drawStreamSkinny(stream_wrap,selected.data.before_categories,selected.data.after_categories,filter)
+    var stages = drawStreamSkinny(stream_wrap,selected.data.before_categories,selected.data.after_categories,noop)
+
+    object_selector(stream_wrap)
+      .selectAll("path")
+      .key((x,i) => { return x[0].key })
+      .on("mouseout",function(key,selections) {
+        stream_wrap
+          .selectAll("path")
+          .style("opacity","1")
+
+        bawrap.selectAll("tbody")
+          .selectAll("tr")
+          .classed("hide-category", false)
+
+      })
+      .on("click",function(key,selections) {
+
+        stream_wrap
+          .selectAll("path")
+          .filter(x => {
+            if (!x[0]) return false
+            var k = x[0].key
+
+            var bool = selections
+              .filter(s => { return k == s})
+              .map(x => x)
+
+            return bool.length
+          })
+          .classed("selected",true)
+
+
+      })
+      .on("interact",function(key,selections) {
+
+        stream_wrap.selectAll("path")
+          .style("opacity","1")
+          .filter(x => {
+            if (!x[0]) return false
+
+            var bool = selections
+              .filter(s => { return x[0].key == s})
+              .map(x => x)
+
+            return !bool.length
+          })
+          .style("opacity",".6")
+
+        bawrap.selectAll("tbody")
+          .selectAll("tr")
+          .classed("hide-category", function(x) { 
+            var bool =  selections.indexOf(x.parent_category_name) > -1
+            return !bool
+          })
+
+        const cat_wrap = d3_class(details,"cat","g")
+        d3_class(cat_wrap,"title","text").text("Categories Selected:")
+          .style("font-weight","bold")
+          .style("text-transform","uppercase")
+          .attr("x",15)
+          .attr("y", 15)
+
+
+        var cats = d3_updateable(cat_wrap,".cats","g",selections,x => 1)
+          .classed("cats",true)
+
+
+        var cat = cats.selectAll(".cat")
+          .data(x => x)
+
+        cat
+          .enter()
+          .append("text")
+          .classed("cat",true)
+          .attr("x",15)
+          .attr("y",(x,i) => 30 + (i+1)*15)
+
+        cat
+          .text(String)
+        
+        cat.exit().remove()
+
+        
+
+
+      })
+      .draw()
+
+
 
     var time_wrap = d3_class(ts,"time-wrap")
       .style("text-align", "right")
@@ -120,87 +208,28 @@ class RelativeTiming extends D3ComponentBase {
 
     var sts = simpleTimeseries(svg,values,682,80,-2)
 
-    var lock = false
-    var dont_hide_times = []
-
-
-    function filterTime(t,i,skip_hide) {
-      var key = timeBuckets[i]
-
-      if (lock) {
-        clearTimeout(lock)
-      }
-      lock = setTimeout(function() {
-        lock = false
-        var tr = bawrap.selectAll("tbody").selectAll("tr")
-
-        console.log(skip_hide)
-        if (!skip_hide) tr.classed("hide-time",false)
-
-        if (i === false) return false
-
-        var filtered = tr.filter(function(x) { 
-            return x[key] == undefined || x[key] == ""
-          })
-          .classed("hide-time",true)
-      },10)
-
-    }
-
     object_selector(sts)
       .selectAll("rect")
       .key((x,i) => timeBuckets[i])
-      .on("click",function(key,selections) {
+      .on("mouseout",function(key,selections) {
 
-        console.log(selections)
+        bawrap.selectAll("tbody")
+          .selectAll("tr")
+          .classed("hide-time", false)
+
+      })
+      .on("interact",function(key,selections) {
+
         var tr = bawrap.selectAll("tbody")
           .selectAll("tr")
-          .classed("hide-time", function(x) {
-
-            var bool = selections.filter(s => {
-              return x[s] != undefined || x[s] != ""
-            })
-
-            console.log(bool.length,x)
-
-            return !bool.length
-
+          .classed("hide-time", function(x) { 
+            var bool = selections.filter(s => { return x[s] != undefined && x[s] != "" }) 
+            return !bool.length 
           })
 
       })
       .draw()
 
-    //sts.selectAll("rect")
-    //  .on("mouseover",filterTime)
-    //  .on("mouseout",function() { 
-    //    filterTime(false,false)
-    //  })
-    //  .on("click",function(t,i) {
-
-    //    if (d3.select(this).classed("selected") == false) {
-    //      d3.select(this).classed("selected",true)
-
-    //      sts.selectAll("rect")
-    //        .on("mouseover", noop)
-    //        .on("mouseout", noop) 
-
-    //      filterTime(false,i,true)
-    //      if (sts.selectAll("rect.selected").size() > 0) return
-    //    }
-    //    
-
-    //    lock = false
-    //    var bool = (sts.selectAll("rect").on("mouseover") == filterTime)
-
-    //    sts.selectAll("rect")
-    //      .on("mouseover", bool ? noop : filterTime)
-    //      .on("mouseout",  bool ? noop : function() { filterTime(false,false) })
-    //      .classed("selected",false)
-
-    //    d3.select(this).classed("selected",bool)
-
-    //    return false
-    //  })
 
     const categories = data[0].data.category.reduce((p,c) => {
       p[c.key] = c
