@@ -156,7 +156,7 @@ console.log(max)
       .skip_option(true)
       .on("expand",function(d,td) {
 
-        var dd = data.full_urls.filter(function(x) { return x.domain == d.domain })
+        var dd = data[0].data.filter(function(x) { return x.domain == d.key })
         var rolled = timeseries.prepData(dd)
         
         domain_expanded(td)

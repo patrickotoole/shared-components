@@ -139,7 +139,7 @@ export default function init() {
       const timing_tabular = timingTabular(full_urls)
       const cat_timing_tabular = timingTabular(full_urls,"parent_category_name")
       const timing_tabs = [
-          {"key":"Top Domains", "values": timing_tabular}
+          {"key":"Top Domains", "values": timing_tabular, "data": value.full_urls}
         , {"key":"Top Categories", "values": cat_timing_tabular}
 
       ]

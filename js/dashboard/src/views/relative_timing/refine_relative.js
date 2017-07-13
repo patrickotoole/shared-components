@@ -72,15 +72,13 @@ class RefineRelative extends D3ComponentBase {
       , kws_consid
       , kws_valid 
 
-    } = processData(before_urls,after_urls,before_pos,after_pos,d.domain)
-
-
+    } = processData(before_urls,after_urls,before_pos,after_pos,this._domain)
 
 
     const summary_row = d3_class(td,"summary-row")
 
     d3_class(summary_row,"title")
-      .text("Before and After: " + d.domain)
+      .text("Before and After: " + this._domain)
 
     before_after_timeseries(summary_row)
       .data(overall_rollup)

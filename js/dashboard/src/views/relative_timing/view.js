@@ -73,11 +73,6 @@ class RelativeTiming extends D3ComponentBase {
       .on("dataset.change", x => { this.on("select")(x) })
       .draw()
 
-
-
-
-
-
     var stream_wrap = d3_class(ts,"stream-wrap")
       .style("width","682px")
       .style("display",selected.key == "Top Categories" ? "none" : "inline-block")
@@ -90,20 +85,6 @@ class RelativeTiming extends D3ComponentBase {
       .style("margin-top","-140px")
       .style("float","left")
 
-    
-
-    function filter(cat) {
-
-      var tr = bawrap.selectAll("tbody").selectAll("tr")
-        .classed("hide-category",false)
-
-      if (cat === false) return 
-
-      var filtered = tr.filter(function(x) { 
-          return x.parent_category_name != cat
-        })
-        .classed("hide-category",true)
-    }
 
     var stages = drawStreamSkinny(stream_wrap,selected.data.before_categories,selected.data.after_categories,noop)
 
@@ -270,12 +251,14 @@ class RelativeTiming extends D3ComponentBase {
       .on("sort", this.on("sort"))
       .on("expand",function(d,td) {
 
+        let _data = data[0].data
+
         refine_relative(td)
           .data(d)
-          .domain(d.domain)
+          .domain(d.key)
           .stages(stages)
-          .before_urls(data.before.filter(y => y.domain == d.domain) )
-          .after_urls(data.after.filter(y => y.domain == d.domain))
+          .before_urls(_data.before.filter(y => y.domain == d.key) )
+          .after_urls(_data.after.filter(y => y.domain == d.key))
           .on("stage-filter",self.on("stage-filter"))
           .draw()
 
