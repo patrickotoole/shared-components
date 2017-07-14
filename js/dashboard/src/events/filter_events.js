@@ -120,7 +120,7 @@ export default function init() {
       var tabs = [
           buildDomainsTab(full_urls,categories)
         , {key:"Top Categories", values: cat_summary}
-        , buildUrlsTab(full_urls,categories)
+        //, buildUrlsTab(full_urls,categories)
       ]
 
       
