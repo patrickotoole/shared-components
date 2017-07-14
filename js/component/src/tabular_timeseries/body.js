@@ -10,6 +10,8 @@ export default class TabularBody extends D3ComponentBase {
   props() { return ["data","split"] }
 
   draw() {
+    const self = this
+
     let expansion_row = this._target
 
     var expansion = d3_class(expansion_row,"expansion-urls")
@@ -24,9 +26,7 @@ export default class TabularBody extends D3ComponentBase {
 
     d3_updateable(url_name,"input","input")
       .attr("type","checkbox")
-      .on("click", function(x) {
-        self.on("stage-filter")(x)
-      })
+      .on("click", self.on("stage-filter"))
 
     d3_class(url_name,"url","a")
       .text(x => { return this.split() ? x.key.split(this.split())[1] || x.key : x.key })

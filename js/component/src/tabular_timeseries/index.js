@@ -31,6 +31,7 @@ class TabularTimeseries extends D3ComponentBase {
     var body = (new TabularBody(expansion_row))
       .data(this.data())
       .split(this.split() || false)
+      .on("stage-filter",this.on("stage-filter"))
       .draw()
 
   }

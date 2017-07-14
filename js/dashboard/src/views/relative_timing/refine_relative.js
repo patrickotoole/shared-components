@@ -132,12 +132,14 @@ class RefineRelative extends D3ComponentBase {
       .label("URL")
       .data(urls)
       .split(this.domain())
+      .on("stage-filter",this.on("stage-filter"))
       .draw()
 
     tabular_timeseries(d3_class(modify,"kw-depth"))
       .headers(["Before","After"])
       .label("Keywords")
       .data(kws)
+      .on("stage-filter",this.on("stage-filter"))
       .draw()
 
   }

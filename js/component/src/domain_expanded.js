@@ -89,11 +89,13 @@ class DomainExpanded extends D3ComponentBase {
       .label("URL")
       .data(to_draw)
       .split(this.domain())
+      .on("stage-filter",this.on("stage-filter"))
       .draw()
 
     tabular_timeseries(d3_class(td,"kw-depth"))
       .label("Keywords")
       .data(kw_to_draw)
+      .on("stage-filter",this.on("stage-filter"))
       .draw()
         
   }

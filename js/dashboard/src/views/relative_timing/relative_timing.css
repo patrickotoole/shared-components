@@ -62,11 +62,14 @@ margin-left: -20px;
 }
 
 .ba-row tr td:not(:first-child) {
+
   color:transparent;
   cursor:pointer
 }
 
-.ba-row tr td:not(:first-child):hover, .ba-row.show-values tr td:not(:first-child) {
+.ba-row tr td:not(:first-child):hover, 
+.ba-row.show-values tr td:not(:first-child),
+.ba-row tr.expanded td {
   color:inherit
 }
 .summary-wrap .timeseries-row {

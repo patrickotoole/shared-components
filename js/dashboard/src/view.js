@@ -150,6 +150,44 @@ NewDashboard.prototype = {
         .on("action_date.change", this.on("action_date.change"))
         .on("comparison.change", this.on("comparison.change"))
         .on("comparison_date.change", this.on("comparison_date.change"))
+        .on("download.click", function() {  
+          var ss = share(d3.select("body")).draw()
+          ss.inner(function(target) {
+
+            var header = d3_updateable(target,".header","h4")
+              .classed("header",true)
+              .style("text-align","center")
+              .style("text-transform","uppercase")
+              .style("font-family","ProximaNova, sans-serif")
+              .style("font-size","12px")
+              .style("font-weight","bold")
+              .style("padding-top","30px")
+              .style("padding-bottom","30px")
+              .text("Download a saved media plan")
+
+            var form = d3_updateable(target,"div","div",self.saved())
+              .style("text-align","left")
+              .style("padding-left","25%")
+
+            if (!self.saved() || self.saved().length == 0) {
+              d3_updateable(form,"span","span")
+                .text("You currently have no saved mediaplans")
+            } else {
+              d3_splat(form,".row","a",function(x) { return x },function(x) { return x.name })
+                .classed("row",true)
+                .attr("href", x => {
+
+                  var filter_id = x.endpoint.split("selected_action=")[1].split("&")[0]
+                  return "/mediaplan/cache?format=csv&filter_id=" + filter_id + "&name=" + x.name
+                })
+                .attr("download",x => x.name + "-export.csv")
+                .text(x => x.name)
+
+            }
+
+          })
+
+        })
         .on("saved-search.click", function() {  
           var ss = share(d3.select("body")).draw()
           ss.inner(function(target) {

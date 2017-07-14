@@ -21,7 +21,9 @@
   cursor:pointer
 }
 
-.timing-row tr td:not(:first-child):hover, .timing-row.show-values tr td:not(:first-child) {
+.timing-row tr td:not(:first-child):hover, 
+.timing-row.show-values tr td:not(:first-child),
+tr.expanded td {
   color:inherit
 }
 
