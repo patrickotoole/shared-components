@@ -87,9 +87,7 @@ console.log(max)
 
 
     header(wrap)
-      .text("Before and After") //selected.key)
-      //.options(data)
-      //.on("select", function(x) { this.on("select")(x) }.bind(this))
+      .text("Timing")
       .draw()
 
 

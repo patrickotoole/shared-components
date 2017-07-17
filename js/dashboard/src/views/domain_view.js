@@ -1,6 +1,8 @@
 import {d3_class, d3_updateable, d3_splat, D3ComponentBase} from 'helpers'
 import header from '../generic/header'
 import {prepData} from '../generic/timeseries'
+import data_selector from '../generic/data_selector'
+
 
 import table from 'table'
 import {domain_expanded} from 'component'
@@ -49,10 +51,15 @@ export class DomainView extends D3ComponentBase {
 
 
     header(_explore)
-      .text(selected.key )
-      .options(tabs)
-      .on("select", function(x) { this.on("select")(x) }.bind(this))
+      .text("Overall")
       .draw()
+
+    data_selector(_explore)
+      .datasets(tabs)
+      .skip_values(true)
+      .on("dataset.change", x => { this.on("select")(x) })
+      .draw()
+
 
     _explore.selectAll(".vendor-domains-bar-desc").remove()
     _explore.datum(data)

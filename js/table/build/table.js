@@ -12,12 +12,13 @@ function __$styleInject(css, returnValue) {
   var head = document.head || document.getElementsByTagName('head')[0];
   var style = document.createElement('style');
   style.type = 'text/css';
+  head.appendChild(style);
+  
   if (style.styleSheet){
     style.styleSheet.cssText = css;
   } else {
     style.appendChild(document.createTextNode(css));
   }
-  head.appendChild(style);
   return returnValue;
 }
 
@@ -49,9 +50,12 @@ const d3_splat = function(target,selector,type,data,joiner) {
   return updateable
 };
 
+function d3_class(target,cls,type,data) {
+  return d3_updateable(target,"." + cls, type || "div",data)
+    .classed(cls,true)
+}
 
-
-
+function noop() {}
 
 
 
@@ -59,6 +63,24 @@ function accessor(attr, val) {
   if (val === undefined) return this["_" + attr]
   this["_" + attr] = val;
   return this
+}
+
+class D3ComponentBase {
+  constructor(target) {
+    this._target = target;
+    this._on = {};
+    this.props().map(x => {
+      this[x] = accessor.bind(this,x);
+    });
+  }
+  props() {
+    return ["data"]
+  }
+  on(action,fn) {
+    if (fn === undefined) return this._on[action] || noop;
+    this._on[action] = fn;
+    return this
+  }
 }
 
 __$styleInject(".table-wrapper tr { height:33px}\n.table-wrapper tr th { border-right:1px dotted #ccc } \n.table-wrapper tr th:last-of-type { border-right:none } \n\n.table-wrapper tr { border-bottom:1px solid #ddd }\n.table-wrapper tr th, .table-wrapper tr td { \n  padding-left:10px;\n  max-width:200px\n}\n\n.table-wrapper thead tr { \n  background-color:#e3ebf0;\n}\n.table-wrapper thead tr th .title { \n  text-transform:uppercase\n}\n.table-wrapper tbody tr { \n}\n.table-wrapper tbody tr:hover { \n  background-color:white;\n  background-color:#f9f9fb\n}\n",undefined);
@@ -85,6 +107,25 @@ function Table(target) {
 
   this._hidden_fields = [];
   this._on = {};
+
+  this._render_expand = function(d) {
+    d3.select(this).selectAll("td.option-header").html("&ndash;");
+    if (this.nextSibling && d3.select(this.nextSibling).classed("expanded") == true) {
+      d3.select(this).selectAll("td.option-header").html("&#65291;");
+      return d3.select(this.parentNode).selectAll(".expanded").remove()
+    }
+
+    d3.select(this.parentNode).selectAll(".expanded").remove();
+    var t = document.createElement('tr');
+    this.parentNode.insertBefore(t, this.nextSibling);  
+
+
+    var tr = d3.select(t).classed("expanded",true).datum({});
+    var td = d3_updateable(tr,"td","td")
+      .attr("colspan",this.children.length);
+
+    return td
+  };
   this._render_header = function(wrap) {
 
 
@@ -215,7 +256,6 @@ Table.prototype = {
 
 
 
-      if (!this._skip_option) {
       var table_fixed = d3_updateable(wrapper,"table.fixed","table")
         .classed("hidden", true) // TODO: make this visible when main is not in view
         .classed("fixed",true)
@@ -255,22 +295,23 @@ Table.prototype = {
 
       var thead = d3_updateable(table_fixed,"thead","thead");
 
-      var table_button = d3_updateable(wrapper,".table-option","a")
-        .classed("table-option",true)
-        .style("position","absolute")
-        .style("top","-1px")
-        .style("right","0px")
-        .style("cursor","pointer")
-        .style("line-height","33px")
-        .style("font-weight","bold")
-        .style("padding-right","8px")
-        .style("padding-left","8px")
-        .text("OPTIONS")
-        .style("background","#e3ebf0")
-        .on("click",function(x) {
-          this._options_header.classed("hidden",!this._options_header.classed("hidden"));
-          this._show_options = !this._options_header.classed("hidden");
-        }.bind(this));
+      if (!this._skip_option) {
+        var table_button = d3_updateable(wrapper,".table-option","a")
+          .classed("table-option",true)
+          .style("position","absolute")
+          .style("top","-1px")
+          .style("right","0px")
+          .style("cursor","pointer")
+          .style("line-height","33px")
+          .style("font-weight","bold")
+          .style("padding-right","8px")
+          .style("padding-left","8px")
+          .text("OPTIONS")
+          .style("background","#e3ebf0")
+          .on("click",function(x) {
+            this._options_header.classed("hidden",!this._options_header.classed("hidden"));
+            this._show_options = !this._options_header.classed("hidden");
+          }.bind(this));
       }
 
       return wrapper
@@ -296,12 +337,7 @@ Table.prototype = {
         .style("position","relative")
         .order();
 
-
-      d3_updateable(th,"span","span")
-        .classed("title",true)
-        .style("cursor","pointer")
-        .text(function(x) { return x.value })
-        .on("click",function(x) {
+      var defaultSort = function(x) {
           if (x.sort === false) {
             delete x['sort'];
             this._sort = {};
@@ -312,7 +348,16 @@ Table.prototype = {
             this.sort(x.key,x.sort);
             this.draw();
           }
-        }.bind(this));
+        }.bind(this);
+
+
+      d3_updateable(th,"span","span")
+        .classed("title",true)
+        .style("cursor","pointer")
+        .text(function(x) { return x.value })
+        .on("click",this.on("sort") != noop ? this.on("sort") : defaultSort);
+
+
 
       d3_updateable(th,"i","i")
         .style("padding-left","5px")
@@ -437,7 +482,10 @@ Table.prototype = {
       var rows = d3_splat(tbody,"tr","tr",data,function(x,i){ return String(sortby.key + x[sortby.key]) + i })
         .order()
         .on("click",function(x) {
-          self.on("expand").bind(this)(x);
+          if (self.on("expand") != noop) {
+            var td = self._render_expand.bind(this)(x);
+            self.on("expand").bind(this)(x,td);
+          }
         });
 
       rows.exit().remove();
@@ -494,20 +542,56 @@ Table.prototype = {
 
       this.render_rows(this._table_main);
 
+      this.on("draw").bind(this)();
+
       return this
 
     }
   , on: function(action, fn) {
-      if (fn === undefined) return this._on[action] || function() {};
+      if (fn === undefined) return this._on[action] || noop;
       this._on[action] = fn;
       return this
     }
   , d3: d3
 };
 
+__$styleInject(".summary-table { \n  display:inline-block;\n  vertical-align:top;\n}\n.summary-table > .title {\n  font-weight:bold;\n  font-size:14px;\n}\n\n.summary-table .wrap {\n  width:100%\n}\n",undefined);
+
+function summary_table(target) {
+  return new SummaryTable(target)
+}
+
+class SummaryTable extends D3ComponentBase {
+  constructor(target) {
+    super(target);
+    this._wrapper_class = "table-summary-wrapper";
+  }
+
+  props() { return ["title", "headers", "data", "wrapper_class"] }
+
+  draw() {
+    var urls_summary = d3_class(this._target,"summary-table");
+      
+    d3_class(urls_summary,"title")
+      .text(this.title());
+
+    var uwrap = d3_class(urls_summary,"wrap");
+
+
+    table(uwrap)
+      .wrapper_class(this.wrapper_class(),true)
+      .data({"values":this.data()})
+      .skip_option(true)
+      .headers(this.headers())
+      .draw();
+
+  }
+}
+
 exports.table = table;
 exports['default'] = table;
 exports.t = table;
+exports.summary_table = summary_table;
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
