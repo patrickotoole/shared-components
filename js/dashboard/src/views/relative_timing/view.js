@@ -81,13 +81,13 @@ class RelativeTiming extends D3ComponentBase {
 
     var stream_wrap = d3_class(ts,"stream-wrap")
       .style("width","682px")
-      .style("height","420px")
-      .style("display",selected.key == "Top Categories" ? "none" : "inline-block")
+      .style("height",selected.key == "Top Categories" ? "100px" : "390px")
+
 
     var stages = drawStreamSkinny(stream_wrap,selected.data.before_categories,selected.data.after_categories,noop)
 
     stream_wrap.selectAll(".before-stream")
-      .style("height","350px")
+      .style("display",selected.key == "Top Categories" ? "none" : null)
 
 
     var time_wrap = d3_class(stream_wrap,"time-wrap")
