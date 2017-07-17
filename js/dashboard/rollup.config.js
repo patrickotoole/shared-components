@@ -6,13 +6,12 @@ import postcss from 'rollup-plugin-postcss';
 
 export default {
   //moduleId: 'dashboard',
+  useStrict: false,
   moduleName: 'dashboard',
   entry: 'build/bundle.js',
   dest: 'build/dashboard.js',
   sourceMap: 'inline',
   format: 'umd',
-  external: ['d3'],
-  globals: {d3: 'd3'},
   plugins: [ 
     resolve({
       jsnext: true,

@@ -1,4 +1,4 @@
-import state from 'state';
+import {s as state} from 'state';
 
 
 export default function init() {

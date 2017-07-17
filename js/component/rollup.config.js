@@ -11,8 +11,6 @@ export default {
   dest: 'build/component.js',
   sourceMap: 'inline',
   format: 'umd',
-  external: ['d3'],
-  globals: {d3: 'd3'},
   plugins: [ 
     resolve({
       jsnext: true,

@@ -2,37 +2,37 @@
   "name": "dashboard",
   "version": "0.0.1",
   "description": "dashboard",
-  "main": "build/dashboard.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "rickotoole <rick@rockerbox.com> (http://rockerbox.com)",
-  "license": "ISC",
+  "jsnext:main": "index",
   "scripts": {
     "pretest": "mkdir -p build && node -e 'process.stdout.write(\"var version = \\\"\" + require(\"./package.json\").version + \"\\\"; export * from \\\"../index\\\"; export {version};\");' > build/bundle.js && rollup -c -- build/bundle.js",
     "test": "faucet `find test -name '*-test.js'`",
     "prepublish": "npm run test && uglifyjs build/dashboard.js -c -m -o build/dashboard.min.js && rm -f build/dashboard.zip && zip -j build/dashboard.zip -- LICENSE README.md build/dashboard.js build/dashboard.min.js"
   },
+  "author": "rickotoole <rick@rockerbox.com> (http://rockerbox.com)",
+  "license": "ISC",
   "dependencies": {
-    "state": "file:../state",
-    "table": "file:../table",
-    "media_plan": "file:../media_plan",
+    "jquery": "",
     "api": "file:../api",
-    "helpers": "file:../helpers",
     "chart": "file:../chart",
     "component": "file:../component",
-    "filter": "file:../filter"
+    "d3": "3.5.12",
+    "filter": "file:../filter",
+    "helpers": "file:../helpers",
+    "media_plan": "file:../media_plan",
+    "npm": "^4.6.1",
+    "state": "file:../state",
+    "table": "file:../table"
   },
   "devDependencies": {
     "d3": "3.5.12",
     "faucet": "0.0",
-    "rollup": "^0.43.0",
     "jsdom": "7",
+    "rollup": "^0.43.0",
+    "rollup-plugin-commonjs": "",
+    "rollup-plugin-node-resolve": "",
+    "rollup-plugin-postcss": "",
+    "rollup-watch": "^4.3.1",
     "tape": "4",
-    "uglify-js": "2",
-"rollup-plugin-node-resolve": "",
-"rollup-plugin-postcss": "",
-"rollup-plugin-commonjs":""
+    "uglify-js": "2"
   }
-
 }

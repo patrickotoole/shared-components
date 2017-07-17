@@ -1,0 +1,96 @@
+.scrollbox {
+  /*border-top:1px solid #ccc;*/
+  padding-top:12px;
+  padding-left:5px;
+}
+
+.scrollbox:first-of-type {
+  /*border-right:1px solid #ccc;*/
+}
+
+.inner > select, .inner > input {
+  height: 36px;
+  vertical-align:top
+}
+.selectize-control.multi {
+  display: inline-block
+}
+.selectize-dropdown.multi {
+  padding:5px;
+}
+.expanded thead tr {
+  height:28px;
+  background:none
+}
+
+.expanded .table-wrapper tr { height:28px }
+
+
+.inner .header-wrap, .inner select { flex: 1}
+
+.head-wrap {
+  height: 150px;
+  border-bottom:1px solid #ddd
+}
+body {
+  padding-top:0px;
+}
+body > .container {
+  margin-left: 0px;
+}
+.body-wrap {
+  overflow:hidden
+}
+.head-wrap .item, .body-wrap .item {
+  display:table-cell;
+  width:50px;
+  height:50px;
+  position:relative;
+  vertical-align:top
+}
+
+.head-wrap .item {
+  display:table-cell;
+  width:50px;
+  height:150px;
+  position:relative
+}
+
+.tabular-wrapper {
+  width:900px
+}
+
+.head-wrap .item span {
+  transform: rotate(-45deg);
+  display: block;
+  position: absolute;
+  bottom: 50px;
+  width: 155px;
+  text-transform: uppercase;
+  font-size: .85em;
+  font-weight: normal;
+  border-bottom: solid 1px #DDD;
+  line-height: 30px;
+  right: -120px;
+}
+.versus {
+
+  margin-top:10px;
+  margin-right:10px;
+  display:inline-block;
+
+  padding:10px;
+  border-radius:10px;
+  border: 1px solid #ccc;
+}
+a.versus:hover {
+  text-decoration:none;
+
+}
+
+.versus.selected, .square.selected {
+  background-color:white
+}
+
+.axis { opacity:.7 }
+.hidden { display:none }

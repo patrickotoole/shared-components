@@ -1,9 +1,3 @@
-(function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
-	typeof define === 'function' && define.amd ? define('state', ['exports'], factory) :
-	(factory((global.state = global.state || {})));
-}(this, (function (exports) { 'use strict';
-
 function State(_current, _static) {
 
   this._noop = function() {};
@@ -440,12 +434,4 @@ class ComparisonEval {
 const s = window.__state__ || state();
 window.__state__ = s;
 
-exports.s = s;
-exports['default'] = s;
-exports.state = state;
-exports.qs = qs;
-exports.comp_eval = comparison_eval;
-
-Object.defineProperty(exports, '__esModule', { value: true });
-
-})));
+export { s, state, qs, comparison_eval as comp_eval };export default s;

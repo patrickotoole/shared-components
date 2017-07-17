@@ -1,4 +1,5 @@
 import {d3_class, d3_splat, d3_updateable, accessor, D3ComponentBase} from 'helpers'
+import d3 from 'd3'
 import './domain_expanded.css'
 
 import {tabular_timeseries} from './tabular_timeseries/index'

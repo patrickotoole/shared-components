@@ -1,7 +1,6 @@
 {
   "name": "state",
-  "version": "0.0.2",
-  "main": "build/state.js",
+  "version": "0.0.3",
   "jsnext:main": "index",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -9,14 +8,14 @@
   "author": "rickotoole <rick@rockerbox.com> (http://rockerbox.com)",
   "license": "ISC",
   "scripts": {
-    "pretest": "mkdir -p build && node -e 'process.stdout.write(\"var version = \\\"\" + require(\"./package.json\").version + \"\\\"; export * from \\\"../index\\\"; export {version};\");' > build/bundle.js && rollup -f umd -u state -n state -o build/state.js -- build/bundle.js",
+    "pretest": "rollup -c",
     "test": "faucet `find test -name '*-test.js'`",
     "prepublish": "npm run test && uglifyjs build/state.js -c -m -o build/state.min.js && rm -f build/state.zip && zip -j build/state.zip -- LICENSE README.md build/state.js build/state.min.js"
   },
   "devDependencies": {
     "d3": "3.5.12",
     "faucet": "0.0",
-    "rollup": "0.20.5",
+    "rollup": "0.41.4",
     "jsdom": "7",
     "tape": "4",
     "node-inspector":"0.0",

@@ -18,7 +18,7 @@ class Dashboard {
 
   constructor(target) {
     initEvents()
-    initSubscriptions()
+    initSubscriptions(target)
     this.target(target)
     this.init()
 

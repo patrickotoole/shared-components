@@ -1,9 +1,8 @@
 {
   "name": "component",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "component",
   "jsnext:main": "index",
-  "main": "build/component.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -15,13 +14,15 @@
     "prepublish": "npm run test && uglifyjs build/component.js -c -m -o build/components.min.js && rm -f build/components.zip && zip -j build/components.zip -- LICENSE README.md build/components.js build/components.min.js"
   },
   "dependencies": {
-    "helpers": "file:../helpers"
+    "d3": "3.5.12",
+    "helpers": "file:../helpers",
+    "chart": "file:../chart"
+
   },
   "devDependencies": {
     "rollup-plugin-node-resolve":"",
     "rollup-plugin-commonjs":"",
     "rollup-plugin-postcss":"",
-    "d3": "3.5.12",
     "faucet": "0.0",
     "rollup": "^0.40.1",
     "jsdom": "7",

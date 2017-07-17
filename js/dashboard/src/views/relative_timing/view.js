@@ -73,20 +73,24 @@ class RelativeTiming extends D3ComponentBase {
       .on("dataset.change", x => { this.on("select")(x) })
       .draw()
 
+    var details = d3_class(ts.selectAll(".transform"),"details-wrap","svg")
+      .style("width","255px")
+      .style("height","150px")
+      .style("display",selected.key == "Top Categories" ? "none" : "inline-block")
+      .style("margin-top","20px")
+
     var stream_wrap = d3_class(ts,"stream-wrap")
       .style("width","682px")
+      .style("height","420px")
       .style("display",selected.key == "Top Categories" ? "none" : "inline-block")
-      .style("vertical-align","bottom")
-
-    var details = d3_class(ts,"details-wrap","svg")
-      .style("width","255px")
-      .style("height","200px")
-      .style("display",selected.key == "Top Categories" ? "none" : "inline-block")
-      .style("margin-top","-140px")
-      .style("float","left")
-
 
     var stages = drawStreamSkinny(stream_wrap,selected.data.before_categories,selected.data.after_categories,noop)
+
+    stream_wrap.selectAll(".before-stream")
+      .style("height","350px")
+
+
+    var time_wrap = d3_class(stream_wrap,"time-wrap")
 
     object_selector(stream_wrap)
       .selectAll("path")
@@ -145,7 +149,6 @@ class RelativeTiming extends D3ComponentBase {
         d3_class(cat_wrap,"title","text").text("Categories Selected:")
           .style("font-weight","bold")
           .style("text-transform","uppercase")
-          .attr("x",15)
           .attr("y", 15)
 
 
@@ -176,11 +179,9 @@ class RelativeTiming extends D3ComponentBase {
 
 
 
-    var time_wrap = d3_class(ts,"time-wrap")
-      .style("text-align", "right")
-      .style("margin-right", "63px")
 
-    var svg = d3_updateable(time_wrap,"svg","svg").attr("width",682).attr("height",80)
+    var svg = d3_updateable(time_wrap,"svg","svg")
+      .attr("width",682).attr("height",80)
       .style("display","inline-block")
       .style("vertical-align","bottom")
       .style("margin-bottom","15px")

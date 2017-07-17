@@ -8,14 +8,14 @@ import apiSubscriptions from './subscriptions/api'
 const s = state;
 
 
-export default function init() {
+export default function init(target) {
 
   historySubscriptions()
   apiSubscriptions()
 
   
   state
-    .subscribe("change.loading", function(error,loading,value) { build()() })
+    .subscribe("change.loading", function(error,loading,value) { build(target)() })
     .subscribe("change.dashboard_options", s.prepareEvent("updateFilter"))
     .subscribe("change.tabs", s.prepareEvent("updateFilter")) 
     .subscribe("change.logic_options", s.prepareEvent("updateFilter") )
@@ -27,6 +27,6 @@ export default function init() {
   state
     .subscribe("redraw.formatted_data", function(error,formatted_data,value) { 
       s.update("loading",false); 
-      build()() 
+      build(target)() 
     })
 }

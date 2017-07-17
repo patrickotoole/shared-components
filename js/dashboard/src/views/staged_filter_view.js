@@ -3,6 +3,7 @@ import accessor from '../helpers'
 import header from '../generic/header'
 import select from '../generic/select'
 
+
 import * as table from 'table'
 
 function d3_class(target,cls,type) {
