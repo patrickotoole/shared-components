@@ -1,5 +1,30 @@
 import {hourbuckets, timingHeaders} from './timing_constants'
 
+const timeHeaders = timingHeaders.map(x => x.key)
+
+export function normalizeRowSimple(row) {
+
+  var items = 0
+
+  var mean = timeHeaders.reduce((p,c) => {
+    if (row[c] && row[c] != "") {
+      items ++ 
+      p += row[c] || 0
+    }
+    return p
+  },0)/items
+
+  timeHeaders.map(b => {
+    if (row[b]) row[b] = row[b] > mean ? 
+      Math.round((row[b] - mean)/mean*10)/10 : 
+      Math.round(-(mean - row[b])/mean*10)/10
+  })
+
+
+
+  return row
+}
+
 
 export const computeScale = (data,_max) => {
 

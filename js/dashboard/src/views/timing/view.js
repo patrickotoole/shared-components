@@ -12,7 +12,7 @@ import {domain_expanded} from 'component'
 import {simpleTimeseries} from 'chart'
 
 import {hourbuckets, timingHeaders} from './timing_constants'
-import {computeScale, normalizeRow} from './timing_process'
+import {normalizeRowSimple, computeScale, normalizeRow} from './timing_process'
 
 
 
@@ -74,14 +74,18 @@ class Timing extends D3ComponentBase {
     var max = 0
     const values = selected.values.map((row,i) => {
       
-      const normed = this.transform() == "normalize" ? normalizer(row,rowValue[i]) : row
+      const normed = 
+        this.transform() == "normalize" ? normalizer(row,rowValue[i]) : 
+        this.transform() == "percent_diff" ? normalizeRowSimple(row) : 
+        row
+
+
       const local_max = d3.max(timingHeaders.map(x => x.key).map(k => normed[k]))
       max = local_max > max ? local_max : max
 
       return Object.assign(normed,{"key":row.key})
     })
 
-console.log(max)
 
     const oscale = computeScale(values,max)
 
@@ -96,6 +100,8 @@ console.log(max)
     var OPTIONS = [
           {"key":"Activity","value":false}
         , {"key":"Scored","value":"normalize"}
+        , {"key":"Percent","value":"percent"}
+        , {"key":"Percent Diff","value":"percent_diff"}
       ]
 
       function toggleValues(x) {
@@ -172,7 +178,10 @@ console.log(max)
         this._target.selectAll("tr").selectAll("td:not(:first-child)")
           .style("background-color",function(x) {
             var value = this.parentNode.__data__[x['key']] || 0
-            return "rgba(70, 130, 180," + oscale(Math.log(value+1)) + ")"
+            var slug = value > 0 ? "rgba(70, 130, 180," : "rgba(244, 109, 67,"
+            value = Math.abs(value)
+            return slug + oscale(Math.log(value+1)) + ")"
+
           })
       })
       .draw()

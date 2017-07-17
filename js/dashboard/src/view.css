@@ -92,5 +92,5 @@ a.versus:hover {
   background-color:white
 }
 
-.axis { opacity:.7 }
+.axis { opacity:.7; font-size:10px }
 .hidden { display:none }
