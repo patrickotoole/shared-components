@@ -64,6 +64,81 @@ export class DomainView extends D3ComponentBase {
     _explore.selectAll(".vendor-domains-bar-desc").remove()
     _explore.datum(data)
 
+    var legend = d3_class(_explore,"legend")
+      .style("display","inline-block")
+      .style("margin-left","358px")
+
+    d3_class(legend,"legend-label","span")
+      .style("text-transform","uppercase")
+      .style("font-weight","bold")
+      .style("line-height","30px")
+      .style("vertical-align","top")
+      .style("margin-right","10px")
+      .text("Key")
+
+
+    var graphic = d3_class(legend,"graphic")
+      .style("width","300px")
+      .style("display","inline-block")
+
+
+    domain_bullet(graphic)
+      .max(max)
+      .data({"pop_percent":max/3*2,"sample_percent_norm":max})
+      .draw()
+
+    var svg = graphic.selectAll("svg")
+      .attr("width",400)
+      .attr("height",68)
+
+    d3_updateable(svg,"line.segment","line")
+      .classed("segment",true)
+      .attr("stroke-width",1)
+      .attr("stroke-dasharray","1 3")
+      .attr("stroke","#333")
+      .attr("y2",14)
+      .attr("y1",14)
+      .attr("x2",250)
+      .attr("x1",265)
+
+
+
+    d3_updateable(svg,"text.segment","text")
+      .classed("segment",true)
+      .attr("y",18)
+      .attr("x",270)
+      .style("text-anchor","start")
+
+      .style("font-weight","bold")
+      .text("Users in segment")
+
+    d3_updateable(svg,"line.population","line")
+      .classed("population",true)
+      .attr("stroke-width",1)
+      .attr("stroke-dasharray","1 3")
+      .attr("stroke","#333")
+      .attr("y2",48)
+      .attr("y1",27)
+      .attr("x2",140)
+      .attr("x1",140)
+
+
+    d3_updateable(svg,"text.population","text")
+      .classed("population",true)
+      .style("text-anchor","start")
+      .style("font-weight","bold")
+      .attr("y",53)
+      .attr("x",150)
+      .text("Users in population")
+
+
+
+
+    
+
+    
+
+
     var t = table(_explore)
       .top(140)
       .data(selected)
@@ -92,6 +167,7 @@ export class DomainView extends D3ComponentBase {
         this.innerText = Math.trunc(this.parentNode.__data__.ratio*100)/100 + "x"
       })
       .render("value",function(d) {
+
 
         domain_bullet(d3.select(this))
           .max(max)
