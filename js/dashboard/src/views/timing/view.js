@@ -12,7 +12,7 @@ import {domain_expanded} from 'component'
 import {simpleTimeseries} from 'chart'
 
 import {hourbuckets, timingHeaders} from './timing_constants'
-import {normalizeRowSimple, computeScale, normalizeRow} from './timing_process'
+import {normalizeByColumns, normalizeRowSimple, computeScale, normalizeRow} from './timing_process'
 
 
 
@@ -71,11 +71,15 @@ class Timing extends D3ComponentBase {
     const rowValue = selected.values.map(x => Math.sqrt(1 + x.total) )
     const normalizer = normalizeRow(percentTotals)
 
+    const normByCol = normalizeByColumns(selected.values)
+
+
     var max = 0
     const values = selected.values.map((row,i) => {
       
       const normed = 
         this.transform() == "normalize" ? normalizer(row,rowValue[i]) : 
+        this.transform() == "percent" ? normByCol(row): 
         this.transform() == "percent_diff" ? normalizeRowSimple(row) : 
         row
 
@@ -175,13 +179,22 @@ class Timing extends D3ComponentBase {
       })
       .on("draw",function() {
 
-        this._target.selectAll("tr").selectAll("td:not(:first-child)")
+
+
+        var trs = this._target.selectAll("tr").selectAll("td:not(:first-child)")
           .style("background-color",function(x) {
             var value = this.parentNode.__data__[x['key']] || 0
             var slug = value > 0 ? "rgba(70, 130, 180," : "rgba(244, 109, 67,"
             value = Math.abs(value)
             return slug + oscale(Math.log(value+1)) + ")"
+          })
+        if (self.transform() == "percent") 
+          trs.text(function(x) {
+            var value = this.parentNode.__data__[x['key']] || 0
+            var f = d3.format(".1%")(value/100)
 
+            f = f.length > 4 ? f.slice(0,2) : f.slice(0,-1)
+            return f + "%"
           })
       })
       .draw()

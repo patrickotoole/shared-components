@@ -2,6 +2,25 @@ import {hourbuckets, timingHeaders} from './timing_constants'
 
 const timeHeaders = timingHeaders.map(x => x.key)
 
+export function normalizeByColumns(values) {
+
+  var tb = timeHeaders.reduce((p,c) => { p[c] =0; return p}, {})
+  
+  var totals = values.reduce((tb,row) => {
+    timeHeaders.map(b => {
+      tb[b] += row[b] || 0
+    })
+    return tb
+  },tb)
+
+  return function normalize(row) {
+    timeHeaders.map(b => {
+      if (row[b]) row[b] = Math.round(row[b]/totals[b]*1000)/10 
+    })
+    return row
+  }
+}
+
 export function normalizeRowSimple(row) {
 
   var items = 0

@@ -226,7 +226,7 @@ class RelativeTiming extends D3ComponentBase {
     const sorted_tabular = selected.values.filter(x => x.key != "")
       .map(
         this.transform() == "normalize" ?  normalizeRow : 
-        this.transform() == "percent" ? normalizeByColumns(selected.values) : 
+        this.transform() == "percent" ? normByCol : 
         this.transform() == "percent_diff" ? row => normalizeRowSimple( normByCol(row) ) : 
         this.transform() == "importance" && selected.key.indexOf("Cat") == -1 ? normalizeByCategory(categories) : 
         identity
@@ -273,7 +273,7 @@ class RelativeTiming extends D3ComponentBase {
         this._target.selectAll(".table-option")
           .style("display","none")
 
-        this._target.selectAll("tr").selectAll("td:not(:first-child)")
+        var trs = this._target.selectAll("tr").selectAll("td:not(:first-child)")
           .style("border-right","1px solid white")
           .style("padding-left","0px")
           .style("text-align","center")
@@ -284,6 +284,17 @@ class RelativeTiming extends D3ComponentBase {
             value = Math.abs(value)
             return slug + oscale(Math.log(value+1)) + ")"
           })     
+
+        if (self.transform() == "percent") 
+          trs.text(function(x) {
+            if (this.classList.contains("option-header")) return ""
+
+            var value = this.parentNode.__data__[x['key']] || 0
+            var f = d3.format(".1%")(value/100)
+            f = f.length > 4 ? f.slice(0,2) : f.slice(0,-1)
+            return f + "%"
+
+          })
       })
       .option_text("<div style='width:40px;text-align:center'>&#65291;</div>")
       .data({"values":sorted_tabular})
