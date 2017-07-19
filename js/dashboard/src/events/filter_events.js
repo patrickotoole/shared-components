@@ -112,15 +112,15 @@ export default function init() {
         .entries(full_urls)
 
       const times_rolled = d3.nest()
-        .key(x => parseInt(x.hour) -12 > 0 ? (parseInt(x.hour) - 12) + "pm" : parseInt(hour) +"am")
+        .key(x => parseInt(x.hour) -12 > 0 ? (parseInt(x.hour) - 12) + "pm" : parseInt(x.hour) +"am")
         .rollup(x => x.length)
-        .entries(__state__.state().data.original_urls)
+        .entries(full_urls)
 
       s.setStatic("execution_plan", {
           "categories": cat_summary.filter(x => x.value)
-        , "domains": domains_rolled.sort((p,c) => { return c.idf*c.count - p.idf*p.count }).slice(0,10)
-        , "articles": full_urls.sort((p,c) => { c.key = c.url; p.key = p.url; return domain_idfs[c.domain]*c.count - domain_idfs[p.domain]*p.count}).slice(0,20)
-        , "times": times_rolled.sort((p,c) => { return c.count - p.count }).slice(0,8)
+        , "domains": domains_rolled.sort((p,c) => { return c.idf*c.count - p.idf*p.count }).reverse().slice(0,10)
+        , "articles": full_urls.sort((p,c) => { c.key = c.url; p.key = p.url; return domain_idfs[c.domain]*c.count - domain_idfs[p.domain]*p.count}).reverse().slice(0,20)
+        , "times": times_rolled.sort((p,c) => { return p.count - c.count }).slice(0,8)
       })
       s.setStatic("category_idfs",category_idfs)
 
