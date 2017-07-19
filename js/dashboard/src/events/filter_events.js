@@ -106,25 +106,7 @@ export default function init() {
       s.setStatic("domain_idfs",domain_idfs)
       s.setStatic("category_idfs",category_idfs)
 
-      const domains_rolled = d3.nest()
-        .key(x => x.domain)
-        .rollup(x => { return {"idf":x[0].idf,"count":x.length} })
-        .entries(full_urls)
-
-      const times_rolled = d3.nest()
-        .key(x => parseInt(x.hour) -12 > 0 ? (parseInt(x.hour) - 12) + "pm" : parseInt(x.hour) +"am")
-        .rollup(x => x.length)
-        .entries(full_urls)
-
-      s.setStatic("execution_plan", {
-          "categories": cat_summary.filter(x => x.value)
-        , "domains": domains_rolled.sort((p,c) => { return c.idf*c.count - p.idf*p.count }).reverse().slice(0,10)
-        , "articles": full_urls.sort((p,c) => { c.key = c.url; p.key = p.url; return domain_idfs[c.domain]*c.count - domain_idfs[p.domain]*p.count}).reverse().slice(0,20)
-        , "times": times_rolled.sort((p,c) => { return p.count - c.count }).slice(0,8)
-      })
-      s.setStatic("category_idfs",category_idfs)
-
-
+      
 
 
 
@@ -163,6 +145,31 @@ export default function init() {
       }
 
       s.setStatic("tabs",tabs)
+
+
+      // EXECUTION PLAN
+      const domains_rolled = d3.nest()
+        .key(x => x.domain)
+        .rollup(x => { return {"idf":x[0].idf,"count":x.length} })
+        .entries(full_urls)
+
+      const times_rolled = d3.nest()
+        .key(x => parseInt(x.hour) -12 > 0 ? (parseInt(x.hour) - 12) + "pm" : parseInt(x.hour) +"am")
+        .rollup(x => x.length)
+        .entries(full_urls)
+
+
+      const edomains = tabs[0].values.sort((p,c) => c.importance - p.importance).slice(0,10)
+
+
+      s.setStatic("execution_plan", {
+          "categories": tabs[1].values.sort((p,c) => c.importance - p.importance).slice(0,10)
+        , "domains": edomains
+        , "articles": edomains.map(x => { return {"key": x.urls[0]} }).slice(0,20)
+        , "times": times_rolled.sort((p,c) => { return p.count - c.count }).slice(0,8)
+      })
+      s.setStatic("category_idfs",category_idfs)
+
 
 
 
