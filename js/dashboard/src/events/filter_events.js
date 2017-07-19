@@ -167,6 +167,7 @@ export default function init() {
         , "domains": edomains
         , "articles": edomains.map(x => { return {"key": x.urls[0]} }).slice(0,20)
         , "times": times_rolled.sort((p,c) => { return p.count - c.count }).slice(0,8)
+        , "filters_used": _state.filters
       })
       s.setStatic("category_idfs",category_idfs)
 
