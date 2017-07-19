@@ -93,6 +93,39 @@ export default function init() {
       s.setStatic("category_summary", cat_summary)
       s.setStatic("summary",summary)
 
+      const domain_idfs = d3.nest()
+        .key(x => x.domain)
+        .rollup(x => x[0].idf)
+        .map(full_urls)
+
+      const category_idfs = d3.nest()
+        .key(x => x.parent_category_name)
+        .rollup(x => x[0].category_idf)
+        .map(full_urls)
+
+      s.setStatic("domain_idfs",domain_idfs)
+      s.setStatic("category_idfs",category_idfs)
+
+      const domains_rolled = d3.nest()
+        .key(x => x.domain)
+        .rollup(x => { return {"idf":x[0].idf,"count":x.length} })
+        .entries(full_urls)
+
+      const times_rolled = d3.nest()
+        .key(x => parseInt(x.hour) -12 > 0 ? (parseInt(x.hour) - 12) + "pm" : parseInt(hour) +"am")
+        .rollup(x => x.length)
+        .entries(__state__.state().data.original_urls)
+
+      s.setStatic("execution_plan", {
+          "categories": cat_summary.filter(x => x.value)
+        , "domains": domains_rolled.sort((p,c) => { return c.idf*c.count - p.idf*p.count }).slice(0,10)
+        , "articles": full_urls.sort((p,c) => { c.key = c.url; p.key = p.url; return domain_idfs[c.domain]*c.count - domain_idfs[p.domain]*p.count}).slice(0,20)
+        , "times": times_rolled.sort((p,c) => { return c.count - p.count }).slice(0,8)
+      })
+      s.setStatic("category_idfs",category_idfs)
+
+
+
 
 
 
@@ -159,10 +192,7 @@ export default function init() {
       // BEFORE AND AFTER
       if (_state.data.before) {
 
-        const domain_idfs = d3.nest()
-          .key(x => x.domain)
-          .rollup(x => x[0].idf)
-          .map(full_urls)
+        
 
         const catmap = (x) => Object.assign(x,{key:x.parent_category_name})
         const urlmap = (x) => Object.assign({key:x.domain, idf: domain_idfs[x.domain]},x)
