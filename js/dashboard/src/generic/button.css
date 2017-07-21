@@ -1,0 +1,22 @@
+.options-view { 
+  text-align:right 
+}
+.show-button {
+  width: 150px;
+  text-align: center;
+  line-height: 40px;
+  border-radius: 15px;
+  border: 1px solid #ccc;
+  font-size: 12px;
+  text-transform: uppercase;
+  font-weight: bold;
+  display:inline-block;
+  margin-right:15px;
+}
+.show-button:hover { 
+  text-decoration:none; color:#555 
+}
+.show-button.selected {
+  background: #e3ebf0;
+  color: #555;
+}

@@ -1,6 +1,7 @@
 import {d3_updateable, d3_splat} from 'helpers'
 import accessor from '../helpers'
 import header from './header'
+import './button.css'
 
 function noop() {}
 function identity(x) { return x }
