@@ -2,6 +2,7 @@
   "name": "state",
   "version": "0.0.3",
   "jsnext:main": "index",
+  "main": "build/state.js",
   "scripts": {
     "pretest": "rollup -c",
     "test": "faucet `find test -name '*-test.js'`",
