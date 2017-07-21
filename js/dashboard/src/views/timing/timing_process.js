@@ -1,4 +1,5 @@
 import {hourbuckets, timingHeaders} from './timing_constants'
+import d3 from 'd3';
 
 const timeHeaders = timingHeaders.map(x => x.key)
 

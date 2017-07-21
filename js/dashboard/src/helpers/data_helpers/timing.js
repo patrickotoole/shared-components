@@ -4,6 +4,7 @@ import {
 import {
   aggregateCategory
 } from './category'
+import d3 from 'd3';
 
 export function formatHour(h) {
   if (h == 0) return "12 am"

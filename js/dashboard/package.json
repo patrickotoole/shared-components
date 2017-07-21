@@ -2,6 +2,7 @@
   "name": "dashboard",
   "version": "0.0.1",
   "description": "dashboard",
+  "main": "build/dashboard.js",
   "jsnext:main": "index",
   "scripts": {
     "pretest": "mkdir -p build && node -e 'process.stdout.write(\"var version = \\\"\" + require(\"./package.json\").version + \"\\\"; export * from \\\"../index\\\"; export {version};\");' > build/bundle.js && rollup -c -- build/bundle.js",
@@ -24,10 +25,16 @@
     "table": "file:../table"
   },
   "devDependencies": {
+    "babel-cli": "^6.24.1",
+    "babel-plugin-external-helpers": "^6.22.0",
+    "babel-preset-env": "^1.6.0",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-es2015-rollup": "^3.0.0",
     "d3": "3.5.12",
     "faucet": "0.0",
     "jsdom": "7",
     "rollup": "^0.43.0",
+    "rollup-plugin-babel": "^2.7.1",
     "rollup-plugin-commonjs": "",
     "rollup-plugin-node-resolve": "",
     "rollup-plugin-postcss": "",

@@ -1,3 +1,5 @@
+import d3 from 'd3';
+
 export function prepData(dd) {
   var p = []
   d3.range(0,24).map(function(t) {

@@ -1,3 +1,5 @@
+import d3 from 'd3'
+
 export function aggregateDomains(urls,categories) {
   var categories = categories
     .filter(function(a) { return a.selected })
