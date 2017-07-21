@@ -1,4 +1,4 @@
-
+import babel from 'rollup-plugin-babel';
 
 export default {
   moduleId: 'state',
@@ -20,7 +20,12 @@ export default {
   globals: {
     d3: 'd3'
   },
-  plugins: [],
+  plugins: [
+    babel({ 
+      plugins: ['external-helpers'],
+      externalHelpers: false,
+    }),
+  ],
   exports: "named"
 };
 

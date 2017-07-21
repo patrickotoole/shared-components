@@ -3,22 +3,24 @@
   "version": "0.0.3",
   "jsnext:main": "index",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "rickotoole <rick@rockerbox.com> (http://rockerbox.com)",
-  "license": "ISC",
-  "scripts": {
     "pretest": "rollup -c",
     "test": "faucet `find test -name '*-test.js'`",
     "prepublish": "npm run test && uglifyjs build/state.js -c -m -o build/state.min.js && rm -f build/state.zip && zip -j build/state.zip -- LICENSE README.md build/state.js build/state.min.js"
   },
+  "author": "rickotoole <rick@rockerbox.com> (http://rockerbox.com)",
+  "license": "ISC",
   "devDependencies": {
+    "babel-plugin-external-helpers": "^6.22.0",
+    "babel-preset-env": "^1.6.0",
     "d3": "3.5.12",
     "faucet": "0.0",
-    "rollup": "0.41.4",
     "jsdom": "7",
+    "node-inspector": "0.0",
+    "rollup": "0.41.4",
     "tape": "4",
-    "node-inspector":"0.0",
     "uglify-js": "2"
+  },
+  "dependencies": {
+    "rollup-plugin-babel": "^2.7.1"
   }
 }
