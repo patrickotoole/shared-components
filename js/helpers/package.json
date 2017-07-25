@@ -1,26 +1,31 @@
 {
-  "name": "helpers",
+  "name": "@rockerbox/helpers",
   "version": "0.0.1",
   "description": "helpers",
   "jsnext:main": "index",
   "main": "build/helpers.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "pretest": "rollup -c",
+    "test": "faucet `find test -name '*-test.js'`",
+    "prepublish": "npm run test && uglifyjs build/helpers.js -c -m -o build/helpers.min.js && rm -f build/helpers.zip && zip -j build/helpers.zip -- LICENSE README.md build/helpers.js build/helpers.min.js"
   },
   "author": "rickotoole <rick@rockerbox.com> (http://rockerbox.com)",
   "license": "ISC",
-  "scripts": {
-    "pretest": "mkdir -p build && node -e 'process.stdout.write(\"var version = \\\"\" + require(\"./package.json\").version + \"\\\"; export * from \\\"../index\\\"; export {version};\");' > build/bundle.js && rollup -f umd -u helpers -n media_plan -o build/media_plan.js -- build/bundle.js",
-    "test": "faucet `find test -name '*-test.js'`",
-    "prepublish": "npm run test && uglifyjs build/helpers.js -c -m -o build/media_plan.min.js && rm -f build/media_plan.zip && zip -j build/media_plan.zip -- LICENSE README.md build/media_plan.js build/media_plan.min.js"
-  },
   "devDependencies": {
+    "babel-cli": "^6.24.1",
+    "babel-plugin-external-helpers": "^6.22.0",
+    "babel-preset-env": "^1.6.0",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-es2015-rollup": "^3.0.0",
     "d3": "3.5.12",
     "faucet": "0.0",
-    "rollup": "0.20.5",
     "jsdom": "7",
+    "rollup": "0.43.0",
+    "rollup-plugin-babel": "^2.7.1",
+    "rollup-plugin-commonjs": "^8.0.2",
+    "rollup-plugin-node-resolve": "^3.0.0",
+    "rollup-plugin-postcss": "^0.5.4",
     "tape": "4",
     "uglify-js": "2"
   }
-
 }

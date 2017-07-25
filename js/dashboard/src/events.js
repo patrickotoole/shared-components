@@ -36,12 +36,12 @@ export default function init() {
 
     })
     .registerEvent("view.change", function(x) {
-      s.update("loading",true)
+      s.update("loading")
       var CP = deepcopy(s.state().dashboard_options).map(function(d) { d.selected = (x.value == d.value) ? 1 : 0; return d })
       s.publish("dashboard_options",CP)
     })
     .registerEvent("tab.change", function(x) {
-      s.update("loading",true)
+      s.update("loading")
 
       s.publishStatic("tab_position",x.key)
       s.prepareEvent("updateFilter")(false,s.state().filters,s.state())
