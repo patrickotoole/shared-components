@@ -4,7 +4,13 @@ export {default as comp_eval} from "./src/comp_eval";
 
 import state from "./src/state";
 
-export const s = window.__state__ || state()
-window.__state__ = s
+var t;
+try {
+  t = window.__state__ || state()
+} catch(e) {
+  t = state()
+}
+
+export const s = t
 
 export default s;

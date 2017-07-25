@@ -480,8 +480,14 @@ var ComparisonEval = function () {
   return ComparisonEval;
 }();
 
-var s = window.__state__ || state();
-window.__state__ = s;
+var t;
+try {
+  t = window.__state__ || state();
+} catch (e) {
+  t = state();
+}
+
+var s = t;
 
 exports.s = s;
 exports['default'] = s;

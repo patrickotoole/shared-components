@@ -1,5 +1,5 @@
 {
-  "name": "state",
+  "name": "@rockerbox/state",
   "version": "0.0.3",
   "jsnext:main": "index",
   "main": "build/state.js",

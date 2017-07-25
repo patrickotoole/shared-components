@@ -3,8 +3,6 @@ var test = require('tape'),
   s = require('../');
 
 
-
-
 test('test state creation', function (t) {
   t.plan(3)
 
@@ -51,7 +49,7 @@ test('test subscribe to any change', function (t) {
 
   state.update("k","v")
   state.subscribe("identifier",function(error,value) {
-    t.equal(value,state._state)
+    t.equal(JSON.stringify(value),JSON.stringify(state._state))
   })
 
   state.publish("k","yo")
@@ -108,7 +106,7 @@ test('test back', function (t) {
 
   state.subscribe("identifier",function(error,value) {
     console.log(value)
-    t.equal(value,state._state)
+    t.equal( JSON.stringify(value),JSON.stringify(state._state) )
     t.equal(state._past.length, incrementor, "length of history is correct")
     t.equal(state._future.length, f_incrementor, "length of future is correct")
   })
@@ -138,7 +136,7 @@ test('test forward', function (t) {
 
   state.subscribe("identifier",function(error,value) {
     console.log(value)
-    t.equal(value,state._state)
+    t.equal(JSON.stringify(value),JSON.stringify(state._state))
     t.equal(state._past.length, incrementor, "length of history is correct")
     t.equal(state._future.length, f_incrementor, "length of future is correct")
   })
@@ -169,7 +167,7 @@ test('test change event', function (t) {
 
   state
     .subscribe("uuid", function(err,value) {
-      t.equal(value,state._state) 
+      t.equal(JSON.stringify(value),JSON.stringify(state._state)) 
     })
 
   state.publish("k","v")
@@ -194,7 +192,7 @@ test('test back event', function (t) {
 
   state
     .subscribe("uuid", function(err,value) {
-      t.equal(value,state._state) // should once on init, and again on push
+      t.equal(JSON.stringify(value),JSON.stringify(state._state)) // should once on init, and again on push
     })
 
   state.publish("k","v")
@@ -214,7 +212,7 @@ test('test forward event', function (t) {
 
   state
     .subscribe("uuid", function(err,value) {
-      t.equal(value,state._state) // should once on init, and again on push
+      t.equal(JSON.stringify(value),JSON.stringify(state._state)) // should once on init, and again on push
     })
 
   state.publish("k","v")
@@ -232,7 +230,7 @@ test('test build event', function (t) {
   state
     .subscribe("uuid", function(err,value) {
       console.log(value)
-      t.equal(value,state._state) // should once on init, and again on push
+      t.equal(JSON.stringify(value),JSON.stringify(state._state) ) // should once on init, and again on push
     })
 
   state.publish("k","v")
