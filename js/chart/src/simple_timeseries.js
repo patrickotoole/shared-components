@@ -1,4 +1,4 @@
-import {d3_updateable, d3_splat} from 'helpers'
+import {d3_updateable, d3_splat} from '@rockerbox/helpers'
 
 export function simpleTimeseries(target,data,w,h,min) {
   var width = w || 120

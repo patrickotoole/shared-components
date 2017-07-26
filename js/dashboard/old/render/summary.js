@@ -1,4 +1,4 @@
-import table from 'table'
+import table from '@rockerbox/table'
 import * as timeseries from '../generic/timeseries'
 
 function buildSummaryData(data) {

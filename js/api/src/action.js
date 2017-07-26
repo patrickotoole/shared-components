@@ -1,3 +1,5 @@
+import d3 from 'd3';
+
 export function getData(action,days_ago) {
   return function(cb){
     console.log(days_ago)

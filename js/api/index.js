@@ -1,4 +1,5 @@
 import * as a from './src/action.js';
+import d3 from 'd3'
 
 export let action = a;
 export let dashboard = {

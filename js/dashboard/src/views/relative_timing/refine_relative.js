@@ -1,7 +1,7 @@
-import {d3_updateable, d3_splat, d3_class, noop, D3ComponentBase} from 'helpers'
-import {table, summary_table} from 'table'
-import {simpleTimeseries, before_after_timeseries} from 'chart'
-import {tabular_timeseries, vertical_option} from 'component'
+import {d3_updateable, d3_splat, d3_class, noop, D3ComponentBase} from '@rockerbox/helpers'
+import {table, summary_table} from '@rockerbox/table'
+import {simpleTimeseries, before_after_timeseries} from '@rockerbox/chart'
+import {tabular_timeseries, vertical_option} from '@rockerbox/component'
 
 import {rollupBeforeAndAfter, processData, buckets} from './refine_relative_process'
 import './refine_relative.css'

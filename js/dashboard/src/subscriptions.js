@@ -1,5 +1,5 @@
-import state from 'state'
-import {qs} from 'state'
+import state from '@rockerbox/state'
+import {qs} from '@rockerbox/state'
 import build from './build'
 import historySubscriptions from './subscriptions/history'
 import apiSubscriptions from './subscriptions/api'

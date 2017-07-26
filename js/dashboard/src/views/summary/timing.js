@@ -1,4 +1,4 @@
-import {d3_class, d3_updateable, d3_splat} from 'helpers'
+import {d3_class, d3_updateable, d3_splat} from '@rockerbox/helpers'
 import {buildSummaryBlock} from './sample_vs_pop'
 
 import * as timeseries from '../../generic/timeseries'

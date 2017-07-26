@@ -1,4 +1,4 @@
-import { filter_data } from 'filter';
+import { filter_data } from '@rockerbox/filter';
 import { buildData } from '../../helpers'
 
 function prefixReducer(prefix, p,c) {

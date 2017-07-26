@@ -1,5 +1,5 @@
 import {simpleTimeseries} from './simple_timeseries'
-import {d3_class, D3ComponentBase} from 'helpers'
+import {d3_class, D3ComponentBase} from '@rockerbox/helpers'
 
 export function before_after_timeseries(target) {
   return new BeforeAfterTimeseries(target)

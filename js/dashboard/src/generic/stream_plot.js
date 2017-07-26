@@ -1,4 +1,4 @@
-import {noop, d3_updateable, d3_splat} from 'helpers'
+import {noop, d3_updateable, d3_splat} from '@rockerbox/helpers'
 import accessor from '../helpers'
 
 export default function stream_plot(target) {

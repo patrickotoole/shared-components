@@ -1,5 +1,5 @@
-import {s as state} from 'state';
-import * as api from 'api'
+import {s as state} from '@rockerbox/state';
+import * as api from '@rockerbox/d3-api'
 
 
 

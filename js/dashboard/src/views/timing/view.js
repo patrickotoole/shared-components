@@ -1,4 +1,4 @@
-import {d3_updateable, d3_splat, d3_class, D3ComponentBase, noop} from 'helpers'
+import {d3_updateable, d3_splat, d3_class, D3ComponentBase, noop} from '@rockerbox/helpers'
 import header from '../../generic/header'
 import select from '../../generic/select'
 import data_selector from '../../generic/data_selector'
@@ -6,10 +6,10 @@ import data_selector from '../../generic/data_selector'
 import object_selector from '../../generic/object_selector'
 
 
-import table from 'table'
+import table from '@rockerbox/table'
 import * as timeseries from '../../generic/timeseries'
-import {domain_expanded} from 'component'
-import {simpleTimeseries} from 'chart'
+import {domain_expanded} from '@rockerbox/component'
+import {simpleTimeseries} from '@rockerbox/chart'
 
 import {hourbuckets, timingHeaders} from './timing_constants'
 import {normalizeByColumns, normalizeRowSimple, computeScale, normalizeRow} from './timing_process'

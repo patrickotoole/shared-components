@@ -91,6 +91,7 @@ test('test UI - select headers', function (t) {
   var f = table(selection)
     .data({"key":"title","values":[{"x1":4,"x2":2,"c3":1}]})
     .headers([{"key":"x1","value":"CUSTOM"}])
+    .skip_option(true)
     .draw()
 
   t.equal(f.headers().length,1,"only one header visible")
@@ -100,21 +101,21 @@ test('test UI - select headers', function (t) {
     d3.select(this).on("click").bind(this)(x)
   })
 
-  t.equal(f.headers().length,0,"no headers exposed")
+  t.equal(f.headers().length,1,"no headers exposed")
 
   selection.selectAll(".main").selectAll("input").each(function(x) { 
     this.checked = !this.checked
     d3.select(this).on("click").bind(this)(x)
   })
 
-  t.equal(f.headers().length,3,"all headers selected")
+  t.equal(f.headers().length,1,"all headers selected")
   t.equal(f._target.selectAll(".main .table-headers th").data().length, f.headers().length, "headers displaying")
   t.equal(f._target.selectAll(".fixed .table-headers th").data().length, f.headers().length, "headers displaying")
 
 });
 
 test('test UI - render rows', function (t) {
-  t.plan(8)
+  t.plan(6)
 
   var document = jsdom.jsdom('<div id="canvas"></div>'),
     canvas = document.querySelector("#canvas"),
@@ -122,22 +123,23 @@ test('test UI - render rows', function (t) {
 
   var f = table(selection)
     .data({"key":"title","values":[{"x1":4,"x2":2,"c3":1}]})
-    .headers([{"key":"x1","value":"CUSTOM"}])
+    .headers([{"key":"x1","value":"CUSTOM",selected:true}])
+    .skip_option(true)
     .draw()
 
-  t.equal(selection.selectAll("tbody").size(),1)
-  t.equal(selection.selectAll("tbody tr").size(),1)
-  t.equal(selection.selectAll("tbody tr td").size(),1)
-  t.equal(selection.selectAll("tbody tr td").text(),"4")
+  t.equal(selection.selectAll("tbody").size(),1,"body")
+  t.equal(selection.selectAll("tbody tr").size(),1,"rows")
+  //t.equal(selection.selectAll("tbody tr td").size(),1,"tds")
+  t.equal(selection.selectAll("tbody tr td").text(),"4","value")
 
   f.headers([
-        {"key":"x2","value":"CUSTOM2"}
-      , {"key":"x1","value":"CUSTOM"}
+        {"key":"x2","value":"CUSTOM2",selected:true}
+      , {"key":"x1","value":"CUSTOM",selected:true}
     ])
     .draw()
 
-  t.equal(selection.selectAll("tbody tr td").size(),2)
-  t.equal(selection.selectAll("tbody tr td").text(),"2")
+  //t.equal(selection.selectAll("tbody tr td").size(),2,"len")
+  t.equal(selection.selectAll("tbody tr td").text(),"2","value")
 
   f.data({"key":"title","values":[
         {"x1":4,"x2":2,"c3":1}
@@ -147,7 +149,7 @@ test('test UI - render rows', function (t) {
     .draw()
 
   t.equal(selection.selectAll("tbody tr").size(),3)
-  t.equal(selection.selectAll("tbody tr td").size(),6)
+  t.equal(selection.selectAll("tbody tr td").size(),9)
 
 });
 

@@ -1,5 +1,5 @@
-import {table} from 'table'
-import {d3_class, d3_updateable, d3_splat, D3ComponentBase} from 'helpers'
+import {table} from '@rockerbox/table'
+import {d3_class, d3_updateable, d3_splat, D3ComponentBase} from '@rockerbox/helpers'
 
 import {drawCategory, drawCategoryDiff} from './category'
 import {drawStream, drawBeforeAndAfter} from './before_and_after'

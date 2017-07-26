@@ -1,5 +1,5 @@
-import {d3_updateable, d3_splat} from 'helpers'
-import {filter_data} from 'filter';
+import {d3_updateable, d3_splat} from '@rockerbox/helpers'
+import {filter_data} from '@rockerbox/filter';
 
 export * from './helpers/data_helpers'
 export * from './helpers/graph_helpers'

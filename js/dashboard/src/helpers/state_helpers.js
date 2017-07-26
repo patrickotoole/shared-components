@@ -1,4 +1,4 @@
-import * as state from 'state'
+import * as state from '@rockerbox/state'
 
 export function compare(qs_state,_state) {
 

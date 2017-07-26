@@ -1,4 +1,4 @@
-import {d3_class, d3_updateable, d3_splat, D3ComponentBase} from 'helpers'
+import {d3_class, d3_updateable, d3_splat, D3ComponentBase} from '@rockerbox/helpers'
 import select from './select'
 
 

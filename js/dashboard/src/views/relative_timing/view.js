@@ -1,4 +1,4 @@
-import {noop, identity, d3_updateable, d3_splat, d3_class, D3ComponentBase} from 'helpers'
+import {noop, identity, d3_updateable, d3_splat, d3_class, D3ComponentBase} from '@rockerbox/helpers'
 import header from '../../generic/header'
 import select from '../../generic/select'
 import data_selector from '../../generic/data_selector'
@@ -6,13 +6,13 @@ import object_selector from '../../generic/object_selector'
 
 
 
-import table from 'table'
+import table from '@rockerbox/table'
 
 import refine_relative from './refine_relative'
 import {categoryWeights, computeScale, normalizeRowSimple, normalizeRow, normalize, totalsByTime, normalizeByColumns, normalizeByCategory} from './relative_timing_process'
 import {timingHeaders, timeBuckets} from './relative_timing_constants'
 import {drawStream, drawStreamSkinny} from '../summary/before_and_after'
-import {simpleTimeseries} from 'chart'
+import {simpleTimeseries} from '@rockerbox/chart'
 
 import timeseries from '../../generic/timeseries'
 

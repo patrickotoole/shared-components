@@ -1,5 +1,5 @@
-import {simpleTimeseries} from 'chart'
-import {d3_class, d3_updateable, d3_splat} from 'helpers'
+import {simpleTimeseries} from '@rockerbox/chart'
+import {d3_class, d3_updateable, d3_splat} from '@rockerbox/helpers'
 
 import comp_bubble from '../../generic/comp_bubble'
 import stream_plot from '../../generic/stream_plot'

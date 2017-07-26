@@ -1,4 +1,4 @@
-import {d3_updateable, d3_splat} from 'helpers'
+import {d3_updateable, d3_splat} from '@rockerbox/helpers'
 import accessor from '../helpers'
 import header from './header'
 

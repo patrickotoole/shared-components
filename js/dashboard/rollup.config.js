@@ -10,7 +10,15 @@ export default {
   useStrict: false,
   moduleName: 'dashboard',
   entry: 'build/bundle.js',
-  dest: 'build/dashboard.js',
+  targets: [{
+      dest: 'build/dashboard.js',
+      format: "umd"
+    },
+    {
+      dest: 'build/dashboard.es.js',
+      format: "es"
+    }
+  ],
   sourceMap: 'inline',
   format: 'umd',
   plugins: [ 

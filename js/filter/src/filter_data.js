@@ -115,7 +115,7 @@ FilterData.prototype = {
       , "contains": function(field,value) {
           return function(x) {
             var values = value.toLowerCase().split(",")
-            return values.reduce(function(p,value) { return p + String(x[field]).indexOf(String(value).toLowerCase()) > -1 }, 0) > 0
+            return values.reduce(function(p,value) { return p + String(x[field]).toLowerCase().indexOf(String(value).toLowerCase()) > -1 }, 0) > 0
           } 
         }
     }

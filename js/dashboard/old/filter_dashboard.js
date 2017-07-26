@@ -7,7 +7,7 @@ import * as ui_helper from './helpers'
 import bar_selector from './bar_selector'
 import time_selector from './time_selector'
 //import table from './table'
-import table from 'table'
+import table from '@rockerbox/table'
 
 
 import render_filter from './render/filter'

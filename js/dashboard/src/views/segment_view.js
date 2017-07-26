@@ -1,11 +1,11 @@
-import {d3_updateable, d3_splat} from 'helpers'
+import {d3_updateable, d3_splat} from '@rockerbox/helpers'
 import accessor from '../helpers'
 import header from '../generic/header'
 import button_radio from '../generic/button_radio'
 import select from '../generic/select'
-import {simpleTimeseries, simpleBar} from 'chart'
+import {simpleTimeseries, simpleBar} from '@rockerbox/chart'
 
-import * as table from 'table'
+import * as table from '@rockerbox/table'
 
 function noop() {}
 function identity(x) { return x }

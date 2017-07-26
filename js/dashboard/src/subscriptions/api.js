@@ -1,5 +1,5 @@
-import state from 'state'
-import * as api from 'api'
+import state from '@rockerbox/state'
+import * as api from '@rockerbox/d3-api'
 
 const s = state;
 

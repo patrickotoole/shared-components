@@ -1,4 +1,4 @@
-//import d3 from 'd3'
+import d3 from 'd3'
 
 export function d3_updateable(target,selector,type,data,joiner) {
   var type = type || "div"
@@ -46,6 +46,8 @@ export function Filter(target) {
   this._data = false
   this._on = {}
   this._render_op = {}
+  this._fields = []
+  this._ops = []
 }
 
 export default function filter(target) {
@@ -89,7 +91,7 @@ Filter.prototype = {
       if (d === undefined) return this._fields
       this._fields = d
       return this
-  	}
+    }
   , data: function(d) {
       if (d === undefined) return this._data
       this._data = d
@@ -140,6 +142,7 @@ Filter.prototype = {
       var filter = d3_updateable(_filter,".inner","div")
         .classed("inner",true)
 
+
       var select = d3_updateable(filter,"select.field","select",fields)
         .classed("field",true)
         .style("width","165px")
@@ -172,6 +175,7 @@ Filter.prototype = {
         .attr("selected", function(x) { return x == value.field ? "selected" : undefined })
 
       if (value.op && value.field && value.value) {
+debugger
         var pos = fields.indexOf(value.field)
         self.drawOps(filter, ops[pos], value, pos)
       }

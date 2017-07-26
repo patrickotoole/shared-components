@@ -1,7 +1,7 @@
 {
   "name": "@rockerbox/state",
-  "version": "0.0.3",
-  "jsnext:main": "index",
+  "version": "0.0.4",
+  "jsnext:main": "build/state.es.js",
   "main": "build/state.js",
   "scripts": {
     "pretest": "rollup -c",

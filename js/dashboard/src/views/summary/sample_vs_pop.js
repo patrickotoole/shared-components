@@ -1,4 +1,4 @@
-import {d3_class, d3_updateable, d3_splat} from 'helpers'
+import {d3_class, d3_updateable, d3_splat} from '@rockerbox/helpers'
 import pie from '../../generic/pie'
 
 export function buildSummaryBlock(data, target, radius_scale, x) {

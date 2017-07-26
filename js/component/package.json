@@ -1,25 +1,33 @@
 {
-  "name": "component",
-  "version": "0.0.2",
+  "name": "@rockerbox/component",
+  "version": "0.0.3",
   "description": "component",
-  "jsnext:main": "index",
+  "jsnext:main": "build/component.es.js",
+  "main": "build/component.js",
+
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "rickotoole <rick@rockerbox.com> (http://rockerbox.com)",
   "license": "ISC",
   "scripts": {
-    "pretest": "mkdir -p build && node -e 'process.stdout.write(\"var version = \\\"\" + require(\"./package.json\").version + \"\\\"; export * from \\\"../index\\\"; export {version};\");' > build/bundle.js && rollup -c -f umd -u component -n components -o build/components.js -- build/bundle.js",
+    "pretest": "node -e 'process.stdout.write(\"var version = \\\"\" + require(\"./package.json\").version + \"\\\"; export * from \\\"../index\\\"; export {version};\");' > build/bundle.js && rollup -c",
     "test": "faucet `find test -name '*-test.js'`",
     "prepublish": "npm run test && uglifyjs build/component.js -c -m -o build/components.min.js && rm -f build/components.zip && zip -j build/components.zip -- LICENSE README.md build/components.js build/components.min.js"
   },
   "dependencies": {
     "d3": "3.5.12",
-    "helpers": "file:../helpers",
-    "chart": "file:../chart"
+    "@rockerbox/helpers": "",
+    "@rockerbox/chart": ""
 
   },
   "devDependencies": {
+    "babel-cli": "^6.24.1",
+    "babel-plugin-external-helpers": "^6.22.0",
+    "babel-preset-env": "^1.6.0",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-es2015-rollup": "^3.0.0",
+
     "rollup-plugin-node-resolve":"",
     "rollup-plugin-commonjs":"",
     "rollup-plugin-postcss":"",

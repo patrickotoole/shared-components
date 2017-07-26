@@ -1,4 +1,4 @@
-import {s as state} from 'state';
+import {s as state} from '@rockerbox/state';
 
 import {
   aggregateCategory,

@@ -1,5 +1,5 @@
-import {qs} from 'state';
-import state from 'state';
+import {qs} from '@rockerbox/state';
+import state from '@rockerbox/state';
 import {compare} from '../helpers'
 
 function publishQSUpdates(updates,qs_state) {

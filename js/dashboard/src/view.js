@@ -1,6 +1,6 @@
-import {d3_updateable, d3_splat} from 'helpers'
+import {d3_updateable, d3_splat} from '@rockerbox/helpers'
 import './view.css'
-import * as state from 'state'
+import * as state from '@rockerbox/state'
 import {media_plan} from 'media_plan'
 import filter_view from './views/filter_view'
 import option_view from './views/option_view'

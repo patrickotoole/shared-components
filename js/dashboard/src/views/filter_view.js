@@ -1,11 +1,11 @@
-import {d3_updateable, d3_splat} from 'helpers'
+import {d3_updateable, d3_splat} from '@rockerbox/helpers'
 import accessor from '../helpers'
 import header from '../generic/header'
 import select from '../generic/select'
 
 
-import * as table from 'table'
-import {filter} from 'filter'
+import * as table from '@rockerbox/table'
+import {filter} from '@rockerbox/filter'
 
 function noop() {}
 function identity(x) { return x }

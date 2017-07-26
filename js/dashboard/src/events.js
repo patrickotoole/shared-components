@@ -1,4 +1,4 @@
-import {s as state} from 'state'
+import {s as state} from '@rockerbox/state'
 import filterInit from './events/filter_events'
 import actionInit from './events/action_events'
 
