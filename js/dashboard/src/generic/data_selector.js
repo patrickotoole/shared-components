@@ -40,13 +40,13 @@ class DataSelector extends D3ComponentBase {
 
     var toggle = d3_class(transform_selector,"filter-values")
 
-    d3_updateable(toggle,"span","span")
-      .text("live filter? ")
+    //d3_updateable(toggle,"span","span")
+    //  .text("live filter? ")
 
-    d3_updateable(toggle,"input","input")
-      .attr("type","checkbox")
-      .attr("disabled",true)
-      .attr("checked","checked")
+    //d3_updateable(toggle,"input","input")
+    //  .attr("type","checkbox")
+    //  .attr("disabled",true)
+    //  .attr("checked","checked")
 
     return this
   }

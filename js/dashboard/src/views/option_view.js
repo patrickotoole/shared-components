@@ -2,6 +2,8 @@ import {d3_updateable, d3_splat} from '@rockerbox/helpers'
 import accessor from '../helpers'
 import header from '../generic/header'
 import button_radio from '../generic/button_radio'
+import select from '../generic/select'
+
 import * as table from '@rockerbox/table'
 
 function noop() {}
@@ -35,13 +37,13 @@ OptionView.prototype = {
       var wrap = d3_updateable(this.target,".option-wrap","div")
         .classed("option-wrap",true)
 
-      //header(wrap)
-      //  .text("Choose View")
-      //  .draw()
+      header(wrap)
+        .text("Display")
+        .draw()
 
-      button_radio(wrap)
-        .on("click", this.on("select") )
-        .data(this.data())
+      select(wrap)
+        .on("select", this.on("select") )
+        .options(this.data())
         .draw()
 
       return this

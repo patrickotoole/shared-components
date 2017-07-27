@@ -94,9 +94,9 @@ class Timing extends D3ComponentBase {
     const oscale = computeScale(values,max)
 
 
-    header(wrap)
-      .text("Timing")
-      .draw()
+    //header(wrap)
+    //  .text("Timing")
+    //  .draw()
 
 
     var ts = d3_class(wrap,"timeseries-row")

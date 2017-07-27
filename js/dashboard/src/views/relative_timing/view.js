@@ -39,9 +39,9 @@ class RelativeTiming extends D3ComponentBase {
 
     var wrap = d3_class(this._target,"summary-wrap")
 
-    header(wrap)
-      .text("Before and After")
-      .draw()
+    //header(wrap)
+    //  .text("Before and After")
+    //  .draw()
 
 
     var totals_by_time= totalsByTime(selected.values)

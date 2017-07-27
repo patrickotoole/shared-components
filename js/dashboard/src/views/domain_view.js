@@ -50,9 +50,9 @@ export class DomainView extends D3ComponentBase {
 
 
 
-    header(_explore)
-      .text("Overall")
-      .draw()
+    //header(_explore)
+    //  .text("Overall")
+    //  .draw()
 
     data_selector(_explore)
       .datasets(tabs)
