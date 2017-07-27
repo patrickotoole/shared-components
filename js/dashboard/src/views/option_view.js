@@ -52,7 +52,7 @@ OptionView.prototype = {
     
       d3_updateable(subtitle,"span.first","span")
         .classed("first",true)
-        .text("Choose dataset")
+        .text("Choose dataset: ")
 
 
       select(wrap)
