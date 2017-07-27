@@ -33,11 +33,11 @@ SegmentView.prototype = {
 
       var wrap = d3_updateable(this.target,".segment-wrap","div")
         .classed("segment-wrap",true)
-        .style("height",this.is_comparison() ? "140px" : "100px")
+        .style("height",this.is_comparison() ? "160px" : "120px")
         .style("width",this.target.style("width"))
         .style("position","fixed")
         .style("z-index","300")
-        .style("background","#f0f4f7")
+        .style("background","white")
 
 
       d3_updateable(this.target,".segment-wrap-spacer","div")
@@ -46,12 +46,13 @@ SegmentView.prototype = {
 
 
       header(wrap)
+        .navigation(["Planning","Explore"])
         .buttons([
-            {class: "download", icon: "fa-filefa", text: "Export Saved"}
-          , {class: "saved-search", icon: "fa-folder-open-o fa", text: "Open Saved"}
-          , {class: "new-saved-search", icon: "fa-bookmark fa", text: "Save"}
-          , {class: "create", icon: "fa-plus-circle fa", text: "New Segment"}
-          , {class: "logout", icon: "fa-sign-out fa", text: "Logout"}
+            {class: "download", icon: "fa-filefa", text: "Export", color: "orange"}
+          , {class: "saved-search", icon: "fa-folder-open-o fa", text: "Open", color: "blue"}
+          , {class: "new-saved-search", icon: "fa-bookmark fa", text: "Save", color: "green"}
+          //, {class: "create", icon: "fa-plus-circle fa", text: "New Segment"}
+          //, {class: "logout", icon: "fa-sign-out fa", text: "Logout"}
         ])
         .on("saved-search.click", this.on("saved-search.click"))
         .on("download.click", this.on("download.click"))
@@ -100,9 +101,7 @@ SegmentView.prototype = {
         .classed("inner action",true)
         .style("flex","1")
         .style("display","flex")
-        .style("padding","10px")
-        .style("padding-bottom","0px")
-
+        .style("padding-top","10px")
         .style("margin-bottom","0px")
 
       var inner_desc = d3_updateable(row1,".action.inner-desc","div")
@@ -124,12 +123,12 @@ SegmentView.prototype = {
         .style("font-weight","bold")
         .style("text-transform","uppercase")
         .style("flex","1")
-        .style("background","#e3ebf0")
+        .style("background","rgb(240, 244, 247)")
         .style("padding-left","10px")
         .style("margin-right","10px")
         .style("margin-top","2px")
         .style("margin-bottom","2px")
-        .style("height","100%")
+        .style("height","32px")
 
 
 

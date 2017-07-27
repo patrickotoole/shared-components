@@ -1,6 +1,7 @@
-import {d3_updateable, d3_splat} from '@rockerbox/helpers'
+import {d3_class, d3_updateable, d3_splat} from '@rockerbox/helpers'
 import accessor from '../helpers'
 import select from './select'
+import d3 from 'd3';
 
 function noop() {}
 function identity(x) { return x }
@@ -13,15 +14,16 @@ function injectCss(css_string) {
 }
 
 function buttonWrap(wrap) {
-  var head = d3_updateable(wrap, "h3.buttons","h3")
+  var head = d3_updateable(wrap, ".buttons")
     .classed("buttons",true)
-    .style("margin-bottom","15px")
-    .style("margin-top","-5px")
+    .style("line-height","36px")
+    .style("padding-top","10px")
+    .style("color","black")
+
+
 
   var right_pull = d3_updateable(head,".pull-right","span")
     .classed("pull-right header-buttons", true)
-    .style("margin-right","17px")
-    .style("line-height","22px")
     .style("text-decoration","none !important")
 
   return right_pull
@@ -76,6 +78,9 @@ Header.prototype = {
       return accessor.bind(this)("text",val) 
     }
 
+  , navigation: function(val) {
+      return accessor.bind(this)("navigation",val) 
+    }
 
   , select_only: function(val) {
       return accessor.bind(this)("select_only",val) 
@@ -94,7 +99,7 @@ Header.prototype = {
       
 
       var wrap = d3_updateable(this.target, ".header-wrap","div")
-        .classed("header-wrap",true)
+        .classed("header-wrap semantic-base",true)
 
       var expand_wrap = expansionWrap(wrap)
         , button_wrap = buttonWrap(wrap)
@@ -140,20 +145,38 @@ Header.prototype = {
 
       if (this._buttons) {
 
+        
+        if (this._navigation) {
+
+          head_wrap.remove()
+
+          var nav = wrap.selectAll(".buttons")
+            .style("font-family", "Lato, sans-serif")
+
+          var breadcrumb = d3_class(nav,"breadcrumb")
+            .classed("ui big breadcrumb",true)
+
+          var crumb = d3_splat(breadcrumb,"span","span",this._navigation)
+          d3_class(crumb,"section")
+            .text(String)
+          d3_class(crumb,"divider","i")
+            .attr("aria-hidden","true")
+            .classed("right angle icon divider",true)
+
+          d3_class(nav,"nav_divider")
+            .classed("ui divider",true)
+            
+
+        }
+
+          
+
         var self = this;
 
         var a = d3_splat(button_wrap,"a","a",this._buttons, function(x) { return x.text })
-          .style("vertical-align","middle")
-          .style("font-size","12px")
-          .style("font-weight","bold")
-          .style("border-right","1px solid #ccc")
-          .style("padding-right","10px")
-          .style("padding-left","10px")
-          .style("display","inline-block")
-          .style("line-height","22px")
-          .style("text-decoration","none")
           .html(x => "<span class='" + x.icon + "'></span><span style='padding-left:3px'>" + x.text + "</span>")
-          .attr("class",x => x.class)
+          .attr("class",x => x.class + " " + x.color)
+          .classed("ui basic button",true)
           .on("click",x => this.on(x.class + ".click")(x))
 
 

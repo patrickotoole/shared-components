@@ -100,3 +100,7 @@ a.versus:hover {
 
 .axis { opacity:.7; font-size:10px }
 .hidden { display:none }
+.conditional-wrap .table-wrapper thead tr {
+  background: rgb(240, 244, 247) 
+}
+background-color: #e3ebf0;

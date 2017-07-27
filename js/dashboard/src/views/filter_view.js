@@ -46,9 +46,9 @@ FilterView.prototype = {
       var wrapper = d3_updateable(this.target,".filter-wrap","div",false,function(){ return 1})
         .classed("filter-wrap",true)
 
-      header(wrapper)
-        .text("Filter")
-        .draw()
+      //header(wrapper)
+      //  .text("Filter")
+      //  .draw()
 
       var subtitle = d3_updateable(wrapper, ".subtitle-filter","div")
         .classed("subtitle-filter",true)
@@ -56,11 +56,11 @@ FilterView.prototype = {
         .style("text-transform"," uppercase")
         .style("font-weight"," bold")
         .style("line-height"," 33px")
-        .style("background"," #e3ebf0")
+        .style("background","rgb(240, 244, 247)")
         .style("margin-bottom","10px")
     
       d3_updateable(subtitle,"span.first","span")
-        .text("Users matching " )
+        .text("Filter users matching " )
         .classed("first",true)
     
       var filter_type  = d3_updateable(subtitle,"span.middle","span")

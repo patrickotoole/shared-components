@@ -37,9 +37,23 @@ OptionView.prototype = {
       var wrap = d3_updateable(this.target,".option-wrap","div")
         .classed("option-wrap",true)
 
-      header(wrap)
-        .text("Display")
-        .draw()
+      //header(wrap)
+      //  .text("Display")
+      //  .draw()
+
+      var subtitle = d3_updateable(wrap, ".subtitle-filter","div")
+        .classed("subtitle-filter",true)
+        .style("padding-left","10px")
+        .style("text-transform"," uppercase")
+        .style("font-weight"," bold")
+        .style("line-height"," 33px")
+        .style("background","rgb(240, 244, 247)")
+        .style("margin-bottom","10px")
+    
+      d3_updateable(subtitle,"span.first","span")
+        .classed("first",true)
+        .text("Choose dataset")
+
 
       select(wrap)
         .on("select", this.on("select") )

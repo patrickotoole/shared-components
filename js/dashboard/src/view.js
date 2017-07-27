@@ -137,7 +137,7 @@ NewDashboard.prototype = {
         , actions = JSON.parse(JSON.stringify(this.actions()))
         , staged_filters = JSON.parse(JSON.stringify(this.staged_filters()))
 
-      var segmentViewHeight = this.is_comparison() ? 140 : 100
+      var segmentViewHeight = this.is_comparison() ? 160 : 120
 
 
 
