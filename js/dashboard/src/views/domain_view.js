@@ -14,7 +14,7 @@ export class DomainView extends D3ComponentBase {
     super(target)
   }
 
-  props() { return ["data", "options", "sort", "ascending"] }
+  props() { return ["data", "options", "sort", "ascending", "top"] }
 
   draw() {
 
@@ -140,7 +140,7 @@ export class DomainView extends D3ComponentBase {
 
 
     var t = table(_explore)
-      .top(140)
+      .top(this.top())
       .data(selected)
       .headers( headers)
       .sort(sortby,asc)

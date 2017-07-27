@@ -118,6 +118,10 @@ NewDashboard.prototype = {
   , ascending: function(val) {
       return accessor.bind(this)("ascending",val)
     }
+  , is_comparison: function(val) {
+      return accessor.bind(this)("is_comparison",val) || false
+    }
+
   , draw: function() {
 
       var data = this.data()
@@ -133,12 +137,15 @@ NewDashboard.prototype = {
         , actions = JSON.parse(JSON.stringify(this.actions()))
         , staged_filters = JSON.parse(JSON.stringify(this.staged_filters()))
 
+      var segmentViewHeight = this.is_comparison() ? 140 : 100
+
 
 
       var target = this.target
       var self = this
 
       this._segment_view = segment_view(target)
+        .is_comparison(self.is_comparison())
         .is_loading(self.loading() || false)
         .segments(actions)
         .data(self.summary())
@@ -338,6 +345,8 @@ NewDashboard.prototype = {
         .on("filter.change", this.on("filter.change"))
         .draw()
 
+      options = this.is_comparison() ? options : options.filter((x) => x.key !== "Comparison")
+
       option_view(target)
         .data(options)
         .on("select", this.on("view.change") )
@@ -356,6 +365,7 @@ NewDashboard.prototype = {
           if (x.value == "data-view") {
             var dv = domain_view(dthis)
               .options(tabs)
+              .top(segmentViewHeight)
               .data(data)
               .sort(self.sort())
               .ascending(self.ascending())
@@ -380,6 +390,7 @@ NewDashboard.prototype = {
 
           if (x.value == "ba-view") {
             relative_view(dthis)
+             .top(segmentViewHeight)
              .transform(self.transform())
              .data(self.before_tabs())
              .sort(self.sort())
@@ -412,6 +423,7 @@ NewDashboard.prototype = {
 
           if (x.value == "timing-view") {
             timing_view(dthis)
+             .top(segmentViewHeight)
              .data(self.time_tabs())
              .transform(self.transform())
              .sort(self.sort())

@@ -28,7 +28,7 @@ class Timing extends D3ComponentBase {
     super(target)
   }
 
-  props() { return ["data","transform", "sort", "ascending"] }
+  props() { return ["data","transform", "sort", "ascending", "top"] }
 
 
   draw() {
@@ -156,7 +156,7 @@ class Timing extends D3ComponentBase {
     var timingwrap = d3_class(wrap,"timing-row")
 
     var table_obj = table(timingwrap)
-      .top(140)
+      .top(this.top())
       .headers(headers)
       .sort(sortby,asc)
       .on("sort", this.on("sort"))

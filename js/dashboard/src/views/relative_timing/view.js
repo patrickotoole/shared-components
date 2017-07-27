@@ -28,7 +28,7 @@ class RelativeTiming extends D3ComponentBase {
     super(target)
   }
 
-  props() { return ["data","transform", "sort", "ascending"] }
+  props() { return ["data","transform", "sort", "ascending","top"] }
 
   draw() {
 
@@ -245,8 +245,10 @@ class RelativeTiming extends D3ComponentBase {
     const selectedHeader = headers.filter(x => x.key == s)
     const sortby = selectedHeader.length ? selectedHeader[0].key : _default
 
+
+
     table(bawrap)
-      .top(140)
+      .top(this.top())
       .headers(headers)
       .sort(sortby,asc)
       .on("sort", this.on("sort"))

@@ -33,7 +33,7 @@ SegmentView.prototype = {
 
       var wrap = d3_updateable(this.target,".segment-wrap","div")
         .classed("segment-wrap",true)
-        .style("height","140px")
+        .style("height",this.is_comparison() ? "140px" : "100px")
         .style("width",this.target.style("width"))
         .style("position","fixed")
         .style("z-index","300")
@@ -91,8 +91,9 @@ SegmentView.prototype = {
       var row2 = d3_updateable(body,".row-2","div")
         .classed("row-2",true)
         .style("flex",1)
-        .style("display","flex")
+        .style("display",this.is_comparison() ? "flex" : "none")
         .style("flex-direction","row")
+         
 
 
       var inner = d3_updateable(row1,".action.inner","div")
@@ -406,6 +407,10 @@ SegmentView.prototype = {
   , is_loading: function(val) {
       return accessor.bind(this)("is_loading",val)
     }
+  , is_comparison: function(val) {
+      return accessor.bind(this)("is_comparison",val)
+    }
+
 
   , on: function(action, fn) {
       if (fn === undefined) return this._on[action] || noop;
