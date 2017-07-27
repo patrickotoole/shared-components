@@ -10,7 +10,7 @@ function prefixReducer(prefix, p,c) {
   p[c.key]['total'] = (p[c.key]['total'] || 0) + c.visits
 
   
-  p[c.key][prefix + c.time_diff_bucket] = (p[c.key][c.time_diff_bucket] || 0) + c.visits
+  p[c.key][prefix + c.time_diff_bucket] = (p[c.key][prefix + c.time_diff_bucket] || 0) + c.visits
   return p
 }
 export const beforeAndAfterTabular = (before, after) => {
@@ -79,9 +79,11 @@ export function buildBeforeAndAfter(before_urls,after_urls,cat_summary,sort_by) 
 
   var order = before_categories.map(function(x) { return x.key })
 
-  after_categories = after_categories.filter(function(x){return order.indexOf(x.key) > -1}).sort(function(a,b) {
-    return order.indexOf(a.key) - order.indexOf(b.key)
-  })
+  after_categories = after_categories
+    .filter(function(x){return order.indexOf(x.key) > -1})
+    .sort(function(a,b) {
+      return order.indexOf(a.key) - order.indexOf(b.key)
+    })
 
   return {
       "after":after_urls
