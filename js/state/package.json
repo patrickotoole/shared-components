@@ -1,6 +1,6 @@
 {
   "name": "@rockerbox/state",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "jsnext:main": "build/state.es.js",
   "main": "build/state.js",
   "scripts": {
@@ -11,6 +11,8 @@
   "author": "rickotoole <rick@rockerbox.com> (http://rockerbox.com)",
   "license": "ISC",
   "devDependencies": {
+
+    "rollup-plugin-babel": "^2.7.1",
     "babel-plugin-external-helpers": "^6.22.0",
     "babel-preset-env": "^1.6.0",
     "d3": "3.5.12",
@@ -22,6 +24,5 @@
     "uglify-js": "2"
   },
   "dependencies": {
-    "rollup-plugin-babel": "^2.7.1"
   }
 }
