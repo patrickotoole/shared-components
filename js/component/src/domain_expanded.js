@@ -44,7 +44,7 @@ function domainToDraw(urls) {
 
   return d3.entries(obj)
     .map(function(x){
-      x.url = x.key
+      x.url = "http://" + x.key
       x.total = d3.sum(x.value)
       return x
     }) 
