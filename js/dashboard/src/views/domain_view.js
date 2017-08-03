@@ -135,9 +135,8 @@ export class DomainView extends D3ComponentBase {
 
 
     
-
+    var selectedKey = selected.key == "Top Domains" ? "domain" : "parent_category_name"
     
-
 
     var t = table(_explore)
       .top(this.top())
@@ -148,18 +147,33 @@ export class DomainView extends D3ComponentBase {
       .option_text("&#65291;")
       .on("expand",function(d,td) {
 
-        var dd = this.parentElement.__data__.full_urls.filter(function(x) { return x.domain == d.key})
-        var rolled = prepData(dd)
-        
-        domain_expanded(td)
-          .domain(dd[0].domain)
-          .raw(dd)
-          .data(rolled)
-          .urls(d.urls)
-          .on("stage-filter", function(x) {
-            self.on("stage-filter")(x)
-          })
-          .draw()
+        var dd = this.parentElement.__data__.full_urls.filter(function(x) { return x[selectedKey] == d.key})
+
+        if (selectedKey == "domain") {
+
+          var rolled = prepData(dd)
+          domain_expanded(td)
+            .domain(dd[0].domain)
+            .raw(dd)
+            .data(rolled)
+            .urls(d.urls)
+            .on("stage-filter", function(x) {
+              self.on("stage-filter")(x)
+            })
+            .draw()
+
+        }
+
+        if (selectedKey == "parent_category_name") {
+          var rolled = prepData(dd)
+          domain_expanded(td)
+            .domain("/")
+            .use_domain(true)
+            .raw(dd)
+            .data(rolled)
+            .on("stage-filter", self.on("stage-filter") )
+            .draw()
+        }
 
       })
       .hidden_fields(["urls","percent_unique","sample_percent_norm","pop_percent","tf_idf","parent_category_name"])

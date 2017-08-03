@@ -27,6 +27,29 @@ function rawToUrl(data) {
     },{})
 }
 
+function rawToDomain(data) {
+  return data.reduce((p,c) => {
+      p[c.domain] = p[c.domain] || Object.assign({},buckets)
+      p[c.domain][c.hour] = (p[c.domain][c.hour] || 0) + c.count
+      return p
+    },{})
+}
+
+function domainToDraw(urls) {
+
+  var obj = {}
+  Object.keys(urls).map(k => {
+    obj[k] = hourbuckets.map(b => urls[k][b] || 0)
+  })
+
+  return d3.entries(obj)
+    .map(function(x){
+      x.url = x.key
+      x.total = d3.sum(x.value)
+      return x
+    }) 
+}
+
 function urlToDraw(urls) {
   var obj = {}
   Object.keys(urls).map(k => {
@@ -44,7 +67,13 @@ function urlToDraw(urls) {
 function drawToKeyword(draw,split) {
   let obj = draw
     .reduce(function(p,c){
-      c.key.toLowerCase().split(split)[1].split("/").reverse()[0].replace("_","-").split("-").map(x => {
+      var sd = c.key.toLowerCase().split("://")
+      var stripped = sd.length > 1 ? sd[1] : sd[0]
+      var splitted = stripped.split(split)
+      var key = splitted.length > 1 ? splitted[1] : splitted[0]
+
+     
+      key.split("/").reverse()[0].replace("_","-").replace("+","-").split("-").map(x => {
         var values = STOPWORDS
         if (x.match(/\d+/g) == null && values.indexOf(x) == -1 && x.indexOf(",") == -1 && x.indexOf("?") == -1 && x.indexOf(".") == -1 && x.indexOf(":") == -1 && parseInt(x) != x && x.length > 3) {
           p[x] = p[x] || {}
@@ -74,7 +103,7 @@ class DomainExpanded extends D3ComponentBase {
     this._target = target
   }
 
-  props() { return ["raw","data","urls","domain"] }
+  props() { return ["raw","data","urls","domain", "use_domain"] }
 
   draw() {
     let td = this._target
@@ -83,12 +112,15 @@ class DomainExpanded extends D3ComponentBase {
       .text("Explore and Refine")
 
     let urlData = rawToUrl(this.raw())
+    let domainData = rawToDomain(this.raw())
+
+    let domain_to_draw = domainToDraw(domainData)
     let to_draw = urlToDraw(urlData)
     let kw_to_draw = drawToKeyword(to_draw,this.domain())
 
     tabular_timeseries(d3_class(td,"url-depth"))
-      .label("URL")
-      .data(to_draw)
+      .label(this.use_domain() ? "Domain" : "URL")
+      .data(this.use_domain() ? domain_to_draw : to_draw)
       .split(this.domain())
       .on("stage-filter",this.on("stage-filter"))
       .draw()
