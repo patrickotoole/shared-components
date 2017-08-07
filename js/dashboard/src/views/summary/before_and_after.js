@@ -32,7 +32,7 @@ function buildStreamData(data,buckets) {
 
 }
 
-function streamData(before,after,buckets) {
+export function streamData(before,after,buckets) {
   var stackable = buildStreamData(before,buckets)
   var stack = d3.layout.stack().offset("wiggle").order("reverse")
   var before_stacked = stack(stackable)
@@ -55,6 +55,35 @@ function streamData(before,after,buckets) {
 
 }
 
+export function findBounds(before_stacked, after_stacked, buckets) {
+  var before_agg = before_stacked.reduce((o,x) => { return x.reduce((p,c) => { p[c.x] = (p[c.x] || 0) + c.y; return p},o) },{})
+    , after_agg = after_stacked.reduce((o,x) => { return x.reduce((p,c) => { p[c.x] = (p[c.x] || 0) + c.y; return p},o) },{})
+
+
+  var local_before = Object.keys(before_agg).reduce((minarr,c) => {
+      if (minarr[0] >= before_agg[c]) return [before_agg[c],c];
+      if (minarr.length > 1) minarr[0] = -1;
+      return minarr
+    },[Infinity]
+  )[1]
+
+  var local_after = Object.keys(after_agg).reduce((minarr,c) => {
+      if (minarr[0] >= after_agg[c]) return [after_agg[c],c];
+      if (minarr.length > 1) minarr[0] = -1;
+      return minarr
+    },[Infinity]
+  )[1]
+
+
+  var before_line = buckets[buckets.indexOf(parseInt(local_before))]
+    , after_line = buckets[buckets.indexOf(parseInt(local_after))]
+
+  return {
+      before_line: before_line
+    , after_line: after_line
+  }
+
+}
 
 export function drawStreamSkinny(target,before,after,filter) {
 
@@ -121,28 +150,10 @@ export function drawStreamSkinny(target,before,after,filter) {
     })
     .draw()
 
-
-  var before_agg = before_stacked.reduce((o,x) => { return x.reduce((p,c) => { p[c.x] = (p[c.x] || 0) + c.y; return p},o) },{})
-    , after_agg = after_stacked.reduce((o,x) => { return x.reduce((p,c) => { p[c.x] = (p[c.x] || 0) + c.y; return p},o) },{})
-
-
-  var local_before = Object.keys(before_agg).reduce((minarr,c) => {
-      if (minarr[0] >= before_agg[c]) return [before_agg[c],c];
-      if (minarr.length > 1) minarr[0] = -1;
-      return minarr
-    },[Infinity]
-  )[1]
-
-  var local_after = Object.keys(after_agg).reduce((minarr,c) => {
-      if (minarr[0] >= after_agg[c]) return [after_agg[c],c];
-      if (minarr.length > 1) minarr[0] = -1;
-      return minarr
-    },[Infinity]
-  )[1]
-
-
-  var before_line = buckets[buckets.indexOf(parseInt(local_before))]
-    , after_line = buckets[buckets.indexOf(parseInt(local_after))]
+  var balines = findBounds(before_stacked, after_stacked, buckets)
+    , before_line = balines.before_line
+    , after_line = balines.after_line
+  
 
   var svg = stream
     ._svg.style("margin","auto").style("display","block")

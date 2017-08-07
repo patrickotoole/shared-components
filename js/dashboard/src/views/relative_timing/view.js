@@ -37,6 +37,7 @@ class RelativeTiming extends D3ComponentBase {
       , filtered = data.filter(function(x){ return x.selected})
       , selected = filtered.length ? filtered[0] : data[0]
 
+
     var wrap = d3_class(this._target,"summary-wrap")
 
     //header(wrap)
@@ -82,7 +83,6 @@ class RelativeTiming extends D3ComponentBase {
     var stream_wrap = d3_class(ts,"stream-wrap")
       .style("width","682px")
       .style("height",selected.key == "Top Categories" ? "100px" : "390px")
-
 
     var stages = drawStreamSkinny(stream_wrap,selected.data.before_categories,selected.data.after_categories,noop)
 

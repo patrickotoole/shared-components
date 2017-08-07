@@ -64,3 +64,94 @@ export const timingTabular = (data,key="domain") => {
     })
     .filter(x => x.key != "NA")
 }
+
+export const timingRelative = (combined) => {
+        const rolled = d3.nest()
+          .key(x => x.time_diff_bucket)
+          .key(x => x.hour)
+          .rollup(v => {
+            return {
+                count: v.length
+              , uniques: d3.sum(v,x => x.uniques)
+              , visits: d3.sum(v,x => x.visits)
+            }
+          })
+          .entries(combined)
+          .sort((p,c) => d3.descending(parseInt(p.key),parseInt(c.key)) )
+
+        const rows = rolled.map(r => {
+          let mapped = d3.map(r.values, x => x.key)
+
+          let row = hourbuckets.reduce((p,h) => {
+            p[h] = mapped.get(h) || {values: {}}
+            p[h] = p[h].values.visits || 0
+            return p
+          },{})
+
+          return Object.assign({key: r.key}, row)
+        })
+
+        const flat = rolled
+          .reduce((p,c) => {
+            c.values.reduce((q,r) => {
+              q.push(Object.assign({},r.values,{"bucket":c.key, "hour": r.key}) )
+              return q
+            },p)
+            return p
+          },[])
+
+        const hourly = d3.nest()
+          .key(x => x.hour)
+          .rollup(v => d3.sum(v,x => x.visits))
+          .entries(flat)
+
+        const overall = d3.sum(hourly, x => x.values)
+
+        hourly.map(x => {
+          x.percent = x.values/overall
+        })
+
+        const hourlyMap = d3.map(hourly, x => x.key)
+
+        const percentRows = rows.map(x => {
+          const total = hourbuckets.reduce((p,k) => {
+            p += x[k] || 0
+            return p
+          },0)
+
+          const obj = {"key":x.key}
+          hourbuckets.map(k => obj[k] = x[k]/total )
+
+          return obj
+        })
+
+        const normalizedRows = percentRows.map(x => {
+          const obj = {"key":x.key}
+
+          hourbuckets.map(k => {
+            const v = hourlyMap.get(k).percent
+            console.log(v, x[k], parseInt(k), formatHour(k) )
+            obj[formatHour(k)] = (x[k] > v) ? (v - x[k])/v : -(x[k] - v)/v
+          })
+
+          return obj
+        })
+
+        const formattedRows = rows.map(x => {
+          const obj = {"key":x.key}
+          hourbuckets.map(k => {
+            obj[formatHour(k)] = x[k]
+          })
+
+          return obj
+        }).sort((p,c) => {
+          return d3.descending( parseInt(p.key),parseInt(c.key) )
+        }).map((x,i) => {
+          x.total = 100-i
+          return x
+        })
+
+debugger
+
+  return formattedRows //normalizedRows
+}

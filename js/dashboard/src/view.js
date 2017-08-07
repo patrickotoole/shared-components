@@ -5,6 +5,8 @@ import {media_plan} from 'media_plan'
 import filter_view from './views/filter_view'
 import option_view from './views/option_view'
 import domain_view from './views/domain_view'
+import window_view from './views/window_view'
+
 import segment_view from './views/segment_view'
 import summary_view from './views/summary/view'
 import relative_view from './views/relative_timing/view'
@@ -382,6 +384,9 @@ NewDashboard.prototype = {
              .draw()
           }
 
+          
+
+
           if (x.value == "media-view") {
             media_plan(dthis.style("margin-left","-15px").style("margin-right","-15px"))
              .data(data)
@@ -404,6 +409,26 @@ NewDashboard.prototype = {
                self.on("staged-filter.change")(staged_filters)
                HACKbuildStagedFilter(staged_filters)
 
+    
+             })
+             .draw()
+          }
+
+
+          if (x.value == "stage-view") {
+            var dv = window_view(dthis)
+              .options(tabs)
+              .top(segmentViewHeight)
+              .data(self.before_tabs())
+              .sort(self.sort())
+              .ascending(self.ascending())
+              .on("select", self.on("tab.change") )
+              .on("sort", self.on("sort.change") )
+              .on("stage-filter",function(x) {
+
+               staged_filters = staged_filters.split(",").concat(x.key || x.url).filter(x => x.length).join(",")
+               self.on("staged-filter.change")(staged_filters)
+               HACKbuildStagedFilter(staged_filters)
     
              })
              .draw()

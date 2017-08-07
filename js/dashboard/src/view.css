@@ -1,3 +1,19 @@
+.validation h3 {
+  text-transform: uppercase;
+  font-weight: bold;
+  font-size: 12px;
+}
+.consideration h3 {
+  text-transform: uppercase;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.consideration .axis path, .consideration .axis line,
+.validation .axis path, .validation .axis line {
+  stroke:none 
+}
+
 .scrollbox {
   /*border-top:1px solid #ccc;*/
   padding-top:12px;

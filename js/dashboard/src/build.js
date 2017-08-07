@@ -52,9 +52,12 @@ class Dashboard {
       , filters: [{}] 
       , dashboard_options: [
             {"key":"Overall","value":"data-view","selected":1}
-          , {"key":"Path","value":"ba-view","selected":0}
           , {"key":"Timing","value":"timing-view","selected":0}
+          , {"key":"Path","value":"ba-view","selected":0}
           , {"key":"Comparison","value":"summary-view","selected":0}
+          , {"key":"Customer Stages","value":"stage-view","selected":0}
+
+
           //, {"key":"Media Plan", "value":"media-view","selected":0}
 
         ]

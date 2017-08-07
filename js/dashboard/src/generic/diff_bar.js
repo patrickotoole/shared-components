@@ -15,8 +15,10 @@ class DiffBar {
     this._value_accessor = "value"
     this._bar_height = 20
     this._bar_width = 150
+    this._show_labels = false
   } 
 
+  show_labels(val) { return accessor.bind(this)("show_labels",val) }
   key_accessor(val) { return accessor.bind(this)("key_accessor",val) }
   value_accessor(val) { return accessor.bind(this)("value_accessor",val) }
   bar_height(val) { return accessor.bind(this)("bar_height",val) }
@@ -57,8 +59,15 @@ class DiffBar {
           .domain([0,keys.length])
           .range([0,keys.length*height]);
 
-    var canvas = d3_updateable(wrap,"svg","svg",false,function() { return 1})
-      .attr({"width":bar_width*3, "height": keys.length*height + 10});
+    var LABEL_WIDTH = 60
+
+    var svg = d3_updateable(wrap,"svg","svg",false,function() { return 1})
+      .attr({"width":bar_width*3 + (this.show_labels() ? LABEL_WIDTH : 0), "height": keys.length*height + 10});
+
+    var canvas = d3_updateable(svg,"g.canvas","g", false, () => 1)
+      .attr("class","canvas")
+      .attr("transform", this.show_labels() ? "translate(" + (LABEL_WIDTH/2) + ",0)": undefined)
+
 
     var xAxis = d3.svg.axis();
     xAxis
@@ -72,6 +81,8 @@ class DiffBar {
       .tickSize(2)
       .tickFormat(function(d,i){ return keys[i]; })
       .tickValues(d3.range(keys.length));
+
+    canvas.selectAll("g.y").remove()
 
     var y_xis = d3_updateable(canvas,'g.y','g')
       .attr("class","y axis")
@@ -95,6 +106,17 @@ class DiffBar {
       .style('fill','#388e3c')
       .attr("width",function(x) { return xscale(x[v]) })
 
+    chart.selectAll(".pop-bar-text").remove()
+
+    var text = d3_splat(chart,".pop-bar-text","text",function(x) { return x}, function(x) { return x.key })
+      .attr("class","pop-bar-text")
+      .attr('height',height-4)
+      .style("font-size",".9em")
+
+      .attr({'x':x => xscale(x[v]) + 3,'y':function(d,i){ return yscale(i) + height; }})
+      .text(x => x[v] > 0 ? d3.format("%")(x[v]) : "" )
+
+
     var chart2 = d3_updateable(canvas,'g.chart2','g')
       .attr("class","chart2")
       .attr("transform", "translate(0,0)")
@@ -107,6 +129,18 @@ class DiffBar {
       .attr({'x':function(x) { return bar_width - xsampscale(-x[v])},'y':function(d,i){ return yscale(i) + 8.5; }})
       .style('fill','#d32f2f')
       .attr("width",function(x) { return xsampscale(-x[v]) })
+
+    chart2.selectAll(".pop-bar-text").remove()
+
+    var text = d3_splat(chart2,".pop-bar-text","text",function(x) { return x}, function(x) { return x.key })
+      .attr("class","pop-bar-text")
+      .attr('height',height-4)
+      .style("text-anchor","end")
+      .style("font-size",".9em")
+
+      .attr({'x':x => bar_width - xsampscale(-x[v]) - 3,'y':function(d,i){ return yscale(i) + height; }})
+      .text(x => x[v] < 0 ? d3.format("%")(x[v]) : "" )
+
 
     y_xis.exit().remove()
 

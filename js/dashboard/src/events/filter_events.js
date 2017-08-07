@@ -17,7 +17,8 @@ import {
 
 import {
   buildTiming,
-  timingTabular
+  timingTabular,
+  timingRelative
 } from '../helpers/data_helpers/timing'
 
 import {
@@ -172,6 +173,19 @@ export default function init() {
       s.setStatic("category_idfs",category_idfs)
 
 
+      // TIMING AND BA
+
+      _state.data.before_hour.map(x => 
+        x.time_diff_bucket = (x.time_diff_bucket > 0) ? -x.time_diff_bucket : x.time_diff_bucket
+      )
+
+      const before = _state.data.before_hour
+        , after = _state.data.after_hour
+        , combined = before.concat(after)
+
+      const percentRelativeTabular = timingRelative(combined)
+
+debugger
 
 
 
@@ -182,6 +196,8 @@ export default function init() {
       const timing_tabs = [
           {"key":"Top Domains", "values": timing_tabular, "data": value.full_urls}
         , {"key":"Top Categories", "values": cat_timing_tabular}
+        , {"key":"Time to Site", "values": percentRelativeTabular}
+
 
       ]
 

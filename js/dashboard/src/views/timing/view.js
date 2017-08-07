@@ -12,12 +12,33 @@ import {domain_expanded} from '@rockerbox/component'
 import {simpleTimeseries} from '@rockerbox/chart'
 
 import {hourbuckets, timingHeaders} from './timing_constants'
-import {normalizeByColumns, normalizeRowSimple, computeScale, normalizeRow} from './timing_process'
+import {
+  percentColumns, 
+  percentDiffColumn, 
+  normalizeColumn, 
+  normalizeRowSimple, 
+  percentRowSimple, 
+  percentDiffRow, 
+  computeScale, 
+  normalizeRow
+} from './timing_process'
 
 
 
 import './timing.css'
 
+const formatName = function(x) {
+
+  if (x < 0) x = -x
+
+  if (x == 3600) return "1 hr"
+  if (x < 3600) return x/60 + " mins" 
+
+  if (x == 86400) return "1 day"
+  if (x > 86400) return x/86400 + " days" 
+
+  return x/3600 + " hrs"
+}
 
 export default function timing(target) {
   return new Timing(target)
@@ -71,27 +92,45 @@ class Timing extends D3ComponentBase {
     const rowValue = selected.values.map(x => Math.sqrt(1 + x.total) )
     const normalizer = normalizeRow(percentTotals)
 
-    const normByCol = normalizeByColumns(selected.values)
+    const percentCol = percentColumns(selected.values)
+    //const diffCol = percentDiffColumn(selected.values)
+    const normCol = normalizeColumn(selected.values)
+
+
+    const diffRow = percentDiffRow(selected.values)
 
 
     var max = 0
+      , min = Infinity 
+
     const values = selected.values.map((row,i) => {
       
       const normed = 
         this.transform() == "normalize" ? normalizer(row,rowValue[i]) : 
-        this.transform() == "percent" ? normByCol(row): 
-        this.transform() == "percent_diff" ? normalizeRowSimple(row) : 
+        this.transform() == "percent_h" ? percentRowSimple(row): 
+        this.transform() == "percent_diff_h" ? normalizeRowSimple(row): 
+        this.transform() == "percent_v" ? percentCol(row): 
+        this.transform() == "percent_diff_v" ? normCol(row) : 
+        this.transform() == "percent_diff_pop" ? diffRow(row) : 
+
+        //this.transform() == "percent_diff_pop_v" ? diffCol(row) : 
+        //this.transform() == "percent_diff_pop_h" ? diffRow(row): 
         row
 
 
       const local_max = d3.max(timingHeaders.map(x => x.key).map(k => normed[k]))
       max = local_max > max ? local_max : max
 
+      const local_min = d3.min(timingHeaders.map(x => x.key).map(k => normed[k]))
+      min = local_min < min ? local_min : min
+
       return Object.assign(normed,{"key":row.key})
     })
 
-
+    console.log("MAX",max)
     const oscale = computeScale(values,max)
+    const noscale = computeScale(values,Math.abs(min))
+
 
 
     //header(wrap)
@@ -104,8 +143,16 @@ class Timing extends D3ComponentBase {
     var OPTIONS = [
           {"key":"Activity","value":false}
         , {"key":"Scored","value":"normalize"}
-        , {"key":"Percent","value":"percent"}
-        , {"key":"Percent Diff","value":"percent_diff"}
+        , {"key":"Percent (column)","value":"percent_v"}
+        , {"key":"Percent (row)","value":"percent_h"}
+
+        , {"key":"Mean Diff Percent (column)","value":"percent_diff_v"}
+        , {"key":"Mean Diff Percent (row)","value":"percent_diff_h"}
+
+        , {"key":"Percent Diff","value":"percent_diff_pop"}
+        //, {"key":"Percent Diff (column)","value":"percent_diff_pop_v"}
+        //, {"key":"Percent Diff (row)","value":"percent_diff_pop_h"}
+
       ]
 
       function toggleValues(x) {
@@ -158,6 +205,10 @@ class Timing extends D3ComponentBase {
     var table_obj = table(timingwrap)
       .top(this.top())
       .headers(headers)
+      .render("key", selected.key != "Time to Site" ? false : function(x){ 
+        var k = this.parentNode.__data__.key
+        this.innerText = formatName(k) + ((k < 0) ? " after" : " before")
+      })
       .sort(sortby,asc)
       .on("sort", this.on("sort"))
       .data({"values":values.slice(0,500)})
@@ -185,8 +236,13 @@ class Timing extends D3ComponentBase {
           .style("background-color",function(x) {
             var value = this.parentNode.__data__[x['key']] || 0
             var slug = value > 0 ? "rgba(70, 130, 180," : "rgba(244, 109, 67,"
-            value = Math.abs(value)
-            return slug + oscale(Math.log(value+1)) + ")"
+            if (value > 0) {
+              value = Math.abs(value)
+              return slug + oscale(Math.log(value+1)) + ")"
+            } else {
+              value = Math.abs(value)
+              return slug + (noscale(Math.log(value+1))*.8) + ")"
+            }
           })
         if (self.transform() == "percent") 
           trs.text(function(x) {
