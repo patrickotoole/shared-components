@@ -1,5 +1,12 @@
 import {s as state} from '@rockerbox/state';
 
+// TODO: move these helpers to a better place
+import {
+  findBounds, 
+  streamData
+} from '../views/summary/before_and_after' 
+
+
 import {
   aggregateCategory,
   aggregateCategoryHour,
@@ -37,6 +44,44 @@ import {
 } from '../helpers'
 
 const s = state;
+
+
+// TODO: move these objects
+function countKey(data, key) {
+  let counts = d3.nest()
+    .key(x => x[key])
+    .rollup(v => v.length)
+    .entries(data)
+
+  let total = d3.sum(counts,x => x.values)
+  counts.map(x => x.percent = x.values/total)
+
+  return counts
+
+}
+
+function diff(target, baseline) {
+  let baselinePercent = baseline.reduce((p,c) => {
+      p[c.key] = c.percent
+      return p
+    }, {})
+
+  target.map(x => {
+    if (x.percent > baselinePercent[x.key]) {
+      x.diff = (x.percent - baselinePercent[x.key]) / baselinePercent[x.key]
+    } else {
+      x.diff = -(baselinePercent[x.key] - x.percent) / baselinePercent[x.key]
+    }
+
+    return x
+  })
+
+  return target
+}
+
+function desc(p,c) {
+  return c.diff - p.diff
+}
 
 export default function init() {
   const s = state;
@@ -173,42 +218,11 @@ export default function init() {
       s.setStatic("category_idfs",category_idfs)
 
 
-      // TIMING AND BA
-
-      _state.data.before_hour.map(x => 
-        x.time_diff_bucket = (x.time_diff_bucket > 0) ? -x.time_diff_bucket : x.time_diff_bucket
-      )
-
-      const before = _state.data.before_hour
-        , after = _state.data.after_hour
-        , combined = before.concat(after)
-
-      const percentRelativeTabular = timingRelative(combined)
-
-debugger
 
 
 
-      // TIMING
-      const timing = buildTiming(value.full_urls, value.comparison)
-      const timing_tabular = timingTabular(full_urls)
-      const cat_timing_tabular = timingTabular(full_urls,"parent_category_name")
-      const timing_tabs = [
-          {"key":"Top Domains", "values": timing_tabular, "data": value.full_urls}
-        , {"key":"Top Categories", "values": cat_timing_tabular}
-        , {"key":"Time to Site", "values": percentRelativeTabular}
 
-
-      ]
-
-      if (_state.tab_position) {
-        timing_tabs.map(x => x.selected = (x.key == _state.tab_position) )
-      }
-
-
-
-      s.setStatic("time_summary", timing)
-      s.setStatic("time_tabs", timing_tabs)
+      
 
 
 
@@ -239,6 +253,116 @@ debugger
 
         s.setStatic("before_urls",before_and_after) 
         s.setStatic("before_tabs",before_tabs)
+
+
+        // STAGES: CONSIDERATION, VALIDATION, BASELINE
+  
+        let a = before_and_after.after_categories
+          , b = before_and_after.before_categories
+          , buckets = [0,10,30,60,120,180,360,720,1440,2880,5760,10080].map(function(x) { return x*60 })
+
+        var {before_stacked, after_stacked} = streamData(b, a, buckets)
+        var {before_line, after_line} = findBounds(before_stacked, after_stacked, buckets)
+
+        var consideration = before_and_after.before.filter(x => x.time_diff_bucket <= before_line)
+        var validation = before_and_after.after.filter(x => x.time_diff_bucket <= after_line)
+
+        var baseline_before = before_and_after.before.filter(x => x.time_diff_bucket > before_line)
+          , baseline_after = before_and_after.after.filter(x => x.time_diff_bucket > after_line)
+          , baseline = baseline_before.concat(baseline_after)
+
+        var category_baseline = countKey(baseline, "parent_category_name")
+          , category_consideration = diff(countKey(consideration,"parent_category_name"),category_baseline).sort(desc)
+          , category_validation = diff(countKey(validation, "parent_category_name"),category_baseline).sort(desc)
+
+        var stage_values = {
+            consideration: consideration
+          , validation: validation
+          , baseline: baseline
+        }
+
+        var stage_categories = {
+            consideration: category_consideration
+          , validation: category_validation
+          , baseline: category_baseline
+        }
+
+        const stage_tabs = [
+          { "key":"Top Domains", "values": stage_values, "category": stage_categories  }
+        ]
+
+        s.setStatic("stage_tabs",stage_tabs)
+
+        
+  
+  
+        // TIMING AND BA
+
+        _state.data.before_hour.map(x => { 
+          x.stage = Math.abs(x.time_diff_bucket) <= before_line ? "Consideration" : "Baseline" 
+        })
+
+        _state.data.after_hour.map(x => { 
+          x.stage = Math.abs(x.time_diff_bucket) <= after_line ? "Exploration" : "Baseline"
+        })
+
+  
+        _state.data.after_hour.map(x => 
+          x.time_diff_bucket = (x.time_diff_bucket > 0) ? -x.time_diff_bucket : x.time_diff_bucket
+        )
+
+        
+  
+        const before = _state.data.before_hour
+          , after = _state.data.after_hour
+          , combined = before.concat(after)
+  
+        const percentRelativeTabular = timingRelative(combined)
+        const stageRelativeTabular = timingRelative(combined,"stage")
+
+        const nonbaseline_total = stageRelativeTabular.reduce((p,row) => {
+          if (row.key !== "Baseline") {
+            const keys = Object.keys(row)
+            p = Math.max(p,d3.sum(keys.map(k => { if (k !== "total" && k !== "key") return row[k] })) )
+          }
+          return p
+        },0)
+       
+        stageRelativeTabular.map(row => {
+
+          if (row.key == "Baseline") {
+            const keys = Object.keys(row)
+            const total = d3.sum(keys.map(k => { if (k !== "total" && k !== "key") return row[k] }))
+            keys.map(k => { if (k !== "total" && k !== "key") row[k] = row[k]/total*nonbaseline_total })
+            return row
+          }
+
+        })
+
+
+
+        // TIMING
+        const timing = buildTiming(value.full_urls, value.comparison)
+        const timing_tabular = timingTabular(full_urls)
+        const cat_timing_tabular = timingTabular(full_urls,"parent_category_name")
+        const timing_tabs = [
+            {"key":"Top Domains", "values": timing_tabular, "data": value.full_urls}
+          , {"key":"Top Categories", "values": cat_timing_tabular}
+          , {"key":"Time to Site", "values": percentRelativeTabular}
+          , {"key":"Stages", "values": stageRelativeTabular}
+
+
+
+        ]
+
+        if (_state.tab_position) {
+          timing_tabs.map(x => x.selected = (x.key == _state.tab_position) )
+        }
+
+
+
+        s.setStatic("time_summary", timing)
+        s.setStatic("time_tabs", timing_tabs)
 
       }
 

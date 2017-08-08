@@ -65,9 +65,12 @@ export const timingTabular = (data,key="domain") => {
     .filter(x => x.key != "NA")
 }
 
-export const timingRelative = (combined) => {
+export const timingRelative = (combined,_key) => {
+
+        const key = _key || "time_diff_bucket"
+
         const rolled = d3.nest()
-          .key(x => x.time_diff_bucket)
+          .key(x => x[key] + "|" + x.stage)
           .key(x => x.hour)
           .rollup(v => {
             return {
@@ -79,6 +82,7 @@ export const timingRelative = (combined) => {
           .entries(combined)
           .sort((p,c) => d3.descending(parseInt(p.key),parseInt(c.key)) )
 
+
         const rows = rolled.map(r => {
           let mapped = d3.map(r.values, x => x.key)
 
@@ -88,13 +92,14 @@ export const timingRelative = (combined) => {
             return p
           },{})
 
-          return Object.assign({key: r.key}, row)
+
+          return Object.assign({key: r.key.split("|")[0], stage: r.key.split("|")[1] }, row)
         })
 
         const flat = rolled
           .reduce((p,c) => {
             c.values.reduce((q,r) => {
-              q.push(Object.assign({},r.values,{"bucket":c.key, "hour": r.key}) )
+              q.push(Object.assign({},r.values,{"bucket":c.key, "hour": r.key, "stage": r.stage}) )
               return q
             },p)
             return p
@@ -130,7 +135,6 @@ export const timingRelative = (combined) => {
 
           hourbuckets.map(k => {
             const v = hourlyMap.get(k).percent
-            console.log(v, x[k], parseInt(k), formatHour(k) )
             obj[formatHour(k)] = (x[k] > v) ? (v - x[k])/v : -(x[k] - v)/v
           })
 
@@ -138,7 +142,7 @@ export const timingRelative = (combined) => {
         })
 
         const formattedRows = rows.map(x => {
-          const obj = {"key":x.key}
+          const obj = {"key":x.key,"stage":x.stage}
           hourbuckets.map(k => {
             obj[formatHour(k)] = x[k]
           })
@@ -151,7 +155,6 @@ export const timingRelative = (combined) => {
           return x
         })
 
-debugger
 
   return formattedRows //normalizedRows
 }

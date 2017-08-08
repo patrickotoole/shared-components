@@ -207,7 +207,10 @@ class Timing extends D3ComponentBase {
       .headers(headers)
       .render("key", selected.key != "Time to Site" ? false : function(x){ 
         var k = this.parentNode.__data__.key
-        this.innerText = formatName(k) + ((k < 0) ? " after" : " before")
+        var stage = this.parentNode.__data__.stage
+        stage = stage == "Baseline" ? "" : " (" + stage + ") "
+
+        this.innerText = formatName(k) + ((k < 0) ? " after" : " before") + stage
       })
       .sort(sortby,asc)
       .on("sort", this.on("sort"))
