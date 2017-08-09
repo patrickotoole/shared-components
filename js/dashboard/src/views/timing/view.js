@@ -1,3 +1,4 @@
+import d3 from 'd3'
 import {d3_updateable, d3_splat, d3_class, D3ComponentBase, noop} from '@rockerbox/helpers'
 import header from '../../generic/header'
 import select from '../../generic/select'

@@ -1,5 +1,6 @@
 import { filter_data } from '@rockerbox/filter';
 import { buildData } from '../../helpers'
+import d3 from 'd3'
 
 function prefixReducer(prefix, p,c) {
   p[c.key] = p[c.key] || {}

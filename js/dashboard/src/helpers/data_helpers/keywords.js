@@ -1,3 +1,4 @@
+import d3 from 'd3'
 export function buildKeywords(urls,comparison) {
   var parseWords = function(p,c) {
     var splitted = c.url.split(".com/")

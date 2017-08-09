@@ -1,4 +1,6 @@
 import {s as state} from '@rockerbox/state';
+import d3 from 'd3';
+
 
 // TODO: move these helpers to a better place
 import {
@@ -25,7 +27,10 @@ import {
 import {
   buildTiming,
   timingTabular,
-  timingRelative
+  timingRelative,
+  timingRelativeRows,
+  formatHour,
+  hourbuckets
 } from '../helpers/data_helpers/timing'
 
 import {
@@ -200,7 +205,7 @@ export default function init() {
         .entries(full_urls)
 
       const times_rolled = d3.nest()
-        .key(x => parseInt(x.hour) -12 > 0 ? (parseInt(x.hour) - 12) + "pm" : parseInt(x.hour) +"am")
+        .key(x => formatHour(x.hour))
         .rollup(x => x.length)
         .entries(full_urls)
 
@@ -304,17 +309,13 @@ export default function init() {
 
         _state.data.after_hour.map(x => { 
           x.stage = Math.abs(x.time_diff_bucket) <= after_line ? "Exploration" : "Baseline"
-        })
-
-  
-        _state.data.after_hour.map(x => 
           x.time_diff_bucket = (x.time_diff_bucket > 0) ? -x.time_diff_bucket : x.time_diff_bucket
-        )
-
+        })
         
-  
-        const before = _state.data.before_hour
-          , after = _state.data.after_hour
+        //const full_urls = filterUrls(_state.data.original_urls,logic,filters)
+
+        const before = filterUrls(_state.data.before_hour, logic, filters)
+          , after = filterUrls(_state.data.after_hour, logic, filters)
           , combined = before.concat(after)
   
         const percentRelativeTabular = timingRelative(combined)
@@ -338,6 +339,77 @@ export default function init() {
           }
 
         })
+
+        const considerationRow = stageRelativeTabular.filter(x => x.key == "Consideration" )[0]
+
+        let considerationItems = 0
+        let considerationSum = 0
+
+
+        const considerationArray = hourbuckets.map(formatHour).map(x => {
+          if (considerationRow[x]) {
+            considerationItems ++
+            considerationSum += considerationRow[x]
+          }
+
+          return {"key":x, "values": considerationRow[x] || 0 }
+        })
+
+        considerationMean = considerationSum/considerationItems
+
+        considerationArray.map(x => {
+          x.values = (x.values - considerationMean)/considerationMean
+        })
+
+        const online = times_rolled.sort((p,c) => { return p.values - c.values})
+          , exposure = times_rolled.sort((p,c) => { return c.values - p.values}).slice(0,8)
+          , exposureMap = d3.map(exposure,x => x.key)
+          , correlation = considerationArray
+              .filter(x => x.values > 0)
+              .sort((p,c) => { return c.values - p.values})
+          , engagement = considerationArray
+              .filter((x,i) => x.values > 0 )
+              .filter((x,i) => !!exposureMap.get(x.key) )
+              .sort((p,c) => { return c.values - p.values})
+              .slice(0,6)
+          , engagementMap = d3.map(engagement,x => x.key)
+
+
+        const [rolled, rows] = timingRelativeRows(before,"stage")
+
+        const rawEngagement = rolled.filter(x => x.key =="Consideration|Consideration")
+          .reduce((p,x) => x.values, [])
+          .filter(x => !!engagementMap.get(formatHour(x.key)) )
+          .reduce((p,c) => {
+            const _p = p.concat(c.values.values)
+            return _p
+          },[])
+
+        const engagement_domains = d3.nest()
+          .key(x => x.domain)
+          .rollup(v => {
+            return {
+                urls: v.map(x => x.url)
+              , count: v.length
+            }
+          })
+          .entries(rawEngagement)
+          .sort((p,c) => c.values.count - p.values.count)
+          .slice(0,20)
+       
+
+
+        s.setStatic("distribution_plan", {
+            "times": online
+          , "exposure_times": exposure
+          , "correlation_times": correlation
+          , "engagement_times": engagement
+          , "engagement_sites": engagement_domains
+          , "engagement_articles": engagement_domains.filter(x => x.values.count).map(x => { return {"key": x.values.urls[0]} }).slice(0,20)
+
+          , "filters_used": _state.filters
+        })
+
 
 
 
@@ -363,6 +435,7 @@ export default function init() {
 
         s.setStatic("time_summary", timing)
         s.setStatic("time_tabs", timing_tabs)
+
 
       }
 

@@ -1,3 +1,5 @@
+import d3 from 'd3';
+
 export function aggregateCategory(urls) {
   const categories = d3.nest()
     .key(function(x){ return x.parent_category_name})
