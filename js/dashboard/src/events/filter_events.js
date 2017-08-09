@@ -308,7 +308,7 @@ export default function init() {
         })
 
         _state.data.after_hour.map(x => { 
-          x.stage = Math.abs(x.time_diff_bucket) <= after_line ? "Exploration" : "Baseline"
+          x.stage = Math.abs(x.time_diff_bucket) <= after_line ? "Evaluation" : "Baseline"
           x.time_diff_bucket = (x.time_diff_bucket > 0) ? -x.time_diff_bucket : x.time_diff_bucket
         })
         
@@ -340,7 +340,7 @@ export default function init() {
 
         })
 
-        const considerationRow = stageRelativeTabular.filter(x => x.key == "Consideration" )[0]
+        const considerationRow = stageRelativeTabular.filter(x => x.key == "Consideration" )[0] || {}
 
         let considerationItems = 0
         let considerationSum = 0
@@ -391,10 +391,11 @@ export default function init() {
             return {
                 urls: v.map(x => x.url)
               , count: v.length
+              , tf_idf: v.length*domain_idfs[v[0].domain]
             }
           })
           .entries(rawEngagement)
-          .sort((p,c) => c.values.count - p.values.count)
+          .sort((p,c) => c.values.tf_idf - p.values.tf_idf)
           .slice(0,20)
        
 
