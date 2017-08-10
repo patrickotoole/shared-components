@@ -135,7 +135,7 @@ export function categorySummary(samp_urls,pop_urls) {
         y.samp = mapped_cat_roll[x.key] ? mapped_cat_roll[x.key].values.views : 0
 
         y.sample_percent_norm = y.sample_percent = y.percent*100
-        y.importance = Math.log((1/y.pop_size)*y.samp*y.samp)
+        y.importance = Math.log((1/y.pop_size+1)*y.samp*y.samp)
         y.ratio = y.sample_percent/y.real_pop_percent
         y.value = y.samp
     })

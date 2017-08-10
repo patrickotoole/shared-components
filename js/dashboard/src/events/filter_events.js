@@ -185,7 +185,7 @@ export default function init() {
       // EXPLORE TABS
       var tabs = [
           buildDomainsTab(full_urls,categories)
-        , {key:"Top Categories", values: cat_summary}
+        , {key:"Top Categories", values: cat_summary.filter(x => x.samp > 0)}
         //, buildUrlsTab(full_urls,categories)
       ]
 
