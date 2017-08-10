@@ -140,7 +140,7 @@ NewDashboard.prototype = {
         , actions = JSON.parse(JSON.stringify(this.actions()))
         , staged_filters = JSON.parse(JSON.stringify(this.staged_filters()))
 
-      var segmentViewHeight = this.is_comparison() ? 160 : 120
+      var segmentViewHeight = this.is_comparison() ? 170 : 120
 
 
 
@@ -348,12 +348,17 @@ NewDashboard.prototype = {
         .on("filter.change", this.on("filter.change"))
         .draw()
 
-      options = this.is_comparison() ? options : options.filter((x) => x.key !== "Comparison")
+      options = this.is_comparison() ? 
+        options.filter((x) => x.key === "Comparison") : 
+        options.filter((x) => x.key !== "Comparison")
 
-      option_view(target)
-        .data(options)
-        .on("select", this.on("view.change") )
-        .draw()
+
+      if (!this.is_comparison()) {
+        option_view(target)
+          .data(options)
+          .on("select", this.on("view.change") )
+          .draw()
+      }
 
       conditional_show(target)
         .data(options)

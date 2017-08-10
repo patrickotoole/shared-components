@@ -75,17 +75,17 @@ export class SummaryView extends D3ComponentBase {
     //drawKeywords(keywrap,this._keywords)
     //drawKeywordDiff(keywrap,this._keywords)
 
-    var inner = drawBeforeAndAfter(bawrap,this._before)
+    //var inner = drawBeforeAndAfter(bawrap,this._before)
 
-    select(inner)
-      .options([
-          {"key":"Importance","value":"percent_diff"}
-        , {"key":"Activity","value":"score"}
-        , {"key":"Population","value":"pop"}
-      ])
-      .selected(this._before.sortby || "")
-      .on("select", this.on("ba.sort"))
-      .draw()
+    //select(inner)
+    //  .options([
+    //      {"key":"Importance","value":"percent_diff"}
+    //    , {"key":"Activity","value":"score"}
+    //    , {"key":"Population","value":"pop"}
+    //  ])
+    //  .selected(this._before.sortby || "")
+    //  .on("select", this.on("ba.sort"))
+    //  .draw()
 
 
     //drawStream(streamwrap,this._before.before_categories,this._before.after_categories)

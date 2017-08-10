@@ -9,21 +9,24 @@ import initSubscriptions from './subscriptions'
 
 
 
-export default function build(target) {
-  const db = new Dashboard(target)
+export default function build(target,comparison) {
+  const db = new Dashboard(target,comparison)
   return db
 }
 
 class Dashboard {
 
-  constructor(target) {
+  constructor(target,comparison) {
     initEvents()
     initSubscriptions(target)
+
+    this._comparison = comparison == undefined ? false : comparison
     this.target(target)
     this.init()
 
     return this.call.bind(this)
   }
+
 
   target(target) {
     this._target = target || d3_updateable(d3.select(".container"),"div","div")
@@ -56,10 +59,6 @@ class Dashboard {
           , {"key":"Path","value":"ba-view","selected":0}
           , {"key":"Comparison","value":"summary-view","selected":0}
           , {"key":"Customer Stages","value":"stage-view","selected":0}
-
-
-          //, {"key":"Media Plan", "value":"media-view","selected":0}
-
         ]
     }
 
@@ -68,10 +67,44 @@ class Dashboard {
 
   call() {
 
+
    let s = state;
    let value = s.state()
 
+
+   this._comparision = this._comparision == undefined ? false : this._comparison
+   s.update("is_comparison",this._comparison); 
+
+   console.log(this._comparison, value.selected_view)
+
+   if (this._comparison == true && value.selected_view !== "summary-view") {
+     s.update("dashboard_options",[{"key":"Comparison","value":"summary-view","selected":1}])
+     s.update("selected_view","summary-view")
+
+     return setTimeout(() => this.call(),1)
+
+   } 
+
+   if (this._comparision === false && (value.selected_view == "summary-view" || value.selected_view == undefined)) {
+
+     console.log(this._comparison)
+     s.update("dashboard_options", [
+            {"key":"Overall","value":"data-view","selected":1}
+          , {"key":"Timing","value":"timing-view","selected":0}
+          , {"key":"Path","value":"ba-view","selected":0}
+          , {"key":"Comparison","value":"summary-view","selected":0}
+          , {"key":"Customer Stages","value":"stage-view","selected":0}
+        ]
+     )
+     s.update("selected_comparison",undefined)
+     s.update("selected_view","data-view")
+
+     return setTimeout(() => this.call(),1)
+   }
+
+
    let db = view(this._target)
+     .is_comparison(this._comparison)
      .transform(value.transform || "")
      .staged_filters(value.staged_filter || "")
      .media(value.media_plan || {})

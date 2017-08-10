@@ -1,8 +1,16 @@
-.summary-view .table-wrapper { background:#e3ebf0; padding-top:5px; padding-bottom:10px }
+.summary-view {
+  padding-bottom:50px
+}
+.summary-view .y.axis path.domain {
+  display:none
+}
+.summary-view .table-wrapper { background:none; padding-top:5px; padding-bottom:10px }
 .summary-view .table-wrapper tr { border-bottom:none }
-.summary-view .table-wrapper thead tr { background:none }
+.summary-view .table-wrapper thead tr { background:#f0f4f7 }
 .summary-view .table-wrapper tbody tr:hover { background:none }
-.summary-view .table-wrapper tr td { border-right:1px dotted #ccc;text-align:center }
+.summary-view .table-wrapper tbody tr td { border-right:none;text-align:center }
+.summary-view .table-wrapper thead tr th { border-right:none; }
+
 .summary-view .table-wrapper tr td:last-of-type { border-right:none }
 
 .summary-view .ts-row,
@@ -48,13 +56,13 @@
   display: inline-block;
   width: 50%;
   padding: 0px 10px 10px; 
-  background-color: rgb(227, 235, 240);
+  background-color: none;
 }
 .dash-row > div > h3 {
   font-size: 12px;
   color: rgb(51, 51, 51);
   line-height: 33px;
-  background-color: rgb(227, 235, 240);
+  background-color: #f0f4f7;
   margin-left: -10px;
   margin-bottom: 10px;
   padding-left: 10px;

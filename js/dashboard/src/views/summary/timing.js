@@ -8,7 +8,7 @@ export function drawTimeseries(target,data,radius_scale) {
     .classed("timeseries",true)
     .style("width","60%")
     .style("display","inline-block")
-    .style("background-color", "#e3ebf0")
+    //.style("background-color", "#e3ebf0")
     .style("padding-left", "10px")
     .style("height","127px")
 
@@ -21,7 +21,7 @@ export function drawTimeseries(target,data,radius_scale) {
     .style("vertical-align","top")
     .style("padding","15px")
     .style("padding-left","57px")
-    .style("background-color", "#e3ebf0")
+    //.style("background-color", "#e3ebf0")
     .style("height","127px")
 
 
@@ -73,11 +73,11 @@ export function drawTimeseries(target,data,radius_scale) {
 
 
   d3_updateable(w,"h3","h3")
-    .text("Filtered versus All Views")
+    .text("Timing of segment versus baseline")
     .style("font-size","12px")
     .style("color","#333")
     .style("line-height","33px")
-    .style("background-color","#e3ebf0")
+    .style("background-color","#f0f4f7")
     .style("margin-left","-10px")
     .style("margin-bottom","10px")
     .style("padding-left","10px")

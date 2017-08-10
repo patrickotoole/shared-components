@@ -1,3 +1,4 @@
+import d3 from 'd3';
 import {d3_updateable, d3_splat} from '@rockerbox/helpers'
 
 export function Share(target) {

@@ -15,7 +15,7 @@ export default function init(target) {
 
   
   state
-    .subscribe("change.loading", function(error,loading,value) { build(target)() })
+    .subscribe("change.loading", function(error,loading,value) { build(target,value.is_comparison)() })
     .subscribe("change.dashboard_options", s.prepareEvent("updateFilter"))
     .subscribe("change.tabs", s.prepareEvent("updateFilter")) 
     .subscribe("change.logic_options", s.prepareEvent("updateFilter") )
@@ -27,6 +27,6 @@ export default function init(target) {
   state
     .subscribe("redraw.formatted_data", function(error,formatted_data,value) { 
       s.update("loading",false); 
-      build(target)() 
+      build(target,value.is_comparison)() 
     })
 }

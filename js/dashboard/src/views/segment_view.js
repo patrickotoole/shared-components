@@ -34,7 +34,7 @@ SegmentView.prototype = {
 
       var wrap = d3_updateable(this.target,".segment-wrap","div")
         .classed("segment-wrap",true)
-        .style("height",this.is_comparison() ? "160px" : "120px")
+        .style("height",this.is_comparison() ? "170px" : "120px")
         .style("width",this.target.style("width"))
         .style("position","fixed")
         .style("z-index","300")
@@ -47,7 +47,7 @@ SegmentView.prototype = {
 
 
       header(wrap)
-        .navigation(["Planning","Explore"])
+        .navigation(["Planning",this.is_comparison() ? "Compare" : "Explore"])
         .buttons([
             {class: "download", icon: "fa-filefa", text: "Export", color: "orange"}
           , {class: "saved-search", icon: "fa-folder-open-o fa", text: "Open", color: "blue"}
@@ -191,8 +191,9 @@ SegmentView.prototype = {
       var inner2 = d3_updateable(row2,".comparison.inner","div")
         .classed("inner comparison",true)
         .style("flex","1")
-        .style("padding","10px")
         .style("padding-bottom","0px")
+        .style("padding-top","10px")
+
 
         .style("display","flex")
 
@@ -285,11 +286,10 @@ SegmentView.prototype = {
       d3_updateable(inner_desc2,".bar-wrap-space","div").classed("bar-wrap-space",true)
         .style("flex","1 1 0%")
         .style("line-height","36px")
-        .style("padding-left","10px")
         .text(d3.format(",")(this._data.views.population))
 
 
-      d3_updateable(inner_desc2,".bar-wrap-opt","div").classed("bar-wrap-opt",true)
+      d3_updateable(inner_desc2,".bar-wrap-opt","div").classed("bar-wrap-opt ",true)
         .style("flex","2 1 0%")
         .style("margin","0px")
         .style("line-height","32px")
@@ -299,7 +299,7 @@ SegmentView.prototype = {
         .style("text-transform","uppercase")
         .style("height","100%")
         .style("text-align","right")
-        .html("apply filters? <input type='checkbox'></input>")
+        //.html("apply filters? <input type='checkbox'></input>")
 
 
 
@@ -318,19 +318,20 @@ SegmentView.prototype = {
 
       d3_updateable(inner2,"h3","h3")
         .text("Compare Against")
-        .style("line-height","32px")
         .style("margin","0px")
+        .style("line-height","32px")
         .style("color","inherit")
         .style("font-size","inherit")
         .style("font-weight","bold")
-        .style("flex","1")
         .style("text-transform","uppercase")
-        .style("background","#e3ebf0")
+        .style("flex","1")
+        .style("background","rgb(240, 244, 247)")
         .style("padding-left","10px")
         .style("margin-right","10px")
         .style("margin-top","2px")
         .style("margin-bottom","2px")
-        .style("height","100%")
+        .style("height","32px")
+
 
 
 
