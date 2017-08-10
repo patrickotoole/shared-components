@@ -20,7 +20,6 @@ export default class TabularBody extends D3ComponentBase {
     expansion.html("")
 
     var sorted = this.data().sort((p,c) => c.total - p.total).slice(0,500)
-debugger
 
     var url_row = d3_splat(expansion,".url-row","div",sorted,function(x) { return x.key })
       .classed("url-row",true)
