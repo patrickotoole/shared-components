@@ -202,6 +202,8 @@ class Timing extends D3ComponentBase {
 
 
     var timingwrap = d3_class(wrap,"timing-row")
+    var selectedKey = selected.key == "Top Domains" ? "domain" : "parent_category_name"
+
 
     var table_obj = table(timingwrap)
       .top(this.top())
@@ -219,17 +221,30 @@ class Timing extends D3ComponentBase {
       .skip_option(true)
       .on("expand",function(d,td) {
 
-        var dd = data[0].data.filter(function(x) { return x.domain == d.key })
+        var dd = data[0].data.filter(function(x) { return x[selectedKey] == d.key })
         var rolled = timeseries.prepData(dd)
         
-        domain_expanded(td)
-          .domain(dd[0].domain)
-          .raw(dd)
-          .data(rolled)
-          .on("stage-filter", function(x) {
-            self.on("stage-filter")(x)
-          })
-          .draw()
+
+        if (selectedKey == "domain") {
+
+          domain_expanded(td)
+            .domain(dd[0].domain)
+            .raw(dd)
+            .data(rolled)
+            .on("stage-filter", self.on("stage-filter") )
+            .draw()
+
+        }
+
+        if (selectedKey == "parent_category_name") {
+          domain_expanded(td)
+            .domain("/")
+            .use_domain(true)
+            .raw(dd)
+            .data(rolled)
+            .on("stage-filter", self.on("stage-filter") )
+            .draw()
+        }
 
       })
       .on("draw",function() {

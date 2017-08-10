@@ -1,6 +1,6 @@
 {
   "name": "@rockerbox/dashboard",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "description": "dashboard",
   "main": "build/dashboard.js",
   "jsnext:main": "build/dashboard.es.js",
