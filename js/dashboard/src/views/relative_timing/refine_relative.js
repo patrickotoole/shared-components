@@ -52,6 +52,7 @@ class RefineRelative extends D3ComponentBase {
       , stages = this._stages
       , summary_headers = this._summary_headers
       , options = this._options
+      , is_domain = !!this._domain
 
     var before_pos, after_pos;
 
@@ -105,19 +106,19 @@ class RefineRelative extends D3ComponentBase {
 
 
 
-    const tables = d3_class(td,"tables-row")
+    //const tables = d3_class(td,"tables-row")
 
-    summary_table(d3_class(tables,"url"))
-      .title("URL Summary")
-      .data(url_summary)
-      .headers(summary_headers)
-      .draw()
+    //summary_table(d3_class(tables,"url"))
+    //  .title("URL Summary")
+    //  .data(url_summary)
+    //  .headers(summary_headers)
+    //  .draw()
 
-    summary_table(d3_class(tables,"kw"))
-      .title("Keyword Summary")
-      .data(kws_summary)
-      .headers(summary_headers)
-      .draw()
+    //summary_table(d3_class(tables,"kw"))
+    //  .title("Keyword Summary")
+    //  .data(kws_summary)
+    //  .headers(summary_headers)
+    //  .draw()
 
 
 
@@ -129,9 +130,10 @@ class RefineRelative extends D3ComponentBase {
 
     tabular_timeseries(d3_class(modify,"url-depth"))
       .headers(["Before","After"])
-      .label("URL")
-      .data(urls)
+      .label(is_domain ? "URL" : "Domain")
+      .data(urls) // need new dataset for here
       .split(this.domain())
+
       .on("stage-filter",this.on("stage-filter"))
       .draw()
 

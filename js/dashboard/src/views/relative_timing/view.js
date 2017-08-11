@@ -245,6 +245,7 @@ class RelativeTiming extends D3ComponentBase {
     const selectedHeader = headers.filter(x => x.key == s)
     const sortby = selectedHeader.length ? selectedHeader[0].key : _default
 
+    const selectedKey = selected.key == "Top Domains" ? "domain" : "parent_category_name"
 
 
     table(bawrap)
@@ -258,10 +259,10 @@ class RelativeTiming extends D3ComponentBase {
 
         refine_relative(td)
           .data(d)
-          .domain(d.key)
+          .domain(selectedKey == "domain" ? d.key : false)
           .stages(stages)
-          .before_urls(_data.before.filter(y => y.domain == d.key) )
-          .after_urls(_data.after.filter(y => y.domain == d.key))
+          .before_urls(_data.before.filter(y => y[selectedKey] == d.key) )
+          .after_urls(_data.after.filter(y => y[selectedKey] == d.key))
           .on("stage-filter",self.on("stage-filter"))
           .draw()
 

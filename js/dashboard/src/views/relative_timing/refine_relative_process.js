@@ -33,7 +33,15 @@ const STOPWORDS =[
   , "have","first","will","than","says","like","into","after","with"
 ]
 const cleanAndSplitURL = (domain,url) => {
-  return url.toLowerCase().split(domain)[1].split("/").reverse()[0].replace("_","-").split("-")
+  if (domain) {
+    return url.toLowerCase().split(domain)[1].split("/").reverse()[0].replace("_","-").split("-")
+  } else {
+    var sd = url.toLowerCase().split("://")
+    var key = sd.length > 1 ? sd[1] : sd[0]
+
+   
+    return key.split("/").reverse()[0].replace("_","-").replace("+","-").split("-")
+  }
 }
 const isWord = (x) => {
   return x.match(/\d+/g) == null && 
@@ -46,15 +54,16 @@ const isWord = (x) => {
 }
 
 
-const urlReducer = (p,c) => {
-  p[c.url] = (p[c.url] || 0) + c.visits
+const urlReducer = (group, p,c) => {
+  p[c[group]] = (p[c[group]] || 0) + c.visits
   return p
 }
-const urlBucketReducer = (prefix, p,c) => {
-  p[c.url] = p[c.url] || {}
-  p[c.url]["url"] = c.url
+const bucketReducer = (group, prefix, p,c) => {
 
-  p[c.url][prefix + c.time_diff_bucket] = c.visits
+  p[c[group]] = p[c[group]] || {}
+  p[c[group]]["key"] = c[group]
+
+  p[c[group]][prefix + c.time_diff_bucket] = c.visits
   return p
 }
 const urlToKeywordsObjReducer = (domain, p,c) => {
@@ -72,27 +81,42 @@ const urlToKeywordsObjReducer = (domain, p,c) => {
 
 export function urlsAndKeywords(before_urls, after_urls, domain) {
 
+
+    const groupBy = domain ? "url" : "domain"
+
     const url_volume = {}
-    before_urls.reduce(urlReducer,url_volume)
-    after_urls.reduce(urlReducer,url_volume)
+    before_urls.reduce(urlReducer.bind(false, groupBy),url_volume)
+    after_urls.reduce(urlReducer.bind(false, groupBy),url_volume)
 
     const url_ts = {}
-    before_urls.reduce(urlBucketReducer.bind(this,""),url_ts)
-    after_urls.reduce(urlBucketReducer.bind(this,"-"),url_ts)
+
+    before_urls.reduce(bucketReducer.bind(this, groupBy,""),url_ts)
+    after_urls.reduce(bucketReducer.bind(this, groupBy,"-"),url_ts)
 
     const urls = d3.entries(url_volume)
       .sort((p,c) => { return d3.descending(p.value,c.value) })
       .slice(0,1000)
       .map(x => url_ts[x.key])
       .map(function(x){ 
-        x.key = x.url
+        x.key = x.key
         x.values = buckets.map(y => x[y] || 0)
         x.total = d3.sum(buckets.map(function(b) { return x[b] || 0 }))
         return x
       })
 
+
+    let kw_url_ts = {}
+
+    if (groupBy == "url") {
+      kw_url_ts = url_ts
+    } else {
+      before_urls.reduce(bucketReducer.bind(this, "url", ""),kw_url_ts)
+      after_urls.reduce(bucketReducer.bind(this, "url", "-"),kw_url_ts)
+    }
+
+
     const keywords = {}
-    d3.entries(url_ts)
+    d3.entries(kw_url_ts)
       .reduce(urlToKeywordsObjReducer.bind(false,domain),keywords)
     
     
