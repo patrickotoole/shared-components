@@ -92,8 +92,6 @@ export function updateFilter(s) {
   return function(err,_filters,_state) {
     if (_state.data == undefined) return 
 
-    console.error(_filters, Object.keys(_state)
-
     const filters = prepareFilters(_state.filters)
     const logic = determineLogic(_state.logic_options)
     const full_urls = filterUrls(_state.data.original_urls,logic,filters)
