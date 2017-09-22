@@ -2,7 +2,7 @@ import d3 from 'd3'
 import {d3_updateable, d3_splat} from '@rockerbox/helpers'
 import './view.css'
 import * as state from '@rockerbox/state'
-import {media_plan} from 'media_plan'
+//import {media_plan} from 'media_plan'
 import filter_view from './views/filter_view'
 import option_view from './views/option_view'
 import domain_view from './views/domain_view'
@@ -393,11 +393,11 @@ NewDashboard.prototype = {
           
 
 
-          if (x.value == "media-view") {
-            media_plan(dthis.style("margin-left","-15px").style("margin-right","-15px"))
-             .data(data)
-             .draw()
-          }
+          //if (x.value == "media-view") {
+          //  media_plan(dthis.style("margin-left","-15px").style("margin-right","-15px"))
+          //   .data(data)
+          //   .draw()
+          //}
 
           if (x.value == "ba-view") {
             relative_view(dthis)
