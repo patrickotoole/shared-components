@@ -10,10 +10,15 @@ export default function init() {
   state
     .subscribe("receive.data",function(error,value,state) {
       s.publishStatic("logic_categories",value.categories)
+      s.prepareEvent("updateFilter")(false, state.filters, state)
       s.publish("filters",state.filters)
     })
     .subscribe("receive.comparison_data",function(error,value,state) {
       s.publish("filters",state.filters)
+    })
+    .subscribe("update.data", function(error,data,state) {
+      
+
     })
 
 
@@ -21,7 +26,8 @@ export default function init() {
 
   state
     .subscribe("get.action_date",function(error,value,state) {
-      s.publishStatic("data",api.action.getData(state.selected_action,state.action_date))
+      //s.publishStatic("data",api.action.getData(state.selected_action,state.action_date)) 
+      // got rid of this because it is being used too often
     })
     .subscribe("get.comparison_date",function(error,value,state) {
       if (!value) return s.publishStatic("comparison_data",false)

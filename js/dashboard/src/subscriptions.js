@@ -20,6 +20,7 @@ export default function init(target) {
     .subscribe("change.tabs", s.prepareEvent("updateFilter")) 
     .subscribe("change.logic_options", s.prepareEvent("updateFilter") )
     .subscribe("update.filters", s.prepareEvent("updateFilter"))
+
     
 
   // REDRAW: this is where the entire app gets redrawn - if formatted_data changes, redraw the app

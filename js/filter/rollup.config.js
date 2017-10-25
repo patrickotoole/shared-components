@@ -8,10 +8,10 @@ export default {
   moduleId: 'filter',
   moduleName: 'filter',
   entry: 'index.js',
-  //dest: 'build/filter.js',
-  //format: 'iife',
-
-  targets: [
+  targets: [{
+      dest: 'build/filter.js',
+      format: "umd"
+    },
     {
       dest: 'build/filter.es.js',
       format: 'es'
@@ -20,12 +20,14 @@ export default {
   plugins: [ 
     postcss(),
     resolve({
-      main: true
+      jsnext: true,
+      main: true,
+      browser: true,
     }),
     commonjs(),
     babel({ 
-      plugins: ['external-helpers'],
-      externalHelpers: false,
+      //plugins: ['external-helpers'],
+      //externalHelpers: false,
     }),
   ],
   exports: "named"
