@@ -382,6 +382,7 @@ export function updateFilter(s) {
         , "engagement_articles": engagement_domains.filter(x => x.values.count).map(x => { return {"key": x.values.urls[0]} }).slice(0,20)
 
         , "filters_used": _state.filters
+        , "action_used": _state.selected_action
       })
 
 
