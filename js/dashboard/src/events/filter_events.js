@@ -183,12 +183,12 @@ export function updateFilter(s) {
       .entries(full_urls)
 
 
-    const edomains = tabs[0].values.sort((p,c) => c.importance - p.importance).slice(0,10)
+    const edomains = tabs[0].values.sort((p,c) => c.importance - p.importance)
 
 
     s.setStatic("execution_plan", {
-        "categories": tabs[1].values.sort((p,c) => c.importance - p.importance).slice(0,10)
-      , "domains": edomains
+        "categories": tabs[1].values.sort((p,c) => c.importance - p.importance).slice(0,10000)
+      , "domains": edomains.slice(0,10000)
       , "articles": edomains.map(x => { return {"key": x.urls[0]} }).slice(0,20)
       , "times": times_rolled.sort((p,c) => { return p.count - c.count }).slice(0,8)
       , "filters_used": _state.filters

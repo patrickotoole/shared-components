@@ -33,6 +33,8 @@ export class DomainView extends D3ComponentBase {
         , {key:"ratio",value:"Ratio",selected:false}
         , {key:"importance",value:"Importance",selected:false}
         , {key:"value",value:"Segment versus Baseline",locked:true}
+        , {key:"count",value:"Count",selected:false}
+
       ]//.filter((x) => !!selected.values[0][x.key])
 
     const samp_max = d3.max(selected.values,function(x){return x.sample_percent_norm})
