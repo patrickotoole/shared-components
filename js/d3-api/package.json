@@ -1,6 +1,6 @@
 {
   "name": "@rockerbox/d3-api",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "main": "build/api.js",
   "jsnext:main": "build/api.es.js",
   "scripts": {

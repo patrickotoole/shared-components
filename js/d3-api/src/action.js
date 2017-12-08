@@ -4,7 +4,7 @@ export function getData(action,days_ago) {
   return function(cb){
     console.log(days_ago)
 
-    var URL = "/crusher/v2/visitor/domains_full_time_minute/cache?url_pattern=" + action.url_pattern[0] + "&filter_id=" + action.action_id
+    var URL = "/cache/domains_full_time_minute?identifier=" + action.action_id
 
     var date_ago = new Date(+new Date()-24*60*60*1000*days_ago)
       , date = d3.time.format("%Y-%m-%d")(date_ago)

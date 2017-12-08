@@ -177,6 +177,15 @@ export function updateFilter(s) {
       .rollup(x => { return {"idf":x[0].idf,"count":x.length} })
       .entries(full_urls)
 
+    const urls_rolled = d3.nest()
+      .key(x => x.url)
+      .rollup(x => { return {"idf":x[0].idf,"count":x.length, "importance":x.length*x[0].idf, "parent_category_name": x[0].parent_category_name, "url":x[0].url } })
+      .entries(full_urls)
+      .map(x => x.values)
+      .sort((a,b) => b.count - a.count)
+      
+
+
     const times_rolled = d3.nest()
       .key(x => formatHour(x.hour))
       .rollup(x => x.length)
@@ -188,7 +197,8 @@ export function updateFilter(s) {
 
     s.setStatic("execution_plan", {
         "categories": tabs[1].values.sort((p,c) => c.importance - p.importance).slice(0,10000)
-      , "domains": edomains.slice(0,10000)
+      , "urls": urls_rolled.slice(0,1000)
+      , "domains": edomains.slice(0,1000)
       , "articles": edomains.map(x => { return {"key": x.urls[0]} }).slice(0,20)
       , "times": times_rolled.sort((p,c) => { return p.count - c.count }).slice(0,8)
       , "filters_used": _state.filters

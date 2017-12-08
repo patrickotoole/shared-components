@@ -43,8 +43,13 @@ export function buildBeforeAndAfter(before_urls,after_urls,cat_summary,sort_by) 
     , pop_categories = cat_summary.reduce(function(p,c) { p[c.key] = c; return p }, {})
     , cats = cat_summary.map(function(p) { return p.key })
 
-  var before_categories = buildData(before_urls,buckets,pop_categories)
-    , after_categories = buildData(after_urls,buckets,pop_categories)
+  try {
+    var before_categories = buildData(before_urls,buckets,pop_categories)
+      , after_categories = buildData(after_urls,buckets,pop_categories)
+  } catch(e) {
+    before_categories = before_categories || []
+    after_categories = after_categories || []
+  }
 
   var sortby = sort_by
 

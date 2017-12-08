@@ -1,6 +1,6 @@
 {
   "name": "@rockerbox/dashboard",
-  "version": "0.0.20",
+  "version": "0.0.21",
   "description": "dashboard",
   "main": "build/dashboard.js",
   "jsnext:main": "build/dashboard.es.js",
@@ -19,7 +19,7 @@
 
 
     "@rockerbox/component": "",
-    "@rockerbox/d3-api": "",
+    "@rockerbox/d3-api": "0.0.5",
     "@rockerbox/filter": "",
     "@rockerbox/chart": "",
     "@rockerbox/helpers": "",
