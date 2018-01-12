@@ -197,7 +197,7 @@ export function updateFilter(s) {
 
     s.setStatic("execution_plan", {
         "categories": tabs[1].values.sort((p,c) => c.importance - p.importance).slice(0,10000)
-      , "urls": urls_rolled.slice(0,30000)
+      , "urls": urls_rolled.slice(0,100000)
       , "domains": edomains.slice(0,1000)
       , "articles": edomains.map(x => { return {"key": x.urls[0]} }).slice(0,20)
       , "times": times_rolled.sort((p,c) => { return p.count - c.count }).slice(0,8)
